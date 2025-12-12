@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Abacaxi Devanagari';
+  src: url('/fonts/AbacaxiDevanagari-SemiBold.woff2') format('woff2'),
+       url('/fonts/AbacaxiDevanagari-SemiBold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Abacaxi Devanagari';
+  src: url('/fonts/AbacaxiDevanagari-ThinItalic.woff2') format('woff2'),
+       url('/fonts/AbacaxiDevanagari-ThinItalic.woff') format('woff');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+}
+
+
+
