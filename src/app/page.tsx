@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import Hero from '@/components/Hero';
-import SectionTitle from '@/components/SectionTitle';
+import Section from '@/components/Section';
+import SectionHeader from '@/components/SectionHeader';
+import Divider from '@/components/Divider';
+import ActionButton from '@/components/ActionButton';
 import LogoCloud from '@/components/LogoCloud';
 import Timeline from '@/components/Timeline';
 import { processSteps } from '@/data/process';
@@ -9,118 +12,127 @@ import ProductsGrid from '@/components/ProductsGrid';
 import ScrollImages from '@/components/ScrollImages';
 import AutoImageCarousel from '@/components/AutoImageCarousel';
 import HoverImage from '@/components/HoverImage';
+import EqualHeightContainer from '@/components/EqualHeightContainer';
+import SmoothScroll from '@/components/SmoothScroll';
+import SquareCarouselContainer from '@/components/SquareCarouselContainer';
 
 export default function Home() {
-  const benefits = [
-    { title: 'Marcado profundo y limpio', icon: '✓' },
-    { title: 'Envíos a todo el país', icon: '🚚' },
-    { title: 'Hecho por diseñadores industriales', icon: '🎨' },
-  ];
-
-
   return (
-    <div>
+    <SmoothScroll>
       {/* Hero */}
       <Hero
         title="Más que una herramienta, una forma de contar tu historia."
         subtitle="Sellos de bronce fabricados con precisión para profesionales del oficio. Diseñados para revalorizar tu trabajo."
-        primaryCta={{ text: 'Diseña el tuyo.', href: '/cotizar' }}
+        primaryCta={{ text: 'Diseña el tuyo.', href: '/buy?mode=custom' }}
       />
 
       {/* Cita destacada */}
-      <section id="quote-section" className="py-24 bg-white relative min-h-screen">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Texto a la izquierda */}
-            <div className="max-w-2xl">
-              <div className="relative">
-                <span className="absolute -left-6 md:-left-8 top-0 text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic font-abacaxi text-primary">"</span>
-                <blockquote className="font-abacaxi text-2xl md:text-3xl lg:text-4xl leading-relaxed text-primary italic">
-                  <span className="font-thin italic">Convertimos a los trabajadores del cuero y la madera en </span>
-                  <span className="font-semibold italic">profesionales</span>
-                  <span className="font-thin italic"> del oficio, revalorizando su trabajo y su </span>
-                  <span className="font-semibold italic">identidad</span>
-                  <span className="font-thin italic"> profesional.</span>
-                  <span className="inline-block text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic ml-2">"</span>
-                </blockquote>
-              </div>
-            </div>
-
-            {/* Imágenes superpuestas a la derecha */}
-            <div className="hidden lg:block relative">
-              <div className="sticky top-24">
-                <ScrollImages
-                  sectionId="quote-section"
-                  images={[
-                    { id: 1, top: '0', right: '0', src: '/images/scroll/motquero1.png', alt: 'Motoquero 1' },
-                    { id: 2, top: '8rem', right: '2rem', src: '/images/scroll/motoquero2.png', alt: 'Motoquero 2' },
-                    { id: 3, top: '16rem', right: '4rem', src: '/images/scroll/surfer.png', alt: 'Surfer' },
-                    { id: 4, top: '18rem', right: '10rem', src: '/images/scroll/viejo1.png', alt: 'Viejo 1' },
-                    { id: 5, top: '14rem', right: '12rem', src: '/images/scroll/viejo2.png', alt: 'Viejo 2' },
-                  ]}
-                />
-              </div>
+      <section 
+        id="quote-section" 
+        className="snap-start snap-always h-[calc(100vh-4rem)] flex items-center justify-center bg-white relative"
+        data-snap-section
+      >
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl relative w-full h-full flex items-center justify-center">
+          {/* Texto centrado */}
+          <div className="max-w-4xl text-center relative z-20 px-8">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-lg p-8 md:p-12 shadow-lg">
+              <span className="absolute -left-6 md:-left-8 top-0 text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic font-abacaxi text-neutral-900">"</span>
+              <blockquote className="font-abacaxi text-2xl md:text-3xl lg:text-4xl leading-relaxed text-neutral-900 italic">
+                <span className="font-thin italic">Convertimos a los trabajadores del cuero y la madera en </span>
+                <span className="font-semibold italic">profesionales</span>
+                <span className="font-thin italic"> del oficio, revalorizando su trabajo y su </span>
+                <span className="font-semibold italic">identidad</span>
+                <span className="font-thin italic"> profesional.</span>
+                <span className="inline-block text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic ml-2">"</span>
+              </blockquote>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Sección dividida: Carrusel izquierda / Imagen fija derecha */}
-      <section className="py-24 bg-white min-h-screen">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 h-screen lg:h-[80vh]">
-            {/* Mitad izquierda - Carrusel automático */}
-            <div className="w-full h-full">
-              <AutoImageCarousel
+          {/* Imágenes superpuestas en ambos lados */}
+          <div className="hidden lg:block absolute inset-0 pointer-events-none">
+            <div className="relative w-full h-full">
+              <ScrollImages
+                sectionId="quote-section"
                 images={[
-                  { id: 1, alt: 'Sello en pan', src: '/images/carousel/pan.png' },
-                  { id: 2, alt: 'Sello en cuero', src: '/images/carousel/cuero.png' },
-                  { id: 3, alt: 'Sello en madera', src: '/images/carousel/madera.png' },
-                  { id: 4, alt: 'Sello en cerámica', src: '/images/carousel/ceramica.png' },
-                  { id: 5, alt: 'Sello en fruta', src: '/images/carousel/fruta.png' },
-                  { id: 6, alt: 'Sello en hielo', src: '/images/carousel/hielo.png' },
-                  { id: 7, alt: 'Sello en jabón', src: '/images/carousel/jabon.png' },
-                  { id: 8, alt: 'Sello en lacre', src: '/images/carousel/lacre.png' },
+                  { id: 1, top: '5%', left: '15%', rotation: -5, src: '/images/scroll/motquero1.png', alt: 'Motoquero 1' },
+                  { id: 2, top: '8%', right: '15%', rotation: 8, src: '/images/scroll/motoquero2.png', alt: 'Motoquero 2' },
+                  { id: 3, top: '12%', left: '5%', rotation: -12, src: '/images/scroll/surfer.png', alt: 'Surfer' },
+                  { id: 4, top: '15%', right: '5%', rotation: 6, src: '/images/scroll/viejo1.png', alt: 'Viejo 1' },
+                  { id: 5, top: '28%', left: '2%', rotation: -8, src: '/images/scroll/viejo2.png', alt: 'Viejo 2' },
+                  { id: 6, top: '30%', right: '2%', rotation: 10, src: '/images/scroll/Firefly_Gemini Flash_Un mate de cuero clarito con vir 725252 QFI (1).png', alt: 'Mate de cuero' },
+                  { id: 7, top: '55%', left: '5%', rotation: -7, src: '/images/scroll/Firefly_Gemini Flash_Un mate imperial argentino de cu 551920 EIi (1).png', alt: 'Mate imperial' },
+                  { id: 8, top: '58%', right: '8%', rotation: 9, src: '/images/scroll/Firefly_Gemini Flash_Una foto producto de una tote ba 586498 ViW (1).png', alt: 'Tote bag' },
+                  { id: 9, top: '60%', left: '12%', rotation: -6, src: '/images/scroll/Firefly_Gemini Flash_Una foto de frente de una mujer -Argentina, de unos 45 años, sonriendo- brazando y pr 586498.png', alt: 'Mujer sonriendo' },
                 ]}
-                interval={4000}
               />
             </div>
-
-            {/* Mitad derecha - Imagen fija y texto */}
-            <div className="w-full h-full bg-white flex flex-col items-center justify-center p-8 lg:p-12">
-              {/* Imagen fija del sello */}
-              <div className="w-[25rem] h-[25rem] md:w-[30rem] md:h-[30rem] lg:w-[35rem] lg:h-[35rem] mb-8 overflow-hidden">
-                <img 
-                  src="/images/sello/sellologo.png" 
-                  alt="Sello de bronce Alcohn" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              {/* Texto */}
-              <div className="text-center w-full max-w-md">
-                <h2 className="font-abacaxi text-3xl md:text-4xl lg:text-5xl font-semibold mb-2 text-primary">
-                  Un mismo sello.
-                </h2>
-                <h2 className="font-abacaxi text-3xl md:text-4xl lg:text-5xl font-semibold mb-6 text-primary">
-                  Todos los usos.
-                </h2>
-                <p className="font-abacaxi text-lg md:text-xl font-thin italic text-primary">
-                  Mira como usarlo
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
+      {/* Sección dividida: Imagen izquierda / Imagen fija derecha */}
+      <Section>
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] gap-0 w-full h-full">
+            {/* Carrusel izquierda - Ocupa el máximo espacio posible */}
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="relative w-full h-full max-h-[calc(100vh-4rem-3rem)] aspect-square lg:aspect-auto">
+                <AutoImageCarousel
+                  images={[
+                    { id: 1, src: '/images/carousel/madera.png', alt: 'Sello marcado en tronco de árbol' },
+                    { id: 2, src: '/images/carousel/cuero.png', alt: 'Sello marcado en cuero' },
+                    { id: 3, src: '/images/carousel/pan.png', alt: 'Sello marcado en pan' },
+                    { id: 4, src: '/images/carousel/ceramica.png', alt: 'Sello marcado en cerámica' },
+                    { id: 5, src: '/images/carousel/fruta.png', alt: 'Sello marcado en fruta' },
+                    { id: 6, src: '/images/carousel/hielo.png', alt: 'Sello marcado en hielo' },
+                    { id: 7, src: '/images/carousel/jabon.png', alt: 'Sello marcado en jabón' },
+                    { id: 8, src: '/images/carousel/lacre.png', alt: 'Sello marcado en lacre' },
+                  ]}
+                  interval={4000}
+                />
+              </div>
+            </div>
+
+            {/* Lado derecho - Se adapta al espacio disponible */}
+            <div className="bg-white flex flex-col items-center justify-center p-6 md:p-8 lg:p-12 w-full h-full">
+              <div className="flex flex-col items-center justify-center gap-6 md:gap-8 w-full h-full">
+                {/* Imagen fija del sello - Se adapta al espacio */}
+                <div className="w-full max-w-full aspect-square max-h-[40vh] lg:max-h-[50vh] flex-shrink-0">
+                  <img 
+                    src="/images/sello/sellologo.png" 
+                    alt="Sello de bronce Alcohn" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+
+                {/* Texto - Se adapta al espacio */}
+                <div className="text-center w-full px-4">
+                  <h2 className="font-abacaxi text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold mb-2 text-neutral-900 tracking-tight">
+                    Un mismo sello.
+                  </h2>
+                  <h2 className="font-abacaxi text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold mb-4 md:mb-6 text-neutral-900 tracking-tight">
+                    Todos los usos.
+                  </h2>
+                  <Link 
+                    href="/sellos/personalizados"
+                    className="font-abacaxi text-base md:text-lg lg:text-xl font-thin italic text-neutral-700 hover:text-neutral-900 transition-colors border-b border-transparent hover:border-neutral-700 inline-block"
+                  >
+                    Mira como usarlo
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* Cita destacada 2 */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 md:px-8">
+      <Section>
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
           <div className="max-w-5xl">
             <div className="relative">
-              <span className="absolute -left-6 md:-left-8 top-0 text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic font-abacaxi text-primary">"</span>
-              <blockquote className="font-abacaxi text-2xl md:text-3xl lg:text-4xl leading-relaxed text-primary italic">
+              <span className="absolute -left-6 md:-left-8 top-0 text-2xl md:text-3xl lg:text-4xl leading-none font-thin italic font-abacaxi text-neutral-900">"</span>
+              <blockquote className="font-abacaxi text-2xl md:text-3xl lg:text-4xl leading-relaxed text-neutral-900 italic">
                 <span className="font-thin italic">No solo fabricamos sellos de bronce personalizados</span>
                 <br />
                 <span className="font-thin italic">—diseñados con precisión para marcar cuero, madera,</span>
@@ -139,18 +151,20 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
       {/* Sección: Un sello no decora tu producto */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 md:px-8">
+      <Section>
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
           {/* Texto superior */}
-          <div className="text-center mb-16">
-            <h2 className="font-abacaxi text-4xl md:text-5xl lg:text-6xl text-primary">
-              <span className="font-thin italic">Un sello no decora tu producto. Lo </span>
-              <span className="font-semibold not-italic">transforma.</span>
-            </h2>
-          </div>
+          <SectionHeader
+            title={
+              <>
+                <span className="font-thin italic">Un sello no decora tu producto. Lo </span>
+                <span className="font-semibold not-italic">transforma.</span>
+              </>
+            }
+          />
 
           {/* Cuatro imágenes en fila */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
@@ -187,62 +201,48 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Beneficios rápidos */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {benefits.map((benefit, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl mb-4">{benefit.icon}</div>
-                <h3 className="text-lg font-semibold">{benefit.title}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      </Section>
 
       {/* Marcas que confían */}
       <LogoCloud />
 
       {/* Cómo funciona (resumen) */}
-      <section className="py-16 bg-secondary">
-        <div className="container mx-auto px-4">
-          <SectionTitle
+      <Section bg="neutral" padding="small">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+          <SectionHeader
             title="Cómo funciona"
             subtitle="Proceso simple y transparente"
           />
           <Timeline steps={processSteps.slice(0, 4)} />
-          <div className="text-center mt-8">
+          <div className="text-center mt-12">
             <Link
               href="/proceso"
-              className="text-bronce font-semibold hover:underline"
+              className="text-sm text-neutral-700 hover:text-neutral-900 transition-colors border-b border-transparent hover:border-neutral-900"
             >
               Ver proceso completo →
             </Link>
           </div>
         </div>
-      </section>
+      </Section>
 
       {/* CTA final */}
-      <section className="py-16 bg-primary text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <Section bg="white" padding="small" className="bg-neutral-900 text-white">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4 tracking-tight">
             ¿Listo para contar tu historia?
           </h2>
-          <p className="text-xl text-secondary-dark mb-6 max-w-2xl mx-auto">
+          <p className="text-base text-neutral-300 mb-8 max-w-2xl mx-auto">
             Cada sello es más que una herramienta. Es tu firma, tu marca, tu legado.
           </p>
-          <Link
-            href="/cotizar"
-            className="inline-block bg-accent text-primary px-8 py-4 rounded-md font-semibold hover:bg-accent-light transition-colors"
+          <ActionButton
+            href="/buy?mode=custom"
+            variant="secondary"
+            className="bg-white text-neutral-900 border-white hover:bg-neutral-100"
           >
             Cotizar ahora
-          </Link>
+          </ActionButton>
         </div>
-      </section>
-    </div>
+      </Section>
+    </SmoothScroll>
   );
 }
-

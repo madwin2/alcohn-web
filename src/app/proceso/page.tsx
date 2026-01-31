@@ -57,7 +57,7 @@ export default function ProcesoPage() {
             Tu historia merece un sello que la represente. Empezá ahora.
           </p>
           <Link
-            href="/cotizar"
+            href="/buy?mode=custom"
             className="inline-block bg-accent text-primary px-8 py-4 rounded-md font-semibold hover:bg-accent-light transition-colors"
           >
             Cotizar ahora

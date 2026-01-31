@@ -1,87 +1,84 @@
 import Link from 'next/link';
+import Divider from './Divider';
 
 export default function Footer() {
   return (
-    <footer className="bg-primary text-white py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-neutral-900 text-white py-16">
+      <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
-            <h3 className="text-xl font-bold mb-4">Alcohn</h3>
-            <p className="text-secondary-dark text-sm">
+            <h3 className="text-lg font-semibold mb-4 tracking-tight">Alcohn</h3>
+            <p className="text-sm text-neutral-400 leading-relaxed">
               Sellos de bronce de alta precisión fabricados en CNC. Mar del Plata, Argentina.
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Productos</h4>
-            <ul className="space-y-2 text-sm text-secondary-dark">
+            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">Productos</h4>
+            <ul className="space-y-2">
               <li>
-                <Link href="/productos/sellos-para-cuero" className="hover:text-accent">
+                <Link href="/productos/sellos-para-cuero" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para cuero
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sellos-para-madera" className="hover:text-accent">
+                <Link href="/productos/sellos-para-madera" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para madera
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sellos-para-alimentos" className="hover:text-accent">
+                <Link href="/productos/sellos-para-alimentos" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para alimentos
                 </Link>
               </li>
               <li>
-                <Link href="/productos/abecedarios" className="hover:text-accent">
+                <Link href="/productos/abecedarios" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Abecedarios
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Información</h4>
-            <ul className="space-y-2 text-sm text-secondary-dark">
+            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">Información</h4>
+            <ul className="space-y-2">
               <li>
-                <Link href="/proceso" className="hover:text-accent">
+                <Link href="/proceso" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Cómo funciona
                 </Link>
               </li>
               <li>
-                <Link href="/sobre-alcohn" className="hover:text-accent">
+                <Link href="/sobre-alcohn" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Sobre Alcohn
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-accent">
+                <Link href="/faq" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Preguntas frecuentes
                 </Link>
               </li>
               <li>
-                <Link href="/contacto" className="hover:text-accent">
+                <Link href="/contacto" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Contacto
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Contacto</h4>
-            <ul className="space-y-2 text-sm text-secondary-dark">
-              <li>Mar del Plata, Argentina</li>
+            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">Contacto</h4>
+            <ul className="space-y-2">
+              <li className="text-sm text-neutral-400">Mar del Plata, Argentina</li>
               <li>
-                <Link href="/cotizar" className="hover:text-accent">
+                <Link href="/buy?mode=custom" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Cotizar ahora
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-secondary-dark">
+        <Divider className="mt-12 pt-8 border-neutral-800" />
+        <div className="text-center text-sm text-neutral-500">
           <p>© {new Date().getFullYear()} Alcohn. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
   );
 }
-
-
-
-
-

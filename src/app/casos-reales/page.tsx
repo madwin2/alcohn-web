@@ -1,7 +1,9 @@
 import SectionTitle from '@/components/SectionTitle';
 import LogoCloud from '@/components/LogoCloud';
 import TestimonialsCarousel from '@/components/TestimonialsCarousel';
+import ClienteCard from '@/components/ClienteCard';
 import { testimonials } from '@/data/testimonials';
+import { getClientes } from '@/lib/clientes';
 
 export const metadata = {
   title: 'Casos reales - Alcohn',
@@ -9,6 +11,8 @@ export const metadata = {
 };
 
 export default function CasosRealesPage() {
+  const clientes = getClientes();
+
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto px-4">
@@ -17,20 +21,12 @@ export default function CasosRealesPage() {
           subtitle="Empresas, talleres y emprendedores de toda Argentina ya usan sellos Alcohn."
         />
 
-        {/* Galería de fotos */}
+        {/* Galería de clientes */}
         <section className="py-12">
           <h2 className="text-2xl font-semibold mb-6 text-center">Galería de sellos terminados</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="aspect-square bg-secondary rounded-lg flex items-center justify-center"
-              >
-                <p className="text-gray-400 text-sm">
-                  {/* TODO: Agregar imágenes reales cuando estén disponibles */}
-                  Imagen del sello {i}
-                </p>
-              </div>
+            {clientes.map((cliente) => (
+              <ClienteCard key={cliente.nombre} cliente={cliente} interval={4000} />
             ))}
           </div>
         </section>

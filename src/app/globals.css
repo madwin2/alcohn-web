@@ -26,10 +26,57 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
 }
 
-
-
+/* Design System Tokens */
+@layer utilities {
+  /* Typography */
+  .text-label {
+    @apply text-[11px] uppercase tracking-[0.18em] text-neutral-600 font-medium;
+  }
+  
+  .text-link {
+    @apply text-sm text-neutral-700 hover:text-neutral-900 transition-colors border-b border-transparent hover:border-neutral-900;
+  }
+  
+  /* Spacing */
+  .section-padding {
+    @apply py-20 md:py-24 lg:py-32;
+  }
+  
+  .section-container {
+    @apply container mx-auto px-4 md:px-8 max-w-7xl;
+  }
+  
+  /* Borders */
+  .border-divider {
+    @apply border-t border-neutral-200;
+  }
+  
+  .border-frame {
+    @apply border border-neutral-200;
+  }
+  
+  /* Radius */
+  .radius-sm {
+    @apply rounded-sm;
+  }
+  
+  .radius-md {
+    @apply rounded;
+  }
+}

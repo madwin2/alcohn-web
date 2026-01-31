@@ -26,6 +26,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# credenciales (no subir a GitHub)
+*[Cc]redenciales*
+Credenciales open pay.md
+
 # vercel
 .vercel
 

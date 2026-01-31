@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { CartProvider } from '@/contexts/CartContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,11 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
-        <Header />
-        <main>{children}</main>
-        <Footer />
+    <html lang="es" className="overflow-x-hidden">
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <CartProvider>
+          <Header />
+          <main className="overflow-x-hidden w-full max-w-full">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

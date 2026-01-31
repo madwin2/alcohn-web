@@ -18,6 +18,15 @@ export const config = {
   seña: {
     amount: 10000, // Seña inicial
   },
+  bank: {
+    // TODO: Reemplazar con datos bancarios reales
+    name: 'Banco [Nombre]',
+    accountType: 'Cuenta Corriente',
+    accountNumber: '0000000000000000000000',
+    cbu: '0000000000000000000000',
+    alias: 'ALCOHN.SELLOS',
+    cuit: '00-00000000-0',
+  },
 };
 
 
