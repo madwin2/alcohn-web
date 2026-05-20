@@ -38,13 +38,13 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white py-16">
+    <div className="atelier-page min-h-screen py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl">
         {/* Back Link editorial */}
         <div className="mb-12">
           <Link
             href="/productos"
-            className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+            className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900 hover:border-[var(--alcohn-bronze)] border-b border-transparent transition-colors"
           >
             <svg
               className="w-4 h-4 mr-2"

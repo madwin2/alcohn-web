@@ -23,22 +23,22 @@ export default function CollectionTabs({
   const collections: CollectionType[] = ['todos', 'futbol', 'argentina', 'cuero', 'madera', 'oficios'];
 
   return (
-    <div className="mb-12 pb-8 border-b border-neutral-300">
+    <div className="mb-12 pb-8 border-b border-[var(--alcohn-line)]">
       <div className="mb-6">
-        <h2 className="text-xs uppercase tracking-wider text-neutral-600 font-medium">
+        <h2 className="craft-label">
           COLECCIÓN
         </h2>
       </div>
       
-      <div className="flex flex-wrap gap-px bg-neutral-300 p-px">
+      <div className="flex flex-wrap gap-2">
         {collections.map((collection) => (
           <button
             key={collection}
             onClick={() => onCollectionChange(collection)}
-            className={`px-4 py-2 text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap ${
+            className={`min-h-[40px] px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-colors whitespace-nowrap border ${
               selectedCollection === collection
-                ? 'bg-neutral-900 text-white'
-                : 'bg-white text-neutral-700 hover:bg-neutral-50'
+                ? 'bg-[var(--alcohn-ink)] text-white border-[var(--alcohn-ink)]'
+                : 'bg-[var(--alcohn-surface)] text-neutral-700 border-[var(--alcohn-line)] hover:border-[var(--alcohn-bronze)] hover:bg-white'
             }`}
           >
             {collectionLabels[collection]}

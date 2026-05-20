@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { getStandardDesignBySlug } from '@/lib/catalog';
-import SectionHeader from '@/components/SectionHeader';
 import ActionButton from '@/components/ActionButton';
+import PageIntro from '@/components/PageIntro';
 import SpecChips from '@/components/SpecChips';
 import SizeSelector from '@/components/SizeSelector';
+import PurchaseInclusions from '@/components/PurchaseInclusions';
 import { useCart } from '@/contexts/CartContext';
 
 interface PageProps {
@@ -17,15 +17,15 @@ interface PageProps {
 }
 
 export default function StandardDesignPage({ params }: PageProps) {
-  const router = useRouter();
   const { addItem } = useCart();
   const design = getStandardDesignBySlug(params.slug);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [selectedPrice, setSelectedPrice] = useState<number | undefined>(undefined);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   if (!design) {
     return (
-      <div className="min-h-screen bg-white py-16">
+      <div className="atelier-page min-h-screen py-16">
         <div className="container mx-auto px-4 md:px-8 max-w-7xl text-center">
           <p className="text-neutral-600">Diseño no encontrado</p>
         </div>
@@ -43,6 +43,7 @@ export default function StandardDesignPage({ params }: PageProps) {
   const handleSizeSelect = (size: string, price: number) => {
     setSelectedSize(size);
     setSelectedPrice(price);
+    setAddedToCart(false);
   };
 
   const handleAddToCart = () => {
@@ -67,8 +68,7 @@ export default function StandardDesignPage({ params }: PageProps) {
       });
 
       // Resetear selección después de agregar
-      setSelectedSize(undefined);
-      setSelectedPrice(undefined);
+      setAddedToCart(true);
     }
   };
 
@@ -85,27 +85,32 @@ export default function StandardDesignPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white py-16">
+    <div className="atelier-page min-h-screen py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium mb-4">
-            {collectionLabels[design.collection] || design.collection}
-          </div>
-          <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 mb-4 tracking-tight">
-            {design.title}
-          </h1>
-          {design.description && (
-            <p className="text-base text-neutral-700 max-w-2xl leading-relaxed">
-              {design.description}
-            </p>
-          )}
-        </div>
+        <PageIntro
+          label={collectionLabels[design.collection] || design.collection}
+          title={design.title}
+          description={design.description || 'Elegí medida, agregá al carrito y completá checkout sin esperar una consulta manual.'}
+          primaryCta={{
+            label: 'Elegir medida',
+            href: '#medidas',
+          }}
+          secondaryCta={{
+            label: 'Ver otros diseños',
+            href: '/sellos/estandar',
+            variant: 'secondary',
+          }}
+          highlights={[
+            'Diseño listo para comprar',
+            'Medidas con precio visible',
+            'Checkout online y seguimiento',
+          ]}
+        />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 mb-20">
           {/* Image */}
-          <div className="aspect-square bg-neutral-50 relative overflow-hidden border border-neutral-200">
+          <div className="material-frame aspect-square relative overflow-hidden">
             {design.image ? (
               <Image
                 src={design.image}
@@ -138,7 +143,7 @@ export default function StandardDesignPage({ params }: PageProps) {
             {/* Description */}
             {design.description && (
               <div>
-                <h3 className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-3">
+                <h3 className="craft-label mb-3">
                   DESCRIPCIÓN
                 </h3>
                 <p className="text-sm text-neutral-700 leading-relaxed">
@@ -148,7 +153,17 @@ export default function StandardDesignPage({ params }: PageProps) {
             )}
 
             {/* Size Selector */}
-            <div className="pt-6 border-t border-neutral-200">
+            <div id="medidas" className="pt-6 border-t border-[var(--alcohn-line)] space-y-4 scroll-mt-24">
+              <div className="atelier-panel p-4">
+                <h3 className="craft-label mb-2">
+                  Guía rápida de medida
+                </h3>
+                <p className="text-sm text-neutral-700 leading-relaxed">
+                  30x30mm funciona bien para etiquetas, piezas chicas o marcas simples.
+                  40x40mm es la opción recomendada para la mayoría de usos. 50x50mm conviene
+                  cuando querés más presencia o mejor lectura en piezas grandes.
+                </p>
+              </div>
               <SizeSelector
                 sizes={availableSizes}
                 selectedSize={selectedSize}
@@ -157,19 +172,25 @@ export default function StandardDesignPage({ params }: PageProps) {
               />
             </div>
 
+            <PurchaseInclusions
+              variant="estandar"
+              compact
+              title="Incluido en este diseño"
+            />
+
             {/* Price */}
-            <div className="pt-6 border-t border-neutral-200">
+            <div className="pt-6 border-t border-[var(--alcohn-line)]">
               <p className="text-lg text-neutral-600">
                 {selectedPrice ? (
                   <>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 mr-3">
+                    <span className="craft-label mr-3">
                       Precio
                     </span>
                     {priceDisplay}
                   </>
                 ) : (
                   <>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 mr-3">
+                    <span className="craft-label mr-3">
                       Desde
                     </span>
                     {priceDisplay}
@@ -179,33 +200,48 @@ export default function StandardDesignPage({ params }: PageProps) {
             </div>
 
             {/* CTA Principal */}
-            <div className="pt-6 border-t border-neutral-200">
+            <div className="pt-6 border-t border-[var(--alcohn-line)]">
               {selectedSize ? (
                 <button
                   onClick={handleAddToCart}
-                  className="w-full sm:w-auto border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                  className="w-full sm:w-auto min-h-[44px] border border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] text-white px-6 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                 >
                   Agregar al carrito
                 </button>
               ) : (
-                <ActionButton
-                  href={`/buy?mode=standard&design=${design.slug}`}
-                  variant="primary"
-                  className="w-full sm:w-auto"
+                <button
+                  type="button"
+                  disabled
+                  className="w-full sm:w-auto min-h-[44px] border border-neutral-300 bg-neutral-100 text-neutral-500 px-6 py-3 text-sm font-medium uppercase tracking-wider cursor-not-allowed"
                 >
-                  Elegir medida
-                </ActionButton>
+                  Eleg&iacute; una medida para comprar
+                </button>
+              )}
+              {addedToCart && (
+                <div className="mt-4 border border-[var(--alcohn-bronze)] bg-[var(--alcohn-paper)] p-4">
+                  <p className="text-sm font-medium text-neutral-900">
+                    Agregado al carrito. Pod&eacute;s finalizar la compra ahora o seguir mirando dise&ntilde;os.
+                  </p>
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                    <ActionButton href="/checkout" variant="primary" className="flex-1">
+                      Finalizar compra
+                    </ActionButton>
+                    <ActionButton href="/sellos/estandar" variant="secondary" className="flex-1">
+                      Seguir comprando
+                    </ActionButton>
+                  </div>
+                </div>
               )}
             </div>
 
             {/* Especificaciones */}
-            <div className="pt-6 border-t border-neutral-200 space-y-4">
-              <h3 className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-4">
+            <div className="pt-6 border-t border-[var(--alcohn-line)] space-y-4">
+              <h3 className="craft-label mb-4">
                 ESPECIFICACIONES
               </h3>
               <dl className="space-y-3">
                 <div className="flex justify-between items-start">
-                  <span className="text-xs uppercase tracking-wider text-neutral-500 font-medium w-1/3">
+                  <span className="craft-label w-1/3">
                     Material
                   </span>
                   <span className="text-sm text-neutral-900 flex-1">
@@ -213,7 +249,7 @@ export default function StandardDesignPage({ params }: PageProps) {
                   </span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-xs uppercase tracking-wider text-neutral-500 font-medium w-1/3">
+                  <span className="craft-label w-1/3">
                     Proceso
                   </span>
                   <span className="text-sm text-neutral-900 flex-1">
@@ -221,7 +257,7 @@ export default function StandardDesignPage({ params }: PageProps) {
                   </span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-xs uppercase tracking-wider text-neutral-500 font-medium w-1/3">
+                  <span className="craft-label w-1/3">
                     Profundidad
                   </span>
                   <span className="text-sm text-neutral-900 flex-1">
@@ -229,7 +265,7 @@ export default function StandardDesignPage({ params }: PageProps) {
                   </span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-xs uppercase tracking-wider text-neutral-500 font-medium w-1/3">
+                  <span className="craft-label w-1/3">
                     Uso
                   </span>
                   <span className="text-sm text-neutral-900 flex-1">
@@ -237,7 +273,7 @@ export default function StandardDesignPage({ params }: PageProps) {
                   </span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-xs uppercase tracking-wider text-neutral-500 font-medium w-1/3">
+                  <span className="craft-label w-1/3">
                     Tiempo
                   </span>
                   <span className="text-sm text-neutral-900 flex-1">
@@ -250,7 +286,7 @@ export default function StandardDesignPage({ params }: PageProps) {
         </div>
 
         {/* Volver a colección */}
-        <div className="border-t border-neutral-300 pt-12">
+        <div className="border-t border-[var(--alcohn-line)] pt-12">
           <ActionButton
             href="/sellos/estandar"
             variant="ghost"

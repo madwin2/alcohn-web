@@ -171,7 +171,7 @@ SOLO MUESTRA LA MARCA SOBRE LA SUPERFICIE:
 
     try {
       // Convertir el Buffer procesado de vuelta a File para OpenAI
-      const processedFile = new File([imageBuffer], 'mockup.png', { type: 'image/png' });
+      const processedFile = new File([new Uint8Array(imageBuffer)], 'mockup.png', { type: 'image/png' });
       
       console.log('Enviando imagen a OpenAI. Tamaño:', imageBuffer.length, 'bytes');
       
@@ -184,7 +184,7 @@ SOLO MUESTRA LA MARCA SOBRE LA SUPERFICIE:
         background: 'opaque',
       });
 
-      const mockupBase64 = response.data[0]?.b64_json;
+      const mockupBase64 = response.data?.[0]?.b64_json;
 
       if (!mockupBase64) {
         return NextResponse.json(
@@ -217,7 +217,7 @@ SOLO MUESTRA LA MARCA SOBRE LA SUPERFICIE:
         console.log('gpt-image-1.5 no disponible, intentando con gpt-image-1...');
         try {
           // Convertir el Buffer procesado de vuelta a File para el fallback
-          const processedFile2 = new File([imageBuffer], 'mockup.png', { type: 'image/png' });
+          const processedFile2 = new File([new Uint8Array(imageBuffer)], 'mockup.png', { type: 'image/png' });
           
           const response2 = await openai.images.edit({
             model: 'gpt-image-1',
@@ -229,7 +229,7 @@ SOLO MUESTRA LA MARCA SOBRE LA SUPERFICIE:
             input_fidelity: 'high',
           });
 
-          const mockupBase642 = response2.data[0]?.b64_json;
+          const mockupBase642 = response2.data?.[0]?.b64_json;
 
           if (!mockupBase642) {
             throw new Error('No se pudo generar el mockup');

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { generateRealisticMockup } from '@/lib/mockupGenerator';
 
-// Esta API route llama al servicio Python para generar la muestra automática
-// TODO: Reemplazar con la URL real del servicio Python cuando esté disponible
-const MOCKUP_SERVICE_URL = process.env.MOCKUP_SERVICE_URL || 'http://localhost:8000/api/mockups/generate';
-
+/**
+ * Genera mockup con mockup_generator.py (Pillow) si hay Python;
+ * si no, Sharp + texturas en public/mockup-textures (copiadas del ejemplo).
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { logo, size, material, aspectRatio, customSize } = body;
+    const { logo, size, material, aspectRatio: _aspectRatio, customSize: _customSize } = body;
 
     if (!logo || !size || !material) {
       return NextResponse.json(
@@ -22,74 +23,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Preparar el request para el servicio Python
-    const requestBody: any = {
-      logo,
-      size,
-      material,
-    };
-
-    if (aspectRatio) {
-      requestBody.aspectRatio = aspectRatio;
-    }
-
-    if (customSize) {
-      requestBody.customSize = customSize;
-    }
-
-    // Llamar al servicio Python
-    const response = await fetch(MOCKUP_SERVICE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'SERVICE_ERROR',
-            message: errorData.error?.message || 'Error en el servicio de mockups',
-            details: errorData.error,
-          },
-        },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
+    const { buffer, method } = await generateRealisticMockup(logo, material);
+    const mockupBase64 = buffer.toString('base64');
+    const mockupDataUrl = `data:image/jpeg;base64,${mockupBase64}`;
 
     return NextResponse.json({
       success: true,
-      ...data,
+      mockupUrl: mockupDataUrl,
+      thumbnailUrl: mockupDataUrl,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        generator: method === 'python' ? 'mockup_generator.py (Pillow)' : 'sharp + textura',
+        material,
+        size,
+      },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error al generar el mockup';
     console.error('Error generando mockup:', error);
-    
-    // Si el servicio Python no está disponible, devolver un error descriptivo
-    if (error.code === 'ECONNREFUSED' || error.message?.includes('fetch failed')) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'SERVICE_UNAVAILABLE',
-            message: 'El servicio de generación de mockups no está disponible en este momento',
-          },
-        },
-        { status: 503 }
-      );
-    }
 
     return NextResponse.json(
       {
         success: false,
         error: {
           code: 'PROCESSING_ERROR',
-          message: error.message || 'Error al generar el mockup',
+          message,
         },
       },
       { status: 500 }

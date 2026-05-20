@@ -22,10 +22,16 @@ interface ImageHoverState {
   isHovering: boolean;
 }
 
+function toHTMLElement(element: Element | null): HTMLElement | null {
+  return element instanceof HTMLElement ? element : null;
+}
+
 export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
   const [visibleImages, setVisibleImages] = useState<Set<number>>(new Set());
   const [currentImageIndex, setCurrentImageIndex] = useState(-1);
   const [hoverStates, setHoverStates] = useState<Map<number, ImageHoverState>>(new Map());
+  const [elevatedZIndexIds, setElevatedZIndexIds] = useState<Set<number>>(new Set());
+  const leaveTimeoutsRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const [windowWidth, setWindowWidth] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -33,6 +39,14 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
   const currentIndexRef = useRef(-1);
   const isProcessing = useRef(false);
   const visibleImagesRef = useRef<Set<number>>(new Set());
+
+  // Limpiar timeouts de z-index al desmontar
+  useEffect(() => {
+    return () => {
+      leaveTimeoutsRef.current.forEach((t) => clearTimeout(t));
+      leaveTimeoutsRef.current.clear();
+    };
+  }, []);
 
   // Detectar tamaño de ventana para responsive
   useEffect(() => {
@@ -57,18 +71,18 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
   // Inicializar sectionRef
   useEffect(() => {
     const updateSectionRef = () => {
-      let found = null;
+      let found: HTMLElement | null = null;
       
       if (sectionId) {
         found = document.getElementById(sectionId);
       }
       
       if (!found && containerRef.current) {
-        found = containerRef.current.closest('section');
+        found = toHTMLElement(containerRef.current.closest('section'));
       }
       
       if (!found && sectionId) {
-        found = document.querySelector(`[id="${sectionId}"]`);
+        found = toHTMLElement(document.querySelector(`[id="${sectionId}"]`));
       }
       
       sectionRef.current = found;
@@ -265,7 +279,7 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
           sectionRef.current = document.getElementById(sectionId);
         }
         if (!sectionRef.current && containerRef.current) {
-          sectionRef.current = containerRef.current.closest('section');
+          sectionRef.current = toHTMLElement(containerRef.current.closest('section'));
         }
       }
       
@@ -343,11 +357,28 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
   };
 
   const handleMouseLeave = (imageId: number) => {
+    // Limpiar timeout previo si existe
+    const existing = leaveTimeoutsRef.current.get(imageId);
+    if (existing) clearTimeout(existing);
+
     setHoverStates((prev) => {
       const newMap = new Map(prev);
       newMap.delete(imageId);
       return newMap;
     });
+
+    // Mantener z-index alto hasta que termine la transición (700ms) para evitar
+    // que la imagen "desaparezca" detrás de otras durante el vuelta a posición
+    setElevatedZIndexIds((prev) => new Set(prev).add(imageId));
+    const timeoutId = setTimeout(() => {
+      leaveTimeoutsRef.current.delete(imageId);
+      setElevatedZIndexIds((prev) => {
+        const next = new Set(prev);
+        next.delete(imageId);
+        return next;
+      });
+    }, 700);
+    leaveTimeoutsRef.current.set(imageId, timeoutId);
   };
 
   return (
@@ -368,9 +399,10 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
           const tiltX = (hoverState.x / 20) * maxTilt; // Rotación basada en movimiento horizontal
           const tiltY = (hoverState.y / 20) * maxTilt * 0.5; // Rotación 3D más pronunciada
           
-          transform = `translate(${hoverState.x}px, ${hoverState.y}px) scale(1.15) rotate(${baseRotation + tiltX}deg) rotateY(${tiltY}deg) rotateX(${-tiltY * 0.3}deg)`;
+          transform = `translate3d(${hoverState.x}px, ${hoverState.y}px, 0) scale(1.15) rotate(${baseRotation + tiltX}deg) rotateY(${tiltY}deg) rotateX(${-tiltY * 0.3}deg)`;
         } else {
-          transform = `translateY(0) scale(1) rotate(${baseRotation}deg)`;
+          // translate3d(0,0,0) mantiene la capa GPU y evita parpadeos al volver
+          transform = `translate3d(0, 0, 0) scale(1) rotate(${baseRotation}deg)`;
         }
         
         // Hacer las imágenes responsive basado en el ancho de ventana
@@ -425,29 +457,37 @@ export default function ScrollImages({ images, sectionId }: ScrollImagesProps) {
             ref={(el) => {
               if (el) imageRefs.current.set(image.id, el);
             }}
-            className="absolute transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer"
+            className="absolute cursor-pointer"
             style={{
               ...getPosition(),
               backgroundColor: image.bgColor,
               opacity: isVisible ? 1 : 0,
               transform: transform,
-              zIndex: hoverState?.isHovering ? 9999 : image.id,
+              // Solo animar transform; filter y z-index estables durante la vuelta evitan el parpadeo
+              transition: 'transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease-out',
+              zIndex: (hoverState?.isHovering || elevatedZIndexIds.has(image.id)) ? 9999 : image.id,
               maxWidth: maxWidth,
               width: 'auto',
               height: 'auto',
               pointerEvents: isVisible ? 'auto' : 'none',
               transformStyle: 'preserve-3d',
-              filter: hoverState?.isHovering ? 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' : 'none',
+              willChange: isVisible ? 'transform' : 'auto',
+              // Mantener la sombra mientras está elevado (incl. los 700ms de vuelta)
+              filter: (hoverState?.isHovering || elevatedZIndexIds.has(image.id))
+                ? 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))'
+                : 'none',
             }}
             onMouseEnter={() => handleMouseEnter(image.id)}
             onMouseMove={(e) => handleMouseMove(image.id, e)}
             onMouseLeave={() => handleMouseLeave(image.id)}
           >
-            {image.src ? (
+            {image.src && isVisible ? (
               <img
                 src={image.src}
                 alt={image.alt || 'Imagen'}
                 className="block w-full h-auto"
+                loading="lazy"
+                decoding="async"
                 style={{ 
                   maxWidth: maxWidth,
                   maxHeight: maxHeight,

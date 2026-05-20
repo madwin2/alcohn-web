@@ -15,7 +15,7 @@ interface SizeSelectorProps {
 export default function SizeSelector({ sizes, selectedSize, onSelect, basePrice }: SizeSelectorProps) {
   return (
     <div className="space-y-3">
-      <h3 className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-3">
+      <h3 className="craft-label mb-3">
         MEDIDAS DISPONIBLES
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -25,10 +25,10 @@ export default function SizeSelector({ sizes, selectedSize, onSelect, basePrice 
             <button
               key={sizeOption.size}
               onClick={() => onSelect(sizeOption.size, sizeOption.price)}
-              className={`inline-flex items-center px-3 py-1.5 border transition-all ${
+              className={`inline-flex min-h-[44px] items-center px-4 py-2 border transition-all ${
                 isSelected
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-300 bg-white hover:border-neutral-500'
+                  ? 'border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] text-white'
+                  : 'border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] hover:border-[var(--alcohn-bronze)]'
               }`}
             >
               <span className="text-[10px] uppercase tracking-wider font-medium">

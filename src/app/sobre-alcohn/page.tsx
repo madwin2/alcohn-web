@@ -1,102 +1,98 @@
-import Link from 'next/link';
-import SectionTitle from '@/components/SectionTitle';
+import PageIntro from '@/components/PageIntro';
+import SalesCtaBand from '@/components/SalesCtaBand';
 
 export const metadata = {
   title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
-  description: 'Empresa de Mar del Plata con más de 4 años de experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
+  description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
 };
+
+const values = [
+  ['Calidad', 'Cada sello debe ser funcional, preciso y estéticamente impecable.'],
+  ['Diseño', 'El proceso de diseño es fundamental para nuestra empresa.'],
+  ['Tecnología', 'Usamos CNC para lograr repetibilidad, profundidad y control.'],
+  ['Oficio', 'Terminamos piezas reales para talleres, marcas y emprendedores.'],
+  ['Innovacion', 'Buscamos siempre la innovacion en el diseño y la tecnologia.'],
+];
 
 export default function SobreAlcohnPage() {
   return (
-    <div className="min-h-screen py-12">
-      <div className="container mx-auto px-4">
-        <SectionTitle
-          title="Sobre Alcohn"
-          subtitle="Diseño industrial y fabricación de precisión"
+    <div className="atelier-page min-h-screen py-10 md:py-16">
+      <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+        <PageIntro
+          label="Sobre Alcohn"
+          title="Diseño industrial aplicado al oficio"
+          description="Alcohn une bronce, CNC y criterio de diseño para fabricar herramientas de marca para marroquineros, carpinteros, cuchilleros, gastronómicos y emprendimientos artesanales."
+          primaryCta={{
+            label: 'Diseñar sello',
+            href: '/buy?mode=custom',
+          }}
+          secondaryCta={{
+            label: 'Ver casos reales',
+            href: '/casos-reales',
+            variant: 'secondary',
+          }}
+          highlights={[
+            'Fabricación en Mar del Plata',
+            'Piezas de bronce con terminación precisa',
+            'Tecnología CNC al servicio de marcas reales',
+          ]}
         />
 
-        <div className="max-w-3xl mx-auto space-y-8">
-          <section className="prose prose-lg">
-            <p className="text-lg text-gray-700 leading-relaxed">
-              Alcohn nació en <strong>Mar del Plata, en 2019</strong>, como un taller de diseño industrial con una misión clara: unir la precisión de la tecnología CNC con el alma artesanal de los oficios tradicionales.
-            </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              <em>"Un sello no es un pedazo de bronce. Es una historia grabada."</em>
-            </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              En nuestros comienzos, atendíamos pedidos de marroquineros y carpinteros locales. Con el tiempo, nuestra reputación creció gracias a la calidad de los grabados y la atención personalizada. Hoy, somos un referente nacional en sellos de bronce, trabajando para emprendedores, talleres, PYMES y grandes marcas.
-            </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              Cada sello está diseñado integralmente en CNC, en ambas caras. Se lijan, pulen y terminan a mano para lograr brillo y suavidad. La parte trasera lleva la marca Alcohn y puede incluir una firma o frase. Los mangos son diseños exclusivos, no piezas estándar del mercado.
-            </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              <strong>Cada sello de Alcohn debe sentirse como una pieza de joyería industrial.</strong>
-            </p>
-          </section>
+        <section className="mb-20 technical-sheet">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
+            <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-10">
+              <p className="craft-label mb-4">Historia</p>
+              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950">
+                Un sello no es un pedazo de bronce
+              </h2>
+            </div>
+            <div className="p-6 md:p-10 space-y-5 text-sm md:text-base leading-relaxed text-neutral-700">
+              <p>
+                Alcohn nació en Mar del Plata como un taller de diseño industrial con una misión clara: unir la precisión de la tecnología CNC con el alma artesanal de los oficios tradicionales.
+              </p>
+              <p>
+                Cada sello está pensado para sentirse como una pieza de joyería industrial: una herramienta duradera, clara y lista para llevar la identidad de una marca al producto final.
+              </p>
+              <p className="text-xl md:text-2xl font-semibold tracking-tight text-neutral-950">
+                Una forma de contar tu historia.
+              </p>
+            </div>
+          </div>
+        </section>
 
-          <section className="bg-secondary rounded-lg p-8 border-l-4 border-accent">
-            <blockquote className="text-xl font-semibold italic text-center text-gray-800">
-              "Detrás de cada sello hay una persona con sueños, esfuerzo y esperanza. Nos obsesiona el detalle, porque sabemos que después ese sello va a ir sobre el producto final de otro emprendedor."
-            </blockquote>
-          </section>
+        <section className="mb-20">
+          <div className="technical-sheet">
+            <div className="relative z-10 border-b border-[var(--alcohn-line)] p-6 md:p-10">
+              <p className="craft-label mb-4">Valores de fabricación</p>
+              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-neutral-950">
+                Precisión, material y criterio
+              </h2>
+            </div>
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+              {values.map(([title, copy]) => (
+                <article key={title} className="border-b md:border-r last:border-r-0 border-[var(--alcohn-line)] p-5 md:p-6">
+                  <h3 className="text-lg font-semibold tracking-tight text-neutral-950">
+                    {title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-relaxed text-neutral-700">
+                    {copy}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold">Nuestros valores</h2>
-            <ul className="space-y-4 text-gray-700">
-              <li className="flex items-start">
-                <span className="text-accent mr-3 text-xl">✓</span>
-                <div>
-                  <strong className="text-gray-900">Calidad:</strong> cada sello debe ser perfecto, funcional y estéticamente impecable.
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent mr-3 text-xl">✓</span>
-                <div>
-                  <strong className="text-gray-900">Creatividad:</strong> innovación constante en diseño y presentación.
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent mr-3 text-xl">✓</span>
-                <div>
-                  <strong className="text-gray-900">Cercanía:</strong> conexión humana real con los clientes.
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent mr-3 text-xl">✓</span>
-                <div>
-                  <strong className="text-gray-900">Innovación:</strong> aplicación constante de nuevas tecnologías.
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent mr-3 text-xl">✓</span>
-                <div>
-                  <strong className="text-gray-900">Adaptabilidad:</strong> soluciones a medida para cada necesidad.
-                </div>
-              </li>
-            </ul>
-          </section>
-
-          <section className="bg-bronce/10 rounded-lg p-6 border border-bronce/20">
-            <h2 className="text-2xl font-semibold mb-4">Nuestra misión</h2>
-            <p className="text-gray-700 leading-relaxed">
-              Fabricar productos de altísima calidad para la personalización profesional de los trabajos de nuestros clientes, brindando una experiencia humana, confiable y cercana, guiada por la innovación, la creatividad y la mejora continua.
-            </p>
-            <p className="text-gray-700 leading-relaxed mt-4">
-              Convertimos a los trabajadores del cuero y la madera en profesionales del oficio, revalorizando su trabajo y su historia.
-            </p>
-          </section>
-
-          <section className="text-center pt-8">
-            <Link
-              href="/proceso"
-              className="inline-block bg-accent text-primary px-8 py-4 rounded-md font-semibold hover:bg-accent-light transition-colors"
-            >
-              Ver cómo trabajamos
-            </Link>
-          </section>
-        </div>
+        <SalesCtaBand
+          title="La mejor forma de conocer Alcohn es probar tu marca en el flujo"
+          copy="Subí tu logo, elegí uso y dejá que la web te muestre el camino hacia muestra, precio y pago."
+          primaryLabel="Subir logo y ver precio"
+          primaryHref="/buy?mode=custom"
+          secondaryLabel="Ver proceso"
+          secondaryHref="/proceso"
+          dark
+        />
       </div>
     </div>
   );
 }
-

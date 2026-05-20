@@ -33,3 +33,5 @@ Una vez que subas las imágenes, actualiza `src/app/page.tsx` (línea ~58-64):
 
 
 
+
+

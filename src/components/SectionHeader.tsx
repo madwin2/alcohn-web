@@ -13,15 +13,19 @@ export default function SectionHeader({
   align = 'center',
   className = '' 
 }: SectionHeaderProps) {
-  const alignClass = align === 'left' ? 'text-left' : 'text-center';
-  
+  const isLeft = align === 'left';
+  const alignClass = isLeft ? 'text-left' : 'text-center';
+  const subtitleClass = isLeft
+    ? 'craft-label max-w-2xl leading-relaxed'
+    : 'craft-label max-w-2xl mx-auto leading-relaxed';
+
   return (
     <div className={`mb-16 ${alignClass} ${className}`}>
       <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-neutral-900 tracking-tight mb-4">
         {title}
       </h2>
       {subtitle && (
-        <p className="text-sm text-neutral-600 uppercase tracking-wider max-w-2xl mx-auto">
+        <p className={subtitleClass}>
           {subtitle}
         </p>
       )}

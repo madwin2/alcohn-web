@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import sharp from 'sharp';
 
+/** Vercel/Next: debe cubrir imagen GPT + análisis de proporción sin cortar antes que el cliente. */
+export const maxDuration = 120;
+
 // Inicializar cliente de OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -84,7 +87,7 @@ SOLO CONVERSIÓN DE COLOR:
 
     try {
       // Convertir el Buffer procesado de vuelta a File para OpenAI
-      const processedFile = new File([imageBuffer], 'logo.png', { type: 'image/png' });
+      const processedFile = new File([new Uint8Array(imageBuffer)], 'logo.png', { type: 'image/png' });
       
       console.log('Enviando imagen a OpenAI. Tamaño:', imageBuffer.length, 'bytes');
       
@@ -97,7 +100,7 @@ SOLO CONVERSIÓN DE COLOR:
         background: 'opaque',
       });
 
-      const optimizedImageBase64 = response.data[0]?.b64_json;
+      const optimizedImageBase64 = response.data?.[0]?.b64_json;
 
       if (!optimizedImageBase64) {
         return NextResponse.json(
@@ -206,7 +209,7 @@ Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin mar
         console.log('gpt-image-1.5 no disponible, intentando con gpt-image-1...');
         try {
           // Convertir el Buffer procesado de vuelta a File para el fallback
-          const processedFile2 = new File([imageBuffer], 'logo.png', { type: 'image/png' });
+          const processedFile2 = new File([new Uint8Array(imageBuffer)], 'logo.png', { type: 'image/png' });
           
           const response2 = await openai.images.edit({
             model: 'gpt-image-1',
@@ -218,7 +221,7 @@ Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin mar
             input_fidelity: 'high',
           });
 
-          const optimizedImageBase642 = response2.data[0]?.b64_json;
+          const optimizedImageBase642 = response2.data?.[0]?.b64_json;
 
           if (!optimizedImageBase642) {
             throw new Error('No se pudo generar la imagen optimizada');

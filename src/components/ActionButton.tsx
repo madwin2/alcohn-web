@@ -19,15 +19,17 @@ export default function ActionButton({
   rel,
   className = '',
 }: ActionButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-medium transition-all duration-150 focus:outline-none focus:ring-1 focus:ring-offset-1';
+  const baseStyles = 'inline-flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-offset-1';
   
   const variantStyles = {
-    primary: 'bg-neutral-900 text-white border border-neutral-900 hover:bg-neutral-800 focus:ring-neutral-900',
-    secondary: 'bg-white text-neutral-900 border border-neutral-300 hover:border-neutral-900 focus:ring-neutral-900',
-    ghost: 'bg-transparent text-neutral-700 border border-transparent hover:border-neutral-300 hover:text-neutral-900 focus:ring-neutral-900',
+    primary: 'bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] hover:bg-[var(--alcohn-ink-soft)] hover:border-bronze focus:ring-neutral-900',
+    secondary: 'bg-[var(--alcohn-surface)] text-neutral-900 border border-neutral-300 hover:border-bronze hover:bg-white focus:ring-neutral-900',
+    ghost: 'bg-transparent text-neutral-700 border border-transparent hover:border-bronze hover:text-neutral-900 focus:ring-neutral-900',
   };
 
-  const icon = variant === 'primary' ? (
+  const showsExternalIcon = Boolean(target === '_blank' || href?.startsWith('http'));
+
+  const icon = variant === 'primary' && showsExternalIcon ? (
     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
     </svg>

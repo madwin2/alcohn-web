@@ -3,7 +3,7 @@
 
 export const config = {
   whatsapp: {
-    number: '5492230000000', // TODO: Reemplazar con número real de WhatsApp
+    number: '5492236209554',
     message: {
       base: 'Hola Alcohn 👋, vi la web y quiero un sello de bronce.',
     },
@@ -28,6 +28,8 @@ export const config = {
     cuit: '00-00000000-0',
   },
 };
+
+
 
 
 

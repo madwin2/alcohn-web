@@ -8,7 +8,7 @@ interface SmoothScrollProps {
 
 export default function SmoothScroll({ children }: SmoothScrollProps) {
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-scroll overflow-x-hidden snap-y snap-mandatory scroll-smooth w-full max-w-full">
+    <div className="w-full max-w-full overflow-x-hidden md:h-[calc(100vh-4rem)] md:overflow-y-scroll md:snap-y md:snap-proximity md:scroll-smooth">
       {children}
     </div>
   );

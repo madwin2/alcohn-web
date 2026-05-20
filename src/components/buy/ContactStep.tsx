@@ -59,16 +59,18 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-          Contacto
+          Datos para guardar tu cotización
         </h2>
-        <p className="text-gray-600">
-          Necesitamos tus datos de contacto para poder enviarte la muestra del sello.
+        <p className="text-gray-600 leading-relaxed">
+          En 2 minutos podés ver medidas, muestra y precio. Pedimos estos datos al inicio para
+          guardar tu cotización, recuperar el proceso si salís de la página y enviarte la muestra si
+          el logo necesita revisión.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="nombre" className="block text-xs uppercase font-semibold text-gray-600 mb-2">
             Nombre completo
           </label>
           <input
@@ -79,8 +81,8 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
               setNombre(e.target.value);
               if (errors.nombre) setErrors({ ...errors, nombre: undefined });
             }}
-            className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.nombre ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+              errors.nombre ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: Juan Pérez"
           />
@@ -90,7 +92,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
         </div>
 
         <div>
-          <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="whatsapp" className="block text-xs uppercase font-semibold text-gray-600 mb-2">
             WhatsApp
           </label>
           <input
@@ -101,8 +103,8 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
               setWhatsapp(e.target.value);
               if (errors.whatsapp) setErrors({ ...errors, whatsapp: undefined });
             }}
-            className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.whatsapp ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+              errors.whatsapp ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: +54 9 223 123-4567"
           />
@@ -115,7 +117,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-xs uppercase font-semibold text-gray-600 mb-2">
             Email
           </label>
           <input
@@ -126,8 +128,8 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: undefined });
             }}
-            className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+              errors.email ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: juan.perez@email.com"
           />
@@ -138,7 +140,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
 
         <button
           type="submit"
-          className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="w-full min-h-[44px] px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] focus:ring-offset-2"
         >
           Continuar
         </button>

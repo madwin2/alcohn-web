@@ -1,206 +1,193 @@
+import Image from 'next/image';
+import Link from 'next/link';
 import SpecStrip from '@/components/SpecStrip';
-import ActionButton from '@/components/ActionButton';
 import SectionHeader from '@/components/SectionHeader';
+import StampSpecifications from '@/components/StampSpecifications';
+import PageIntro from '@/components/PageIntro';
+import SalesCtaBand from '@/components/SalesCtaBand';
 import SizeRecommendationsSection from '@/components/sellos/SizeRecommendationsSection';
+import PurchaseInclusions from '@/components/PurchaseInclusions';
+import { stampUseCases } from '@/data/stampUseCases';
 
 export const metadata = {
   title: 'Sellos Personalizados - Alcohn',
-  description: 'Diseña tu sello único subiendo tu logo. Sellos de bronce a medida con precisión industrial.',
+  description: 'Diseñá tu sello único subiendo tu logo. Sellos de bronce a medida con precisión CNC.',
 };
+
+const processCards = [
+  {
+    code: '01',
+    title: 'Subís tu logo',
+    copy: 'Aceptamos PNG, JPG o SVG. El flujo guarda tus datos para retomar el pedido si el archivo necesita revisión.',
+  },
+  {
+    code: '02',
+    title: 'Elegís uso y medida',
+    copy: 'Cuero, madera, packaging, alimentos u otro material. Te mostramos medidas sugeridas para comprar con más seguridad.',
+  },
+  {
+    code: '03',
+    title: 'Ves muestra y precio',
+    copy: 'Antes de fabricar, el pedido queda claro: logo, medida, material, precio y forma de pago.',
+  },
+];
 
 export default function SellosPersonalizadosPage() {
   return (
-    <div className="min-h-screen bg-white py-16">
+    <div className="atelier-page min-h-screen py-10 md:py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-        {/* Hero */}
-        <div className="mb-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 mb-6 tracking-tight">
-            Sello personalizado
-          </h1>
-          <p className="text-base text-neutral-700 max-w-2xl mx-auto leading-relaxed">
-            Subí tu logo y diseñamos tu sello único. Fabricamos sellos de bronce a medida con precisión CNC, 
-            garantizando marcas profundas y duraderas en cuero y madera. Ideal para estampar tu marca personal o empresa.
-          </p>
-        </div>
+        <PageIntro
+          label="Sello personalizado"
+          title="Tu logo convertido en herramienta de marca"
+          description="Para marroquinería, carpintería, ceramica, packaging, gastronomía, lacre y proyectos artesanales. Un sello de bronce te permite marcar tus productos, aportandole un valor agreagado y distincion."
+          primaryCta={{
+            label: 'Subir logo y ver precio',
+            href: '/buy?mode=custom',
+          }}
+          secondaryCta={{
+            label: 'Ver medidas recomendadas',
+            href: '#medidas',
+            variant: 'secondary',
+          }}
+          highlights={[
+            'Muestra digital antes de fabricar',
+            'Pago online seguro con la plataforma de BBVA',
+            'Atencion personalizada en todo momento',
+          ]}
+        />
 
-        {/* Spec Strip */}
         <SpecStrip />
 
-        {/* Galería de imágenes */}
         <section className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Imagen grande izquierda */}
-            <div className="relative aspect-[3/2]">
-              <img
-                src="/images/sello/sellologo.png"
-                alt="Sello personalizado de bronce"
-                className="w-full h-full object-cover"
-              />
+          <div className="mb-8 grid grid-cols-1 items-end gap-6 lg:grid-cols-[0.62fr_0.38fr]">
+            <div>
+              <p className="craft-label mb-4">Elegí por intención</p>
+              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950">
+                El mismo sello, explicado para el material que vas a marcar.
+              </h2>
             </div>
-            
-            {/* Imágenes derecha - divididas en dos */}
-            <div className="grid grid-cols-1 gap-4">
-              {/* Imagen superior derecha */}
-              <div className="relative aspect-[3/2]">
-                <img
-                  src="/images/sello/sellologo.png"
-                  alt="Detalle de sello personalizado"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              {/* Imagen inferior derecha */}
-              <div className="relative aspect-[3/2]">
-                <img
-                  src="/images/sello/selloestandar.png"
-                  alt="Aplicación de sello en material"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <p className="text-sm leading-relaxed text-neutral-700">
+              Si venís por cuero, madera, pan, packaging o hielo, entrá por una guía específica con fotos y
+              medidas recomendadas. El diseñador online sigue siendo el mismo.
+            </p>
+          </div>
+
+          <div className="technical-sheet">
+            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {stampUseCases.map((useCase, index) => (
+                <Link
+                  key={useCase.slug}
+                  href={`/sellos/${useCase.slug}`}
+                  className="group relative min-h-[220px] overflow-hidden border-b border-r border-[var(--alcohn-line)] p-5 text-white"
+                >
+                  <Image
+                    src={useCase.heroImage}
+                    alt={useCase.heroAlt}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,16,14,0.12)_0%,rgba(17,16,14,0.58)_62%,rgba(17,16,14,0.86)_100%)]" />
+                  <div className="relative flex h-full min-h-[180px] flex-col justify-between">
+                    <p className="text-[10px] font-semibold uppercase text-white/62">
+                      {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <div>
+                      <h3 className="text-2xl font-semibold leading-tight tracking-tight">{useCase.oficio}</h3>
+                      <p className="mt-2 text-xs font-semibold uppercase text-white/72">{useCase.material}</p>
+                      <p className="mt-5 text-xs font-semibold uppercase text-white/80">Ver fotos y medidas</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Cómo funciona - 3 pasos */}
+        <section className="mb-20 grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-4">
+          <div className="material-frame relative aspect-[4/3] overflow-hidden">
+            <Image
+              src="/images/sello/sellologo.png"
+              alt="Sello personalizado de bronce"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              priority
+            />
+            <div className="absolute left-4 top-4 border border-white/20 bg-black/70 px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase text-white">Logo a bronce</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div className="technical-sheet p-6 md:p-8 flex flex-col justify-between">
+              <div className="relative z-10">
+                <p className="craft-label mb-5">Control antes de fabricar</p>
+                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-950">
+                  Sello de Bronce Personalizado
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-neutral-700">
+                  El usuario no sólo consulta: deja datos, ve el camino, entiende el precio y puede pagar. Si el logo falla, Alcohn queda con contexto para recuperar la venta.
+                </p>
+              </div>
+            </div>
+
+            <div className="material-frame relative aspect-[4/3] overflow-hidden">
+              <Image
+                src="/images/sello/selloestandar.png"
+                alt="Aplicación de sello en material"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 42vw"
+              />
+            </div>
+          </div>
+        </section>
+
+        <StampSpecifications />
+
+        <div id="medidas" className="mb-20">
+          <SizeRecommendationsSection />
+        </div>
+
+        <PurchaseInclusions className="mb-20" showKitIllustration />
+
         <section className="mb-20">
           <SectionHeader
             title="Cómo funciona"
-            subtitle="Proceso simple en 3 pasos"
-            align="center"
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-            {/* Paso 1 */}
-            <div className="border border-neutral-300 bg-white p-8">
-              <div className="mb-6">
-                <div className="w-12 h-12 border border-neutral-900 flex items-center justify-center mb-4">
-                  <span className="text-lg font-semibold text-neutral-900">01</span>
-                </div>
-                <h3 className="text-xl font-semibold text-neutral-900 mb-3 tracking-tight">
-                  Subís tu logo
-                </h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Subí tu logo en formato PNG, JPG o SVG. Aceptamos logos con fondo transparente o los recortamos por vos.
-                </p>
-              </div>
-            </div>
-
-            {/* Paso 2 */}
-            <div className="border border-neutral-300 bg-white p-8">
-              <div className="mb-6">
-                <div className="w-12 h-12 border border-neutral-900 flex items-center justify-center mb-4">
-                  <span className="text-lg font-semibold text-neutral-900">02</span>
-                </div>
-                <h3 className="text-xl font-semibold text-neutral-900 mb-3 tracking-tight">
-                  Elegís medida
-                </h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Elegís un tamaño recomendado o especificás tu medida exacta. Fabricamos desde 10×10mm hasta 100×100mm y todas las variantes rectangulares.
-                </p>
-              </div>
-            </div>
-
-            {/* Paso 3 */}
-            <div className="border border-neutral-300 bg-white p-8">
-              <div className="mb-6">
-                <div className="w-12 h-12 border border-neutral-900 flex items-center justify-center mb-4">
-                  <span className="text-lg font-semibold text-neutral-900">03</span>
-                </div>
-                <h3 className="text-xl font-semibold text-neutral-900 mb-3 tracking-tight">
-                  Ves muestra digital
-                </h3>
-                <p className="text-sm text-neutral-600 leading-relaxed">
-                  Te enviamos una muestra digital del sello antes de fabricarlo. Aprobás y fabricamos tu sello en 7-10 días hábiles.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Tamaños recomendados */}
-        <SizeRecommendationsSection />
-
-        {/* Especificaciones */}
-        <section className="mb-20 border-t border-neutral-300 pt-16">
-          <SectionHeader
-            title="Especificaciones"
+            subtitle="Un flujo simple para comprar, no para abrir una conversación nueva."
             align="left"
           />
 
-          <div className="max-w-3xl">
-            <dl className="divide-y divide-neutral-200">
-              <div className="py-6">
-                <dt className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                  Material
-                </dt>
-                <dd className="text-sm text-neutral-900">
-                  Bronce de alta calidad, mecanizado con precisión CNC
-                </dd>
-              </div>
-              <div className="py-6">
-                <dt className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                  Profundidad
-                </dt>
-                <dd className="text-sm text-neutral-900">
-                  Desbaste general de 3mm y grabado profundo de 1.7mm.
-                </dd>
-              </div>
-              <div className="py-6">
-                <dt className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                  Uso
-                </dt>
-                <dd className="text-sm text-neutral-900">
-                  Cuero genuino y sintético, maderas duras y blandas, ceramica en crudo, lacre, alimentos, hielo.
-                </dd>
-              </div>
-              <div className="py-6">
-                <dt className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                  Tiempo de producción
-                </dt>
-                <dd className="text-sm text-neutral-900">
-                  7-10 días hábiles desde la aprobación del diseño
-                </dd>
-              </div>
-              <div className="py-6">
-                <dt className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-                  Incluye
-                </dt>
-                <dd className="text-sm text-neutral-900">
-                  <ul className="list-none space-y-1">
-                    <li>· Sello de bronce personalizado</li>
-                    <li>· Mango ergonómico</li>
-                    <li>· Adaptacion para Remachadora</li>
-                    <li>· Muestra digital antes de fabricar</li>
-                  </ul>
-                </dd>
-              </div>
-            </dl>
+          <div className="technical-sheet">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3">
+              {processCards.map((step) => (
+                <article key={step.code} className="border-b md:border-b-0 md:border-r last:border-r-0 border-[var(--alcohn-line)] p-6 md:p-8">
+                  <div className="mb-8 flex h-11 w-11 items-center justify-center border border-[var(--alcohn-line-strong)] bg-white text-sm font-semibold">
+                    {step.code}
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-tight text-neutral-950">
+                    {step.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-relaxed text-neutral-700">
+                    {step.copy}
+                  </p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* CTA Fijo */}
-        <div className="border-t border-neutral-300 pt-12">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">
-                ¿Listo para diseñar tu sello?
-              </h3>
-              <p className="text-sm text-neutral-600">
-                Iniciá el proceso de diseño y recibí tu muestra digital en 24-48 horas.
-              </p>
-            </div>
-            <ActionButton
-              href="/buy?mode=custom"
-              variant="primary"
-              className="flex-shrink-0"
-            >
-              Iniciar diseño
-            </ActionButton>
-          </div>
-        </div>
+        <SalesCtaBand
+          title="Diseñá el sello con tu logo y avanzá con precio real"
+          copy="El recorrido guarda la información clave para que puedas comprar online y para que Alcohn pueda recuperar el pedido si el mockup necesita revisión."
+          primaryLabel="Subir logo y ver precio"
+          primaryHref="/buy?mode=custom"
+          secondaryLabel="Ver proceso completo"
+          secondaryHref="/proceso"
+          dark
+        />
       </div>
     </div>
   );
 }
-
-

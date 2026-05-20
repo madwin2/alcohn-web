@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CartItemRow from '@/components/cart/CartItemRow';
 import CartSummary from '@/components/cart/CartSummary';
+import ActionButton from '@/components/ActionButton';
+import PurchaseInclusions from '@/components/PurchaseInclusions';
 import { config } from '@/lib/config';
+import { consumeCheckoutPrefill, cartLooksLikeWizardPersonalizado } from '@/lib/checkoutPrefill';
+import { peekWizardSupabaseSession, clearWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
+import { createCheckoutIntent, uploadComprobante } from '@/lib/supabase/mockupApiClient';
+import { sanitizeCartItemsForDb } from '@/lib/supabase/cartItems';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,35 +28,54 @@ export default function CheckoutPage() {
     notas: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [openpayLoading, setOpenpayLoading] = useState(false);
+  const [openpayError, setOpenpayError] = useState<string | null>(null);
+  const [checkoutSaving, setCheckoutSaving] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [openpayTestAmount, setOpenpayTestAmount] = useState<number | null>(null);
   // Guardar datos del pedido antes de limpiar el carrito
   const [orderData, setOrderData] = useState<{
     items: typeof items;
     subtotal: number;
   } | null>(null);
 
-  const subtotal = getSubtotal();
-  const hasItems = items.length > 0 || orderData !== null;
+  const [prefillFromWizard, setPrefillFromWizard] = useState(false);
+  const appliedCheckoutPrefillRef = useRef(false);
 
-  // Redirigir si no hay items y no hay datos de orden guardados
-  if (!hasItems && !orderData) {
-    return (
-      <div className="min-h-screen bg-white py-16">
-        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-          <div className="max-w-2xl mx-auto text-center py-24">
-            <h1 className="text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
-              No hay productos en tu carrito
-            </h1>
-            <Link
-              href="/carrito"
-              className="inline-block border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors"
-            >
-              Volver al carrito
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const subtotal = getSubtotal();
+  const hasCartContent = items.length > 0 || orderData !== null;
+  const currentItems = orderData?.items || items;
+  const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
+
+  useEffect(() => {
+    fetch('/api/checkout/openpay')
+      .then((r) => r.json())
+      .then((data: { testAmountArs?: number | null }) => {
+        if (typeof data.testAmountArs === 'number' && data.testAmountArs > 0) {
+          setOpenpayTestAmount(data.testAmountArs);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (appliedCheckoutPrefillRef.current) return;
+    if (!hasCartContent) return;
+    if (!cartLooksLikeWizardPersonalizado(items)) return;
+    const p = consumeCheckoutPrefill();
+    if (!p) return;
+    appliedCheckoutPrefillRef.current = true;
+    setFormData((prev) => ({
+      ...prev,
+      nombre: p.nombre || prev.nombre,
+      whatsapp: p.whatsapp || prev.whatsapp,
+      email: p.email || prev.email,
+      provincia: p.provincia || prev.provincia,
+      ciudad: p.ciudad || prev.ciudad,
+      notas: p.notas || prev.notas,
+    }));
+    setPrefillFromWizard(true);
+  }, [hasCartContent, items, orderData]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -83,34 +108,80 @@ export default function CheckoutPage() {
     }
   };
 
+  const buildCheckoutIntentPayload = (metodo: 'Openpay' | 'Transferencia') => {
+    const wizardSession = peekWizardSupabaseSession();
+    const cartItems = sanitizeCartItemsForDb(orderData?.items ?? items);
+    return {
+      metodo_pago: metodo,
+      cliente: {
+        nombre: formData.nombre.trim(),
+        telefono: formData.whatsapp.trim(),
+        email: formData.email.trim() || undefined,
+      },
+      cliente_id: wizardSession?.cliente_id,
+      mockup_solicitud_id: wizardSession?.mockup_solicitud_id,
+      items: cartItems,
+      provincia: formData.provincia,
+      ciudad: formData.ciudad,
+      notas: formData.notas,
+    };
+  };
+
+  const handleOpenpayCheckout = async () => {
+    setOpenpayError(null);
+    setCheckoutError(null);
+    setOpenpayLoading(true);
+    try {
+      const intent = await createCheckoutIntent(buildCheckoutIntentPayload('Openpay'));
+      setOrderData({ items: [...items], subtotal });
+      setOrderId(intent.orden_id);
+
+      const payloadItems = items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        qty: item.qty,
+      }));
+      const res = await fetch('/api/checkout/openpay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: payloadItems, orden_id: intent.orden_id }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { checkoutUrl?: string; error?: string };
+      if (!res.ok) {
+        setOpenpayError(data.error || 'No se pudo iniciar el pago con tarjeta');
+        return;
+      }
+      if (data.checkoutUrl) {
+        clearCart();
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      setOpenpayError('Respuesta inválida del servidor');
+    } catch (e) {
+      setOpenpayError(e instanceof Error ? e.message : 'Error de red. Intentá de nuevo.');
+    } finally {
+      setOpenpayLoading(false);
+    }
+  };
+
   const handleCreateOrder = async () => {
-    // TODO: Crear orden en base de datos cuando esté disponible
-    // Por ahora generamos un ID temporal
-    const tempOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    setOrderId(tempOrderId);
-
-    // Guardar datos del pedido antes de limpiar el carrito
-    setOrderData({
-      items: [...items], // Copia de los items
-      subtotal: subtotal,
-    });
-
-    // TODO: Guardar en BD
-    // const order = {
-    //   id: tempOrderId,
-    //   items: items,
-    //   customer: formData,
-    //   subtotal: subtotal,
-    //   seña: config.seña.amount,
-    //   status: 'pendiente_pago',
-    //   createdAt: new Date().toISOString(),
-    // };
-    // await fetch('/api/orders', { method: 'POST', body: JSON.stringify(order) });
-
-    // Limpiar carrito después de guardar los datos
-    clearCart();
-    
-    setStep(3);
+    setCheckoutError(null);
+    setCheckoutSaving(true);
+    try {
+      const intent = await createCheckoutIntent(buildCheckoutIntentPayload('Transferencia'));
+      setOrderId(intent.orden_id);
+      setOrderData({
+        items: [...items],
+        subtotal,
+      });
+      clearCart();
+      setStep(3);
+    } catch (e) {
+      setCheckoutError(e instanceof Error ? e.message : 'No se pudo registrar el pedido');
+    } finally {
+      setCheckoutSaving(false);
+    }
   };
 
   const buildWhatsAppMessage = () => {
@@ -155,30 +226,54 @@ export default function CheckoutPage() {
     const file = e.target.files?.[0];
     if (!file || !orderId) return;
 
-    // TODO: Subir comprobante a BD cuando esté disponible
-    // const uploadData = new FormData();
-    // uploadData.append('receipt', file);
-    // uploadData.append('orderId', orderId);
-    // uploadData.append('phone', formData.whatsapp);
-    // const response = await fetch('/api/orders/upload-receipt', {
-    //   method: 'POST',
-    //   body: uploadData,
-    // });
-    // if (response.ok) {
-    //   // Actualizar estado de la orden a "señada"
-    //   await fetch(`/api/orders/${orderId}/status`, {
-    //     method: 'PATCH',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ status: 'señada' }),
-    //   });
-    // }
-
-    console.log('Comprobante subido:', { orderId, file, phone: formData.whatsapp });
-    alert(`Comprobante recibido para el pedido ${orderId}. Te contactaremos por WhatsApp para confirmar el pago y comenzaremos a fabricar tu sello.`);
+    try {
+      await uploadComprobante(orderId, file);
+      clearWizardSupabaseSession();
+      alert(
+        `Comprobante recibido. Número de pedido: ${orderId.slice(0, 8)}… Te contactaremos por WhatsApp para confirmar el pago.`
+      );
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo subir el comprobante. Intentá de nuevo o envialo por WhatsApp.'
+      );
+    }
   };
 
+  if (!hasCartContent) {
+    return (
+      <div className="atelier-page min-h-screen py-16">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+          <div className="max-w-2xl mx-auto text-center py-20">
+            <h1 className="text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
+              No hay productos en tu carrito
+            </h1>
+            <p className="text-neutral-600 mb-8">
+              Podés diseñar un sello con tu logo o comprar un diseño estándar listo para personalizar.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <ActionButton href="/buy?mode=custom" variant="primary" className="w-full sm:w-auto px-6">
+                Subir logo y ver precio
+              </ActionButton>
+              <ActionButton href="/sellos/estandar" variant="secondary" className="w-full sm:w-auto px-6">
+                Comprar estándar
+              </ActionButton>
+            </div>
+            <Link
+              href="/carrito"
+              className="mt-6 inline-flex min-h-9 items-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
+            >
+              Volver al carrito
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white py-16">
+    <div className="atelier-page min-h-screen py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         {/* Header */}
         <div className="mb-12">
@@ -196,7 +291,12 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-semibold text-neutral-900 mb-6 tracking-tight">
                     Datos de contacto
                   </h2>
-                  
+                  {prefillFromWizard && (
+                    <div className="mb-6 border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-4 py-3 text-sm text-neutral-700">
+                      Completamos estos datos con lo que cargaste al diseñar tu sello. Revisalos y
+                      corregí lo que necesites antes de continuar.
+                    </div>
+                  )}
                   <div className="space-y-4">
                     <div>
                       <label htmlFor="nombre" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
@@ -328,14 +428,14 @@ export default function CheckoutPage() {
                   </h2>
                   
                   <div className="space-y-4 mb-6">
-                    {(orderData?.items || items).map((item) => (
-                      <div key={item.id} className="border border-neutral-200 bg-white p-4">
+                    {currentItems.map((item) => (
+                      <div key={item.id} className="material-card p-4">
                         <CartItemRow item={item} showImage={true} />
                       </div>
                     ))}
                   </div>
 
-                  <div className="bg-neutral-50 border border-neutral-200 p-6 space-y-3">
+                  <div className="technical-sheet p-6 space-y-3">
                     <div>
                       <p className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
                         Datos de contacto
@@ -356,13 +456,57 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="pt-6 border-t border-neutral-200 space-y-3">
+                  {openpayTestAmount != null && (
+                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-sm text-center">
+                      Modo prueba Openpay: la tarjeta se cobrará{' '}
+                      <strong>${openpayTestAmount.toLocaleString('es-AR')}</strong> (el pedido en
+                      Supabase sigue con el precio real del carrito).
+                    </p>
+                  )}
                   <button
-                    onClick={handleCreateOrder}
-                    className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                    type="button"
+                    onClick={handleOpenpayCheckout}
+                    disabled={openpayLoading || checkoutSaving}
+                    className="w-full border border-neutral-900 bg-white text-neutral-900 px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    Realizar compra
+                    {openpayLoading
+                      ? 'Conectando con Openpay…'
+                      : openpayTestAmount != null
+                        ? `Pagar $${openpayTestAmount.toLocaleString('es-AR')} con tarjeta (prueba Openpay)`
+                        : `Pagar $${subtotal.toLocaleString('es-AR')} con tarjeta (Openpay)`}
+                  </button>
+                  <p className="text-xs text-neutral-500 text-center">
+                    Te llevamos al checkout seguro de BBVA Openpay. La intención de pago vence en unos
+                    minutos.
+                  </p>
+                  {openpayError && (
+                    <p className="text-xs text-red-600 text-center" role="alert">
+                      {openpayError}
+                    </p>
+                  )}
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center" aria-hidden>
+                      <span className="w-full border-t border-neutral-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-wider text-neutral-400">
+                      <span className="bg-white px-3">o</span>
+                    </div>
+                  </div>
+                  {checkoutError && (
+                    <p className="text-xs text-red-600 text-center" role="alert">
+                      {checkoutError}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleCreateOrder}
+                    disabled={checkoutSaving || openpayLoading}
+                    className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {checkoutSaving ? 'Registrando pedido…' : 'Realizar compra (seña por transferencia)'}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setStep(1)}
                     className="w-full text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
                   >
@@ -372,7 +516,7 @@ export default function CheckoutPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <div className="border border-[var(--alcohn-bronze)] bg-[var(--alcohn-paper)] p-6 mb-6">
                   <div className="flex items-center gap-3 mb-4">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -396,7 +540,7 @@ export default function CheckoutPage() {
                   <h3 className="text-lg font-semibold text-neutral-900 mb-4 tracking-tight">
                     Datos de la cuenta a transferir
                   </h3>
-                  <div className="bg-neutral-50 border border-neutral-200 p-6 space-y-3">
+                  <div className="technical-sheet p-6 space-y-3">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-neutral-600">Banco:</span>
@@ -441,7 +585,7 @@ export default function CheckoutPage() {
                   <h3 className="text-lg font-semibold text-neutral-900 mb-4 tracking-tight">
                     Proceso de pago
                   </h3>
-                  <div className="bg-white border border-neutral-200 p-6 space-y-4">
+                  <div className="material-card p-6 space-y-4">
                     <div className="space-y-3 text-sm text-neutral-700">
                       <p className="font-medium text-neutral-900">
                         Transferí la seña de <strong>${config.seña.amount.toLocaleString('es-AR')}</strong> a la cuenta indicada arriba.
@@ -457,8 +601,8 @@ export default function CheckoutPage() {
                           <strong>Enviarlo por WhatsApp</strong> junto con el número de pedido <span className="font-mono font-semibold">{orderId}</span>.
                         </li>
                       </ol>
-                      <div className="bg-blue-50 border border-blue-200 p-4 mt-4 rounded">
-                        <p className="text-xs text-blue-900">
+                      <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-4 mt-4">
+                        <p className="text-xs text-neutral-700">
                           <strong>¿Qué pasa después?</strong> Una vez que recibamos el comprobante, comenzaremos a fabricar tu sello y te contactaremos por WhatsApp con la foto del sello terminado.
                         </p>
                       </div>
@@ -470,7 +614,7 @@ export default function CheckoutPage() {
                   <h3 className="text-lg font-semibold text-neutral-900 mb-4 tracking-tight">
                     Subir comprobante de transferencia
                   </h3>
-                  <div className="border border-neutral-200 bg-white p-6 space-y-4">
+                  <div className="material-card p-6 space-y-4">
                     <div>
                       <label htmlFor="receipt" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
                         Comprobante de transferencia
@@ -486,7 +630,7 @@ export default function CheckoutPage() {
                         Subí una foto o PDF del comprobante de transferencia
                       </p>
                     </div>
-                    <div className="bg-neutral-50 border border-neutral-200 p-4">
+                    <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-4">
                       <p className="text-xs text-neutral-700">
                         <strong>Número de pedido:</strong> <span className="font-mono">{orderId}</span>
                       </p>
@@ -498,7 +642,7 @@ export default function CheckoutPage() {
                   <h3 className="text-lg font-semibold text-neutral-900 mb-4 tracking-tight">
                     O enviar por WhatsApp
                   </h3>
-                  <div className="border border-neutral-200 bg-white p-6">
+                  <div className="material-card p-6">
                     <button
                       onClick={handleSendWhatsApp}
                       className="w-full bg-green-600 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 flex items-center justify-center gap-2"
@@ -529,28 +673,34 @@ export default function CheckoutPage() {
           {/* Sidebar resumen */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24">
-              <div className="border border-neutral-200 bg-white p-6 space-y-6">
+              <div className="technical-sheet p-6 space-y-6">
                 <h2 className="text-lg font-semibold text-neutral-900 tracking-tight">
                   Resumen
                 </h2>
                 
                 <CartSummary subtotal={orderData?.subtotal || subtotal} />
 
+                <PurchaseInclusions
+                  variant={isPersonalizedOrder ? 'personalizado' : 'estandar'}
+                  compact
+                  title={isPersonalizedOrder ? 'Incluido con tu sello' : 'Incluido en la compra'}
+                />
+
                 <div className="pt-4 border-t border-neutral-200">
                   <p className="text-xs text-neutral-500 mb-2">
                     <strong>Información de pago:</strong>
                   </p>
                   <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>• Seña de $10.000 para empezar</li>
+                    <li>• Pago total con tarjeta (Openpay) o seña por transferencia</li>
+                    <li>• Seña de $10.000 para empezar (transferencia)</li>
                     <li>• Resto cuando está listo</li>
-                    <li>• Transferencia bancaria</li>
                     <li>• Factura C disponible</li>
                   </ul>
                 </div>
 
                 <Link
                   href="/carrito"
-                  className="block text-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
+                  className="flex min-h-9 items-center justify-center text-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
                 >
                   ← Volver al carrito
                 </Link>

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import WhatsappButton from '@/components/WhatsappButton';
 import { CartProvider } from '@/contexts/CartContext';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -25,6 +26,10 @@ export default function RootLayout({
           <Header />
           <main className="overflow-x-hidden w-full max-w-full">{children}</main>
           <Footer />
+          <WhatsappButton className="fixed bottom-4 right-4 z-50 h-11 w-11 px-0 md:w-auto md:px-5">
+            <span className="md:hidden">WA</span>
+            <span className="hidden md:inline">WhatsApp</span>
+          </WhatsappButton>
         </CartProvider>
       </body>
     </html>

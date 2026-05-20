@@ -1,6 +1,6 @@
-# Alcohn Web
+# Alcohn Web 2026
 
-Sitio web de Alcohn - Sellos de bronce personalizados fabricados en CNC.
+Sitio web de Alcohn — sellos de bronce personalizados (Next.js). Incluye wizard de compra, integración Supabase y checkout Openpay/transferencia.
 
 ## Stack
 
@@ -65,6 +65,8 @@ Toda la documentación del proyecto está en `/docs`. Los archivos principales s
 ## TODOs
 
 Ver `docs/build-log.md` para la lista completa de pendientes y mejoras futuras.
+
+
 
 
 

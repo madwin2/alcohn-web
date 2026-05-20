@@ -16,22 +16,22 @@ export default function Footer() {
             <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">Productos</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/productos/sellos-para-cuero" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/productos/sello-personalizado-cuero" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para cuero
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sellos-para-madera" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/productos/sello-personalizado-madera" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para madera
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sellos-para-alimentos" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/productos/sello-para-alimentos" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Para alimentos
                 </Link>
               </li>
               <li>
-                <Link href="/productos/abecedarios" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/abecedarios" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Abecedarios
                 </Link>
               </li>
@@ -41,22 +41,22 @@ export default function Footer() {
             <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">Información</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/proceso" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/proceso" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Cómo funciona
                 </Link>
               </li>
               <li>
-                <Link href="/sobre-alcohn" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/sobre-alcohn" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Sobre Alcohn
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/faq" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Preguntas frecuentes
                 </Link>
               </li>
               <li>
-                <Link href="/contacto" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                <Link href="/contacto" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
                   Contacto
                 </Link>
               </li>
@@ -67,8 +67,8 @@ export default function Footer() {
             <ul className="space-y-2">
               <li className="text-sm text-neutral-400">Mar del Plata, Argentina</li>
               <li>
-                <Link href="/buy?mode=custom" className="text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
-                  Cotizar ahora
+                <Link href="/buy?mode=custom" className="inline-flex min-h-9 items-center text-sm text-neutral-400 hover:text-white transition-colors border-b border-transparent hover:border-white">
+                  Diseñar mi sello
                 </Link>
               </li>
             </ul>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
 
 // Inicializar cliente de OpenAI
 const openai = new OpenAI({
@@ -61,7 +62,7 @@ Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin mar
   "aspectRatio": number
 }`;
 
-    const createRequest = (model: string) => ({
+    const createRequest = (model: string): ChatCompletionCreateParamsNonStreaming => ({
       model,
       messages: [
         {

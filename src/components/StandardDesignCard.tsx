@@ -19,9 +19,9 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
 
   return (
     <Link href={`/sellos/estandar/${design.slug}`} className="group block">
-      <div className="border border-neutral-300 bg-white transition-all duration-150 hover:border-neutral-900">
+      <div className="material-card p-3">
         {/* Image */}
-        <div className="aspect-square bg-neutral-50 relative overflow-hidden border-b border-neutral-300">
+        <div className="material-frame aspect-square relative overflow-hidden">
           {design.image ? (
             <Image
               src={design.image}
@@ -29,6 +29,7 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
               width={400}
               height={400}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              priority
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-neutral-300">
@@ -40,9 +41,9 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="px-2 pb-2 pt-5 space-y-4">
           {/* Collection label */}
-          <div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
+          <div className="craft-label">
             {collectionLabels[design.collection] || design.collection}
           </div>
 
@@ -59,18 +60,21 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
           )}
 
           {/* Price */}
-          <div className="pt-4 border-t border-neutral-200">
+          <div className="pt-4 border-t border-[var(--alcohn-line)]">
             <p className="text-sm text-neutral-600">
-              <span className="text-[10px] uppercase tracking-wider text-neutral-500 mr-2">
+              <span className="craft-label mr-2">
                 Desde
               </span>
               {priceDisplay}
+            </p>
+            <p className="mt-2 text-xs text-neutral-500">
+              Incluye sello en bronce, medida elegida y guía de uso.
             </p>
           </div>
 
           {/* CTA */}
           <div className="pt-2">
-            <div className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-medium bg-white text-neutral-900 border border-neutral-300 hover:border-neutral-900 transition-all duration-150">
+            <div className="w-full inline-flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-semibold bg-[var(--alcohn-surface)] text-neutral-900 border border-neutral-300 hover:border-[var(--alcohn-bronze)] hover:bg-white transition-all duration-200">
               Elegir este diseño
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

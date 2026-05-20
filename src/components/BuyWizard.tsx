@@ -1,11 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Stepper from './Stepper';
 import ContactStep from './buy/ContactStep';
+import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
+import { useCart } from '@/contexts/CartContext';
+import { saveCheckoutPrefill } from '@/lib/checkoutPrefill';
+import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
+import {
+  syncWizardContact,
+  ensureMockupSolicitud,
+  syncWizardLogos,
+  syncWizardMockupPreview,
+  markMockupPendingApproval,
+  markCheckoutStarted,
+} from '@/lib/wizardSupabaseSync';
+import { patchMockupSolicitud } from '@/lib/supabase/mockupApiClient';
 
 interface BuyWizardData {
   nombre?: string;
@@ -28,7 +41,7 @@ interface BuyWizardData {
   selectedPrice?: number;
   customSize?: { width: number; height: number };
   approximateSizeKey?: 'pequeño' | 'medio' | 'grande'; // Si viene de una medida aproximada
-  sizeOptions?: Array<{ size: string; price: number; recommended?: boolean }>;
+  sizeOptions?: Array<{ size: string; price: number; recommended?: boolean; ratio: number }>;
   previewGenerated?: boolean;
   needsManualPreview?: boolean; // true si necesita muestra manual vía WhatsApp
   isAnalyzing?: boolean; // true mientras se analiza el logo
@@ -38,9 +51,29 @@ interface BuyWizardData {
   isGeneratingMockup?: boolean; // true mientras se genera el mockup
 }
 
+type WizardMaterial = NonNullable<BuyWizardData['material']>;
+
 interface BuyWizardProps {
   initialProduct?: string;
+  initialMaterial?: WizardMaterial;
   onComplete?: (data: BuyWizardData) => void;
+}
+
+const WIZARD_MATERIAL_LABELS: Record<string, string> = {
+  cuero: 'Cuero',
+  madera: 'Madera',
+  ambos: 'Cuero y madera',
+  ceramica: 'Cerámica',
+  alimentos: 'Alimentos',
+  otros: 'Otros',
+};
+
+/** Miniatura del carrito: mockup si es URL corta; si no, textura según material (evita data URLs enormes en localStorage). */
+function wizardCartImageUrl(d: BuyWizardData): string {
+  const u = d.thumbnailUrl || d.mockupUrl || '';
+  if (u && !u.startsWith('data:')) return u;
+  if (d.material === 'madera') return '/mockup-textures/madera.jpg';
+  return '/mockup-textures/cuero.jpg';
 }
 
 // Definición de medidas por categoría (en centímetros, convertidas a mm después)
@@ -212,61 +245,267 @@ const sizeMap: Record<string, { size: string; price: number }> = {
   grande: { size: '60x60mm', price: 66000 },
 };
 
-// Función para calcular medidas sugeridas basadas en el aspect ratio del logo
-// Calcula medidas proporcionales al logo y luego las categoriza
-const calculateSuggestedSizes = (aspectRatio: number): Array<{ size: string; price: number; recommended?: boolean; category?: SizeCategory }> => {
-  const suggestions: Array<{ size: string; price: number; recommended?: boolean; category?: SizeCategory }> = [];
-  
-  // Áreas de referencia para cada categoría (en mm²)
-  const baseAreas = {
-    chico: 400,    // Área pequeña de referencia
-    mediano: 1600, // Área mediana de referencia (similar a 4x4 = 1600)
-    grande: 3600,  // Área grande de referencia (similar a 6x6 = 3600)
-  };
-  
-  // Calcular medidas para cada categoría manteniendo la proporción del logo
-  Object.entries(baseAreas).forEach(([key, targetArea]) => {
-    let width: number;
-    let height: number;
-    
-    // Calcular dimensiones manteniendo el aspect ratio del logo
-    if (aspectRatio >= 1.0) {
-      // Logo es más ancho que alto o cuadrado
-      width = Math.round(Math.sqrt(targetArea * aspectRatio));
-      height = Math.round(width / aspectRatio);
-    } else {
-      // Logo es más alto que ancho
-      height = Math.round(Math.sqrt(targetArea / aspectRatio));
-      width = Math.round(height * aspectRatio);
+function medianOfSortedCopy(values: number[]): number {
+  if (values.length === 0) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)];
+}
+
+/**
+ * Proporción ancho/alto del DIBUJO del logo (bounding box del contenido), no del archivo completo.
+ * - PNG/SVG con transparencia: usa el canal alpha.
+ * - Imagen opaca: estima color de fondo con la mediana del borde y toma píxeles que se alejan bastante.
+ */
+function measureLogoContentAspectRatioFromDataUrl(dataUrl: string): Promise<number> {
+  return new Promise((resolve) => {
+    if (!dataUrl.startsWith('data:image')) {
+      resolve(1);
+      return;
     }
-    
-    // Asegurar que estén en el rango válido (10-100mm)
-    width = Math.max(10, Math.min(100, width));
-    height = Math.max(10, Math.min(100, height));
-    
-    // Categorizar la medida calculada
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const nw = img.naturalWidth || 1;
+      const nh = img.naturalHeight || 1;
+      const fullRatio = Math.max(0.15, Math.min(8, nw / nh));
+
+      const maxSide = 640;
+      const scale = Math.min(1, maxSide / Math.max(nw, nh));
+      const cw = Math.max(1, Math.round(nw * scale));
+      const ch = Math.max(1, Math.round(nh * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) {
+        resolve(fullRatio);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, cw, ch);
+      let imageData: ImageData;
+      try {
+        imageData = ctx.getImageData(0, 0, cw, ch);
+      } catch {
+        resolve(fullRatio);
+        return;
+      }
+      const data = imageData.data;
+
+      const borderRs: number[] = [];
+      const borderGs: number[] = [];
+      const borderBs: number[] = [];
+      const borderAs: number[] = [];
+      const pushBorderPixel = (x: number, y: number) => {
+        const i = (y * cw + x) * 4;
+        borderRs.push(data[i]);
+        borderGs.push(data[i + 1]);
+        borderBs.push(data[i + 2]);
+        borderAs.push(data[i + 3]);
+      };
+      for (let x = 0; x < cw; x++) {
+        pushBorderPixel(x, 0);
+        pushBorderPixel(x, ch - 1);
+      }
+      for (let y = 0; y < ch; y++) {
+        pushBorderPixel(0, y);
+        pushBorderPixel(cw - 1, y);
+      }
+
+      const bgR = medianOfSortedCopy(borderRs);
+      const bgG = medianOfSortedCopy(borderGs);
+      const bgB = medianOfSortedCopy(borderBs);
+      const meanBorderAlpha = borderAs.reduce((a, b) => a + b, 0) / borderAs.length;
+
+      // Borde mayormente transparente → recortar por alpha
+      const useAlphaMask = meanBorderAlpha < 252;
+
+      const colorDist = (i: number) => {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        return Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+      };
+
+      let minX = cw;
+      let minY = ch;
+      let maxX = -1;
+      let maxY = -1;
+      let count = 0;
+
+      for (let y = 0; y < ch; y++) {
+        for (let x = 0; x < cw; x++) {
+          const i = (y * cw + x) * 4;
+          const a = data[i + 3];
+          let isFg = false;
+          if (useAlphaMask) {
+            isFg = a > 32;
+          } else {
+            const d = colorDist(i);
+            const dr = Math.abs(data[i] - bgR);
+            const dg = Math.abs(data[i + 1] - bgG);
+            const db = Math.abs(data[i + 2] - bgB);
+            const maxRgbDiff = Math.max(dr, dg, db);
+            // Contenido = distinto del color típico del borde (fondo)
+            isFg = d > 48 || maxRgbDiff > 28;
+          }
+          if (isFg) {
+            count++;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      const boxW = maxX - minX + 1;
+      const boxH = maxY - minY + 1;
+      const areaFrac = (boxW * boxH) / (cw * ch);
+
+      if (count < 8 || maxX < minX || boxW < 2 || boxH < 2 || areaFrac < 0.0008) {
+        resolve(fullRatio);
+        return;
+      }
+
+      // Si casi todo el canvas quedó marcado, el criterio de fondo falló → volver al marco completo
+      if (areaFrac > 0.985 && !useAlphaMask) {
+        resolve(fullRatio);
+        return;
+      }
+
+      const r = boxW / boxH;
+      resolve(Math.max(0.15, Math.min(8, Number.isFinite(r) ? r : fullRatio)));
+    };
+    img.onerror = () => resolve(1);
+    img.src = dataUrl;
+  });
+}
+
+async function parseJsonResponse(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error('Respuesta vacía del servidor');
+  }
+  if (trimmed.startsWith('<')) {
+    throw new Error(
+      'El servidor devolvió HTML en lugar de JSON (reiniciá `npm run dev` o revisá la ruta de la API).'
+    );
+  }
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  } catch {
+    throw new Error('La respuesta del servidor no es JSON válido');
+  }
+}
+
+const LOGO_ANALYSIS_TIMEOUT_MS = 12000;
+const LOGO_OPTIMIZE_TIMEOUT_MS = 120000;
+const LOGO_MEASURE_TIMEOUT_MS = 7000;
+const MOCKUP_GENERATE_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number,
+  timeoutMessage: string
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error: unknown) {
+    if ((error as { name?: string })?.name === 'AbortError') {
+      throw new Error(timeoutMessage);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Mantiene proporción ancho/alto (ancho = ar × alto).
+ * - Lado largo según categoría (chico/mediano/grande).
+ * - Lado corto mínimo 5 mm (sellos muy anchos tipo 15:1); el largo mínimo 10 mm.
+ */
+function stampDimensionsFromLongSide(
+  longSideMm: number,
+  aspectWidthOverHeight: number,
+  minLongMm: number,
+  maxMm: number
+): { width: number; height: number } {
+  const ar = Math.max(0.05, Math.min(30, aspectWidthOverHeight));
+  const minShortMm = 5;
+
+  if (ar >= 1) {
+    let w = Math.min(maxMm, Math.max(minLongMm, Math.round(longSideMm)));
+    let h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
+    w = Math.min(maxMm, Math.max(minLongMm, Math.round(h * ar)));
+    h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
+    if (w > maxMm) {
+      w = maxMm;
+      h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
+    }
+    if (h > maxMm) {
+      h = maxMm;
+      w = Math.max(minLongMm, Math.min(maxMm, Math.round(h * ar)));
+    }
+    return { width: w, height: h };
+  }
+
+  let h = Math.min(maxMm, Math.max(minLongMm, Math.round(longSideMm)));
+  let w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
+  h = Math.min(maxMm, Math.max(minLongMm, Math.round(w / ar)));
+  w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
+  if (h > maxMm) {
+    h = maxMm;
+    w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
+  }
+  if (w > maxMm) {
+    w = maxMm;
+    h = Math.max(minLongMm, Math.min(maxMm, Math.round(w / ar)));
+  }
+  return { width: w, height: h };
+}
+
+const LONG_SIDE_TIERS_MM = { chico: 52, mediano: 78, grande: 100 } as const;
+
+const calculateSuggestedSizes = (
+  aspectRatio: number
+): Array<{ size: string; price: number; recommended?: boolean; category?: SizeCategory; ratio: number }> => {
+  const ar = Math.max(0.05, Math.min(30, aspectRatio));
+  const tiers: Array<{ key: keyof typeof LONG_SIDE_TIERS_MM; recommended: boolean }> = [
+    { key: 'chico', recommended: false },
+    { key: 'mediano', recommended: true },
+    { key: 'grande', recommended: false },
+  ];
+
+  return tiers.map(({ key, recommended }) => {
+    const longMm = LONG_SIDE_TIERS_MM[key];
+    const { width, height } = stampDimensionsFromLongSide(longMm, ar, 10, 100);
     const category = getSizeCategory(width, height);
-    
-    // Si la categoría calculada no coincide con la esperada, ajustar ligeramente
-    // para que caiga en la categoría correcta
-    let finalCategory = category || (key === 'chico' ? 'chico' : key === 'mediano' ? 'mediano' : 'grande');
-    
-    // Calcular precio basado en la categoría real
+    const finalCategory =
+      category || (key === 'chico' ? 'chico' : key === 'mediano' ? 'mediano' : 'grande');
     const price = calculatePrice(finalCategory, width, height);
-    
-    suggestions.push({
+    const ratio = width / height;
+    return {
       size: `${width}x${height}mm`,
       price,
-      recommended: key === 'mediano',
+      recommended,
       category: finalCategory,
-    });
+      ratio: Number.isFinite(ratio) ? ratio : ar,
+    };
   });
-  
-  return suggestions;
 };
 
-// Función para analizar el logo con OpenAI
-const analyzeLogoWithAI = async (imageUrl: string): Promise<{
+// Función para analizar el logo con OpenAI (con proporción medida en el cliente si falla la API)
+const analyzeLogoWithAI = async (
+  imageUrl: string,
+  fallbackAspectRatio: number
+): Promise<{
   isOptimal: boolean;
   hasPlainBackground: boolean;
   isComplex: boolean;
@@ -276,47 +515,70 @@ const analyzeLogoWithAI = async (imageUrl: string): Promise<{
 }> => {
   try {
     console.log('Enviando logo a analizar...', imageUrl.substring(0, 100));
-    
-    const response = await fetch('/api/logo/analyze', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ logo: imageUrl }),
-    });
 
-    const result = await response.json();
+    const response = await fetchWithTimeout(
+      '/api/logo/analyze',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ logo: imageUrl }),
+      },
+      LOGO_ANALYSIS_TIMEOUT_MS,
+      'El analisis del logo tardo demasiado. Usamos la proporcion de tu archivo para sugerir medidas.'
+    );
+
+    const result = await parseJsonResponse(response);
     console.log('Respuesta del análisis:', result);
 
-    if (!result.success) {
-      console.error('Error en la respuesta:', result.error);
-      throw new Error(result.error || 'Error al analizar el logo');
+    if (!response.ok || !result.success) {
+      const errMsg =
+        typeof result.error === 'string'
+          ? result.error
+          : (result.error as { message?: string })?.message || 'Error al analizar el logo';
+      throw new Error(errMsg);
     }
 
-    // El aspect ratio ya viene del análisis de OpenAI (del diseño del logo, no de la imagen completa)
+    const analysis = result.analysis as Record<string, unknown> | undefined;
+    if (!analysis) throw new Error('Respuesta de análisis incompleta');
+
+    let ar = Number(analysis.aspectRatio);
+    if (!Number.isFinite(ar) || ar <= 0) {
+      ar = fallbackAspectRatio;
+    }
+
     return {
-      ...result.analysis,
-      aspectRatio: result.analysis.aspectRatio || 1.0,
+      isOptimal: Boolean(analysis.isOptimal),
+      hasPlainBackground: Boolean(analysis.hasPlainBackground),
+      isComplex: Boolean(analysis.isComplex),
+      needsOptimization: Boolean(analysis.needsOptimization),
+      reason: String(analysis.reason || ''),
+      aspectRatio: ar,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error analizando logo:', error);
-    // En caso de error, retornar valores por defecto
+    const msg = error instanceof Error ? error.message : 'Error al analizar el logo';
+    // Si la API cae, no pedimos optimización (evita otro fetch que también falle con HTML)
     return {
       isOptimal: false,
       hasPlainBackground: false,
-      isComplex: true,
-      needsOptimization: true,
-      reason: error.message || 'Error al analizar el logo',
-      aspectRatio: 1,
+      isComplex: false,
+      needsOptimization: false,
+      reason: `${msg} Usamos la proporción de tu archivo para sugerir medidas.`,
+      aspectRatio: fallbackAspectRatio,
     };
   }
 };
 
 // Función helper para convertir dataURL a File
 const dataUrlToFile = (dataUrl: string, filename = 'logo.png'): File => {
-  const [meta, b64] = dataUrl.split(',');
-  const mime = meta.match(/data:(.*);base64/)?.[1] ?? 'image/png';
-  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const comma = dataUrl.indexOf(',');
+  if (comma < 0) throw new Error('Data URL inválido');
+  const meta = dataUrl.slice(0, comma);
+  const b64 = dataUrl.slice(comma + 1).replace(/\s/g, '');
+  const mime = meta.match(/data:([^;]+)/)?.[1] ?? 'image/png';
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   return new File([bytes], filename, { type: mime });
 };
 
@@ -330,37 +592,100 @@ const optimizeLogoWithAI = async (imageUrl: string): Promise<{ optimizedLogo: st
     const formData = new FormData();
     formData.append('logo', file);
     
-    const response = await fetch('/api/logo/optimize', {
-      method: 'POST',
-      body: formData, // No establecer Content-Type, el navegador lo hace automáticamente
-    });
+    const response = await fetchWithTimeout(
+      '/api/logo/optimize',
+      {
+        method: 'POST',
+        body: formData, // No establecer Content-Type, el navegador lo hace automáticamente
+      },
+      LOGO_OPTIMIZE_TIMEOUT_MS,
+      'La optimizacion del logo tardo demasiado.'
+    );
 
-    const result = await response.json();
+    const result = await parseJsonResponse(response);
 
-    if (!result.success) {
-      throw new Error(result.error || 'Error al optimizar el logo');
+    if (!response.ok || !result.success) {
+      const err =
+        typeof result.error === 'string'
+          ? result.error
+          : 'Error al optimizar el logo';
+      throw new Error(err);
+    }
+
+    const ar = Number(result.aspectRatio);
+    const optimizedLogo = result.optimizedLogo;
+    if (typeof optimizedLogo !== 'string' || !optimizedLogo.startsWith('data:')) {
+      throw new Error('No se recibió imagen optimizada del servidor');
     }
 
     return {
-      optimizedLogo: result.optimizedLogo,
-      aspectRatio: result.aspectRatio || 1.0,
+      optimizedLogo,
+      aspectRatio: Number.isFinite(ar) && ar > 0 ? ar : 1.0,
     };
-  } catch (error: any) {
-    console.error('Error optimizando logo:', error);
+  } catch (error: unknown) {
     throw error;
   }
 };
 
-export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps) {
+/** Proporción del logo recortado (Python Pillow o Sharp trim en el servidor). */
+const measureLogoOnServer = async (dataUrl: string): Promise<number | null> => {
+  try {
+    const response = await fetchWithTimeout(
+      '/api/logo/measure',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo: dataUrl }),
+      },
+      LOGO_MEASURE_TIMEOUT_MS,
+      'La medicion del logo tardo demasiado.'
+    );
+    const result = await parseJsonResponse(response);
+    if (!response.ok || !result.success) return null;
+    const ar = Number(result.aspectRatio);
+    return Number.isFinite(ar) && ar > 0 ? Math.max(0.05, Math.min(30, ar)) : null;
+  } catch {
+    return null;
+  }
+};
+
+export default function BuyWizard({ initialProduct, initialMaterial, onComplete }: BuyWizardProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { addItem } = useCart();
   const [step, setStep] = useState(0); // Empezar en paso 0 (contacto)
-  const [data, setData] = useState<BuyWizardData>({});
+  const [data, setData] = useState<BuyWizardData>(() => (
+    initialMaterial ? { material: initialMaterial } : {}
+  ));
   const [manualPreviewRequested, setManualPreviewRequested] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
+  const wizardRef = useRef<HTMLDivElement>(null);
+  const webSessionIdRef = useRef('');
+  const clienteIdRef = useRef<string | null>(null);
+  const mockupSolicitudIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    webSessionIdRef.current = getOrCreateWebSessionId();
+    const session = peekWizardSupabaseSession();
+    if (session?.cliente_id) clienteIdRef.current = session.cliente_id;
+    if (session?.mockup_solicitud_id) mockupSolicitudIdRef.current = session.mockup_solicitud_id;
+  }, []);
+
+  useEffect(() => {
+    wizardRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [step]);
+
+  useEffect(() => {
+    if (!initialMaterial) return;
+    setData((prevData) => (
+      prevData.material ? prevData : { ...prevData, material: initialMaterial }
+    ));
+  }, [initialMaterial]);
 
   // Función helper para obtener el texto de la medida a mostrar
   const getSizeDisplayText = (): string => {
@@ -397,22 +722,24 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
       const approximateKeys: string[] = ['pequeño', 'medio', 'grande'];
       const isApproximate = approximateKeys.includes(sizeKey);
       
-      setData({
+      setData((prevData) => ({
+        ...prevData,
         selectedSize: mappedSize.size,
         selectedPrice: mappedSize.price,
         ...(isApproximate && { approximateSizeKey: sizeKey as 'pequeño' | 'medio' | 'grande' }),
-      });
+      }));
       // Empezar en paso 1 (material), no saltar pasos
     } else if (modeParam === 'custom' && wParam && hParam) {
       // Medida personalizada
       const width = parseInt(wParam, 10);
       const height = parseInt(hParam, 10);
       if (width >= 10 && width <= 100 && height >= 10 && height <= 100) {
-        setData({
+        setData((prevData) => ({
+          ...prevData,
           selectedSize: `${width}x${height}mm`,
           customSize: { width, height },
           selectedPrice: 44000, // Precio base, se ajustará según medida
-        });
+        }));
         // Empezar en paso 1 (material), no saltar pasos
       }
     }
@@ -435,11 +762,11 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
       const suggestedSizes = calculateSuggestedSizes(aspectRatio);
       setData((prevData) => ({ ...prevData, sizeOptions: suggestedSizes }));
     } else if (data.logoFile && data.material && step >= 3 && !data.sizeOptions && !data.logoAnalysis?.aspectRatio) {
-      // Fallback: usar medidas estándar si no hay aspect ratio disponible
+      // Fallback: proporción 1:1
       const fallbackSizes = [
-        { size: '30x30mm', price: 44000, recommended: false },
-        { size: '40x40mm', price: 55000, recommended: true },
-        { size: '50x50mm', price: 66000, recommended: false },
+        { size: '30x30mm', price: 44000, recommended: false, ratio: 1 },
+        { size: '40x40mm', price: 55000, recommended: true, ratio: 1 },
+        { size: '50x50mm', price: 66000, recommended: false, ratio: 1 },
       ];
       setData((prevData) => ({ ...prevData, sizeOptions: fallbackSizes }));
     }
@@ -497,24 +824,44 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
           }
           
           // Llamar al servicio Python
-          const response = await fetch('/api/mockups/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          const response = await fetchWithTimeout(
+            '/api/mockups/generate',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
             },
-            body: JSON.stringify(requestBody),
-          });
+            MOCKUP_GENERATE_TIMEOUT_MS,
+            'La muestra tardo demasiado en generarse.'
+          );
 
-          const result = await response.json();
+          const result = (await parseJsonResponse(response)) as {
+            success?: boolean;
+            mockupUrl?: string;
+            thumbnailUrl?: string;
+            error?: unknown;
+          };
 
           if (result.success) {
+            const mockupUrl = result.mockupUrl;
             setData((prevData) => ({
               ...prevData,
               previewGenerated: true,
-              mockupUrl: result.mockupUrl,
+              mockupUrl,
               thumbnailUrl: result.thumbnailUrl || result.mockupUrl,
               isGeneratingMockup: false,
             }));
+            const mid = mockupSolicitudIdRef.current;
+            const mat = data.material;
+            if (mid && mockupUrl && mat) {
+              void syncWizardMockupPreview(mid, mat, mockupUrl, {
+                size: data.selectedSize || '',
+                price: data.selectedPrice,
+                approximateSizeKey: data.approximateSizeKey,
+              });
+            }
           } else {
             console.error('Error generando mockup con servicio Python:', result.error);
             setData((prevData) => ({
@@ -537,14 +884,30 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
     }
   }, [step, data.selectedSize, data.previewGenerated, data.needsManualPreview, data.logoPreview, data.material, data.logoOptimized, data.logoAnalysis, data.customSize, data.isGeneratingMockup]);
 
-  const handleContactSubmit = (nombre: string, whatsapp: string, email: string) => {
+  const handleContactSubmit = async (nombre: string, whatsapp: string, email: string) => {
     setData({ ...data, nombre, whatsapp, email });
-    setStep(1); // Ir a selección de material
+    saveCheckoutPrefill({ nombre, whatsapp, email });
+    const cid = await syncWizardContact(
+      nombre,
+      whatsapp,
+      email,
+      webSessionIdRef.current
+    );
+    if (cid) clienteIdRef.current = cid;
+    setStep(1);
   };
 
-  const handleMaterialSelect = (material: 'cuero' | 'madera' | 'ambos' | 'ceramica' | 'alimentos' | 'otros') => {
-    setData({ ...data, material });
-    setStep(2); // Ir a subir logo
+  const handleMaterialSelect = async (material: WizardMaterial) => {
+    setData((prev) => ({ ...prev, material }));
+    const mid = await ensureMockupSolicitud(clienteIdRef.current, material, {
+      nombre: data.nombre,
+      whatsapp: data.whatsapp,
+      email: data.email,
+      webSessionId: webSessionIdRef.current,
+      mockupSolicitudId: mockupSolicitudIdRef.current,
+    });
+    if (mid) mockupSolicitudIdRef.current = mid;
+    setStep(2);
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -553,7 +916,10 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
       const reader = new FileReader();
       reader.onloadend = async () => {
         const imageUrl = reader.result as string;
-        
+
+        // Proporción del dibujo del logo (recorte de contenido), no del lienzo completo
+        const logoContentAspectRatio = await measureLogoContentAspectRatioFromDataUrl(imageUrl);
+
         // Guardar logo original
         setData({
           ...data,
@@ -566,27 +932,37 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
         setAnalysisError(null);
 
         try {
-          // Paso 1: Analizar el logo con OpenAI
-          const analysis = await analyzeLogoWithAI(imageUrl);
-          
+          // Paso 1: Analizar el logo con OpenAI (fallback = proporción del contenido del logo)
+          const analysis = await analyzeLogoWithAI(imageUrl, logoContentAspectRatio);
+
           let finalLogoUrl = imageUrl;
-          let isOptimizing = false;
 
           // Paso 2: Si no está óptimo, optimizarlo
           let optimizedAspectRatio = analysis.aspectRatio;
+          // Si la API devolvió ~cuadrado pero el archivo no lo es, confiar en la medición local
+          if (Math.abs(logoContentAspectRatio - 1) > 0.08 && Math.abs(optimizedAspectRatio - 1) < 0.02) {
+            optimizedAspectRatio = logoContentAspectRatio;
+          }
+
           if (analysis.needsOptimization && !analysis.isOptimal) {
             setData((prev) => ({ ...prev, isOptimizing: true }));
-            isOptimizing = true;
-            
+
             try {
               const optimizeResult = await optimizeLogoWithAI(imageUrl);
               finalLogoUrl = optimizeResult.optimizedLogo;
-              optimizedAspectRatio = optimizeResult.aspectRatio;
-            } catch (optimizeError: any) {
-              console.error('Error optimizando logo:', optimizeError);
-              // Continuar con el logo original si falla la optimización
-              setAnalysisError('No se pudo optimizar el logo automáticamente. Se usará el logo original.');
+            } catch (optimizeError: unknown) {
+              console.info('Optimizacion automatica omitida; se usa el logo original.', optimizeError);
+              const omsg = optimizeError instanceof Error ? optimizeError.message : '';
+              setAnalysisError(
+                `No se pudo optimizar el logo automáticamente. Se usa el original. ${omsg ? `(${omsg})` : ''}`
+              );
             }
+          }
+
+          // Medición real del dibujo (recorte alpha / fondo): Python si está, si no Sharp trim
+          const measuredAr = await measureLogoOnServer(finalLogoUrl);
+          if (measuredAr != null) {
+            optimizedAspectRatio = measuredAr;
           }
 
           // Actualizar datos con el análisis y logo final
@@ -598,39 +974,54 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
             logoOptimized: finalLogoUrl !== imageUrl ? finalLogoUrl : undefined,
             logoAnalysis: {
               ...analysis,
-              aspectRatio: optimizedAspectRatio, // Usar el aspect ratio del logo final (optimizado o original)
+              aspectRatio: optimizedAspectRatio,
             },
-            // Si está óptimo (original o optimizado), puede generar mockup automático
-            // Si es complejo y no se pudo optimizar, necesita muestra manual
-            needsManualPreview: analysis.isComplex && !analysis.isOptimal && finalLogoUrl === imageUrl,
+            // Nuevo logo → recalcular medidas y volver a generar mockup
+            sizeOptions: undefined,
+            previewGenerated: false,
+            mockupUrl: undefined,
+            thumbnailUrl: undefined,
+            isGeneratingMockup: false,
+            // Siempre intentamos muestra automática (Python/Sharp + texturas).
+            // Si el resultado no convence, el cliente puede pedir revisión por WhatsApp.
+            needsManualPreview: false,
             isAnalyzing: false,
             isOptimizing: false,
           };
           setData(newData);
 
-          // Si el logo es complejo y no se pudo optimizar, ir a solicitar muestra manual
-          if (newData.needsManualPreview) {
-            if (newData.selectedSize) {
-              setStep(4); // Paso de solicitar muestra vía WhatsApp
-            } else {
-              setStep(3); // Paso de selección de medida
-            }
-          } else {
-            // Logo óptimo o optimizado: flujo normal con muestra automática
-            if (newData.selectedSize) {
-              setStep(4); // Vista previa automática
-            } else {
-              setStep(3); // Selección de medida
-            }
+          const mid = mockupSolicitudIdRef.current;
+          if (mid) {
+            void syncWizardLogos(mid, imageUrl, finalLogoUrl !== imageUrl ? finalLogoUrl : undefined);
           }
-        } catch (error: any) {
+
+          if (newData.selectedSize) {
+            setStep(4); // Vista previa (mockup)
+          } else {
+            setStep(3); // Selección de medida
+          }
+        } catch (error: unknown) {
           console.error('Error procesando logo:', error);
-          setAnalysisError(error.message || 'Error al procesar el logo');
+          const msg = error instanceof Error ? error.message : 'Error al procesar el logo';
+          setAnalysisError(msg);
           setData((prev) => ({
             ...prev,
             isAnalyzing: false,
             isOptimizing: false,
-            needsManualPreview: true, // En caso de error, requerir muestra manual
+            needsManualPreview: false,
+            logoAnalysis: {
+              isOptimal: false,
+              hasPlainBackground: false,
+              isComplex: false,
+              needsOptimization: false,
+              reason: msg,
+              aspectRatio: logoContentAspectRatio,
+            },
+            sizeOptions: undefined,
+            previewGenerated: false,
+            mockupUrl: undefined,
+            thumbnailUrl: undefined,
+            isGeneratingMockup: false,
           }));
         }
       };
@@ -646,45 +1037,34 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
       approximateSizeKey: undefined, // Limpiar si se selecciona una medida específica
     };
     setData(newData);
-    
-    // Si el logo es complejo, ir al paso de solicitar muestra vía WhatsApp
-    // Si es simple, ir a vista previa automática
-    if (newData.needsManualPreview) {
-      setStep(4); // Solicitar muestra vía WhatsApp
-    } else {
-      setStep(4); // Vista previa automática (mismo paso, pero diferente contenido según needsManualPreview)
-    }
+    setStep(4); // Vista previa (mockup)
   };
 
   const handleRequestManualPreview = async () => {
-    // TODO: Guardar en base de datos cuando esté disponible
-    // Estructura de datos para guardar:
-    const previewRequest = {
-      nombre: data.nombre,
-      whatsapp: data.whatsapp,
-      email: data.email,
-      material: data.material,
-      medida: getSizeDisplayText(),
-      medidaExacta: data.selectedSize, // Guardar también la medida exacta para referencia
-      approximateSizeKey: data.approximateSizeKey, // Guardar si es aproximada
-      precio: data.selectedPrice,
-      logoUrl: data.logoPreview,
-      logoFile: data.logoFile,
-      tipo: 'manual', // 'manual' o 'automatic'
-      estado: 'pendiente', // 'pendiente', 'en_proceso', 'completada'
-      fechaCreacion: new Date().toISOString(),
-    };
-
-    // Por ahora solo logueamos, pero aquí iría la llamada a la API/BD
-    console.log('Solicitud de muestra manual:', previewRequest);
-    
-    // TODO: Llamar a API cuando esté disponible
-    // await fetch('/api/preview-requests', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(previewRequest),
-    // });
-
+    const mid = mockupSolicitudIdRef.current;
+    if (mid) {
+      if (data.logoPreview) {
+        void syncWizardLogos(
+          mid,
+          data.logoOriginal || data.logoPreview,
+          data.logoOptimized
+        );
+      }
+      await markMockupPendingApproval(mid);
+      try {
+        await patchMockupSolicitud(mid, {
+          medidas_cotizacion_json: {
+            size: getSizeDisplayText(),
+            medidaExacta: data.selectedSize,
+            approximateSizeKey: data.approximateSizeKey,
+            precio: data.selectedPrice,
+            tipo: 'manual',
+          },
+        });
+      } catch (err) {
+        console.error('[wizard] cotizacion manual', err);
+      }
+    }
     setManualPreviewRequested(true);
   };
 
@@ -694,11 +1074,58 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
     }
   };
 
+  /** Lleva al checkout el sello configurado en el wizard (precio tarjeta = selectedPrice). */
+  const handleAddWizardToCheckout = () => {
+    if (!data.selectedPrice || !data.material || checkoutNavigateBusy) return;
+    setCheckoutNavigateBusy(true);
+    if (data.nombre?.trim() && data.whatsapp?.trim()) {
+      saveCheckoutPrefill({
+        nombre: data.nombre.trim(),
+        whatsapp: data.whatsapp.trim(),
+        email: (data.email || '').trim(),
+      });
+    }
+    const variantSize = data.selectedSize || getSizeDisplayText();
+    const materialLabel = WIZARD_MATERIAL_LABELS[data.material] || data.material;
+    const designSlug = `personalizado-${Date.now()}`;
+    const cartLine = {
+      title: `Sello personalizado (${materialLabel}, ${variantSize})`,
+      collection: 'Personalizado',
+      material: 'Bronce',
+      process: 'CNC',
+      variantSize,
+      price: data.selectedPrice,
+      image: wizardCartImageUrl(data),
+      designSlug,
+    };
+    addItem(cartLine);
+    const mid = mockupSolicitudIdRef.current;
+    if (mid) {
+      void markCheckoutStarted(mid, [cartLine]);
+    }
+    window.setTimeout(() => {
+      router.push('/checkout');
+    }, 0);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div ref={wizardRef} className="max-w-5xl mx-auto">
       <Stepper steps={steps} currentStep={step + 1} />
 
-      <div className="bg-white border border-gray-200 rounded-lg p-8 md:p-12">
+      <div className="technical-sheet blueprint-sheet p-4 md:p-8 lg:p-10">
+        <div className="mb-8 grid grid-cols-1 gap-4 border-b border-[var(--alcohn-line)] pb-6 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p className="craft-label mb-2">Ficha de pedido personalizada</p>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-950">
+              Diseñá, revisá y pagá con datos guardados
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold uppercase text-neutral-500 md:text-right">
+            <span className="border border-dashed border-[var(--alcohn-line)] bg-white/70 px-3 py-2">Logo</span>
+            <span className="border border-dashed border-[var(--alcohn-line)] bg-white/70 px-3 py-2">Precio</span>
+          </div>
+        </div>
+
         {/* Step 0: Contact Information */}
         {step === 0 && (
           <ContactStep
@@ -725,7 +1152,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                 <button
                   key={material}
                   onClick={() => handleMaterialSelect(material)}
-                  className={`p-6 border-2 rounded-lg text-left transition-all duration-200 ${
+                  className={`p-6 border text-left transition-all duration-200 ${
                     data.material === material
                       ? 'border-primary bg-primary/5'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -772,7 +1199,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                 Subí tu logo en formato PNG, JPG o SVG. Aceptamos fondos transparentes.
               </p>
             </div>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors">
+            <div className="border border-dashed border-gray-300 p-12 text-center hover:border-gray-400 transition-colors">
               <input
                 type="file"
                 id="logo-upload"
@@ -793,6 +1220,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                         alt="Logo preview"
                         fill
                         className="object-contain"
+                        unoptimized
                       />
                       {(data.isAnalyzing || data.isOptimizing) && (
                         <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded">
@@ -865,7 +1293,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
 
             {/* Resultado del análisis */}
             {data.logoAnalysis && !data.isAnalyzing && !data.isOptimizing && (
-              <div className={`border rounded-lg p-4 ${
+              <div className={`border p-4 ${
                 data.logoAnalysis.isOptimal
                   ? 'bg-green-50 border-green-200'
                   : data.logoAnalysis.needsOptimization && data.logoOptimized
@@ -931,7 +1359,9 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                   <div>
                     <p className="text-sm font-medium text-red-800">Error al procesar el logo</p>
                     <p className="text-xs text-red-700 mt-1">{analysisError}</p>
-                    <p className="text-xs text-red-700 mt-1">Se requerirá muestra manual vía WhatsApp.</p>
+                    <p className="text-xs text-red-700 mt-1">
+                      Las medidas sugeridas usan la proporción de tu imagen; podés continuar con la vista previa.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1010,6 +1440,32 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                 </p>
               </div>
             )}
+
+            <div className="border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Cómo elegir medida
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="font-medium text-gray-900">Pequeño</p>
+                  <p className="text-gray-600">
+                    Logos simples, etiquetas, packaging chico o piezas delicadas.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Mediano</p>
+                  <p className="text-gray-600">
+                    Recomendado para la mayoría de marcas: buen equilibrio entre lectura y precio.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Grande</p>
+                  <p className="text-gray-600">
+                    Para piezas grandes, marcas con más detalle o lectura a distancia.
+                  </p>
+                </div>
+              </div>
+            </div>
             
             {/* Opciones de tamaño: Basadas en aspect ratio del logo o estándar */}
             {data.sizeOptions && data.sizeOptions.length > 0 ? (
@@ -1030,7 +1486,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                           customSize: undefined, // Limpiar medida personalizada
                         });
                       }}
-                      className={`p-6 border-2 rounded-lg text-left transition-all duration-200 relative ${
+                      className={`p-6 border text-left transition-all duration-200 relative ${
                         isSelected
                           ? 'border-primary bg-primary/5'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -1046,11 +1502,9 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                       </div>
                       <div className="text-sm text-gray-600 mb-2">
                         {sizeOption.size}
-                        {data.logoAnalysis?.aspectRatio && (
-                          <span className="text-xs text-gray-500 block mt-1">
-                            Proporción: {data.logoAnalysis.aspectRatio.toFixed(2)}:1
-                          </span>
-                        )}
+                        <span className="text-xs text-gray-500 block mt-1">
+                          Proporción de esta medida: {sizeOption.ratio.toFixed(2)}:1
+                        </span>
                       </div>
                       <div className="space-y-1">
                         <div className="text-2xl font-bold text-gray-900">
@@ -1092,7 +1546,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                           customSize: undefined, // Limpiar medida personalizada
                         });
                       }}
-                      className={`p-6 border-2 rounded-lg text-left transition-all duration-200 relative ${
+                      className={`p-6 border text-left transition-all duration-200 relative ${
                         isSelected
                           ? 'border-primary bg-primary/5'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -1127,7 +1581,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
             )}
 
             {/* Opción para medida personalizada */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            <div className="border border-dashed border-gray-300 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Medida personalizada
               </h3>
@@ -1201,7 +1655,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                       }
                     }}
                     placeholder="30"
-                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white rounded-md focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
                   />
                 </div>
                 <div>
@@ -1270,7 +1724,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                       }
                     }}
                     placeholder="45"
-                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white rounded-md focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
                   />
                 </div>
               </div>
@@ -1278,7 +1732,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                 Rango: 10–100mm. Rectangulares incluidos. {data.logoAnalysis?.aspectRatio && 'La proporción se ajusta automáticamente según tu logo.'}
               </p>
               {data.customSize && data.customSize.width >= 10 && data.customSize.height >= 10 && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+                <div className="bg-gray-50 border border-gray-200 p-4 space-y-2">
                   <p className="text-sm text-gray-700">
                     <strong>Medida personalizada:</strong> {data.customSize.width}×{data.customSize.height}mm
                   </p>
@@ -1380,7 +1834,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                       <p className="text-gray-600 mb-4">
                         Tu solicitud de muestra personalizada ha sido registrada. Uno de nuestros diseñadores la revisará y te contactará por WhatsApp en las próximas 24 horas.
                       </p>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 mt-4">
+                      <div className="bg-white border border-[var(--alcohn-line)] rounded-lg p-4 mt-4">
                         <p className="text-sm text-gray-700">
                           <strong>Contacto:</strong> {data.whatsapp}
                         </p>
@@ -1402,12 +1856,12 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                   <p className="text-gray-600">
                     {data.mockupUrl 
                       ? 'Vista previa generada automáticamente de cómo se verá tu sello aplicado.'
-                      : 'Logo analizado y listo. La muestra automática se generará cuando el servicio esté disponible.'}
+                      : 'Logo analizado y listo. Estamos generando la muestra sobre la textura del material elegido.'}
                   </p>
                 </div>
 
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 min-h-[400px] flex items-center justify-center">
+                <div className="material-frame rounded-lg p-6 md:p-12 min-h-[360px] md:min-h-[400px] flex items-center justify-center">
                   {data.isGeneratingMockup ? (
                     <div className="text-center text-gray-400">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
@@ -1420,42 +1874,45 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                     // Mockup generado - mostrar mockup y opción de ver logos
                     <div className="space-y-6 text-center w-full">
                       {/* Mockup */}
-                      <div className="relative w-full max-w-2xl mx-auto bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                      <div className="relative w-full max-w-2xl mx-auto bg-white border border-[var(--alcohn-line)] rounded-lg overflow-hidden shadow-sm">
                         <Image
                           src={data.thumbnailUrl || data.mockupUrl}
                           alt="Vista previa del sello"
                           width={800}
                           height={600}
                           className="w-full h-auto"
+                          unoptimized
                         />
                       </div>
                       
                       {/* Mostrar logos si hay versión optimizada */}
                       {data.logoOptimized && data.logoOriginal && (
-                        <div className="mt-6 border-t border-gray-200 pt-6">
+                        <div className="mt-6 border-t border-[var(--alcohn-line)] pt-6">
                           <p className="text-sm font-medium text-gray-700 mb-4">
                             Comparar logos:
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                            <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <div className="bg-white border border-[var(--alcohn-line)] rounded-lg p-4">
                               <p className="text-xs text-gray-600 mb-2">Original</p>
-                              <div className="relative w-full aspect-square bg-gray-50 rounded border border-gray-200">
+                              <div className="relative w-full aspect-square bg-gray-50 rounded border border-[var(--alcohn-line)]">
                                 <Image
                                   src={data.logoOriginal}
                                   alt="Logo original"
                                   fill
                                   className="object-contain p-2"
+                                  unoptimized
                                 />
                               </div>
                             </div>
-                            <div className="bg-white border-2 border-purple-300 rounded-lg p-4">
-                              <p className="text-xs text-purple-700 mb-2 font-medium">Optimizado</p>
-                              <div className="relative w-full aspect-square bg-white rounded border-2 border-purple-300">
+                            <div className="bg-white border-2 border-[var(--alcohn-bronze)] rounded-lg p-4">
+                              <p className="text-xs text-[var(--alcohn-bronze-dark)] mb-2 font-semibold">Optimizado</p>
+                              <div className="relative w-full aspect-square bg-white rounded border-2 border-[var(--alcohn-bronze)]">
                                 <Image
                                   src={data.logoOptimized}
                                   alt="Logo optimizado"
                                   fill
                                   className="object-contain p-2"
+                                  unoptimized
                                 />
                               </div>
                             </div>
@@ -1479,12 +1936,13 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                     // Vista previa temporal: mostrar logo analizado (mockup se generará después)
                     <div className="space-y-6 text-center w-full">
                       {/* Mostrar el logo (se muestra la comparación abajo si hay optimizado) */}
-                      <div className="relative w-64 h-64 mx-auto bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+                      <div className="relative w-64 h-64 mx-auto bg-white border border-[var(--alcohn-line)] rounded-lg p-8 shadow-sm">
                         <Image
                           src={data.logoPreview}
                           alt="Logo"
                           fill
                           className="object-contain p-4"
+                          unoptimized
                         />
                       </div>
                       <div className="text-sm text-gray-600 space-y-2">
@@ -1597,24 +2055,43 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
               </div>
 
               {/* Order Summary */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
-                <h3 className="font-semibold text-gray-900">Resumen del pedido</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Material:</span>
-                    <span className="text-gray-900 font-medium capitalize">{data.material}</span>
+              <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr] gap-4">
+                <div className="technical-sheet p-5 md:p-6 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="craft-label mb-2">Resumen del pedido</p>
+                      <h3 className="text-xl font-semibold tracking-tight text-neutral-950">
+                        Sello personalizado listo para checkout
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase text-neutral-400">ALC-PAY</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Medida:</span>
-                    <span className="text-gray-900 font-medium">{getSizeDisplayText()}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-gray-200">
-                    <span className="text-gray-900 font-semibold">Total:</span>
-                    <span className="text-gray-900 font-bold text-lg">
-                      ${data.selectedPrice?.toLocaleString('es-AR')}
-                    </span>
-                  </div>
+                  <dl className="divide-y divide-[var(--alcohn-line)] text-sm">
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Material</dt>
+                      <dd className="font-medium capitalize text-neutral-950">{data.material}</dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Medida</dt>
+                      <dd className="font-medium text-neutral-950">{getSizeDisplayText()}</dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Muestra</dt>
+                      <dd className="font-medium text-neutral-950">Vista previa generada</dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="font-semibold text-neutral-950">Total</dt>
+                      <dd className="text-xl font-bold text-neutral-950">
+                        ${data.selectedPrice?.toLocaleString('es-AR')}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
+
+                <PurchaseInclusions
+                  compact
+                  title="Incluido con tu sello"
+                />
               </div>
 
               {/* Payment Methods */}
@@ -1623,7 +2100,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                   {/* Tarjeta con Open Pay */}
                   <button
                     onClick={() => setPaymentMethod('card')}
-                    className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
+                    className="technical-sheet p-5 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">Pagar con tarjeta</h3>
@@ -1647,7 +2124,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                   {/* Transferencia */}
                   <button
                     onClick={() => setPaymentMethod('transfer')}
-                    className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
+                    className="technical-sheet p-5 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">Transferencia bancaria</h3>
@@ -1671,25 +2148,26 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
               ) : paymentMethod === 'card' ? (
                 // Pago con tarjeta - Open Pay
                 <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
+                  <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] p-4">
+                    <p className="text-sm text-gray-800">
                       Pagá de forma segura con Open Pay. 3 cuotas sin interés disponibles.
                     </p>
                   </div>
                   
                   {/* Aquí iría el formulario de Open Pay */}
-                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+                  <div className="bg-white border border-[var(--alcohn-line)] p-6">
                     <p className="text-sm text-gray-600 mb-4">
-                      El formulario de pago con Open Pay se integrará aquí.
+                      Agregamos tu sello (material, medida y precio que viste) al pedido y te llevamos
+                      al checkout. Ahí podés completar tus datos y elegir &quot;Pagar con tarjeta
+                      (Openpay)&quot;.
                     </p>
                     <button
-                      onClick={() => {
-                        // Aquí iría la lógica de Open Pay
-                        alert('Integración con Open Pay pendiente');
-                      }}
-                      className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors"
+                      type="button"
+                      onClick={handleAddWizardToCheckout}
+                      disabled={checkoutNavigateBusy || !data.selectedPrice}
+                      className="block w-full text-center px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      Pagar ${cardPrice.toLocaleString('es-AR')} con tarjeta
+                      {checkoutNavigateBusy ? 'Preparando pedido…' : 'Continuar al checkout y pagar con Openpay'}
                     </button>
                   </div>
                   
@@ -1704,7 +2182,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                 // Pago con transferencia
                 <div className="space-y-6">
                   {/* Datos bancarios */}
-                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
+                  <div className="bg-white border border-[var(--alcohn-line)] p-6 space-y-4">
                     <h3 className="font-semibold text-gray-900">Datos para transferencia</h3>
                     <div className="space-y-3 text-sm">
                       <div>
@@ -1736,7 +2214,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                   </div>
 
                   {/* Carga de comprobante */}
-                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
+                  <div className="bg-white border border-[var(--alcohn-line)] p-6 space-y-4">
                     <h3 className="font-semibold text-gray-900">Enviar comprobante</h3>
                     <p className="text-sm text-gray-600">
                       Subí el comprobante de transferencia o enviálo por WhatsApp.
@@ -1744,7 +2222,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                     
                     {!receiptPreview ? (
                       <div className="space-y-3">
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                        <div className="border border-dashed border-gray-300 p-8 text-center">
                           <input
                             type="file"
                             id="receipt-upload"
@@ -1779,7 +2257,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={handlePaymentComplete}
-                          className="block w-full px-6 py-3 bg-green-600 text-white rounded-md font-semibold hover:bg-green-700 transition-colors text-center"
+                          className="block w-full px-6 py-3 bg-green-600 text-white font-semibold uppercase tracking-wider hover:bg-green-700 transition-colors text-center"
                         >
                           Enviar por WhatsApp
                         </a>
@@ -1818,7 +2296,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
                         <button
                           onClick={handleSubmitReceipt}
                           disabled={isUploadingReceipt}
-                          className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-6 py-3 bg-primary text-white font-semibold uppercase tracking-wider hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isUploadingReceipt ? 'Enviando...' : 'Confirmar pedido'}
                         </button>
@@ -1843,7 +2321,7 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
           <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between">
             <button
               onClick={() => setStep(step - 1)}
-              className="px-6 py-2 text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="px-6 py-2 text-gray-700 bg-white border border-[var(--alcohn-line)] rounded-md hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               Atrás
             </button>
@@ -1853,8 +2331,3 @@ export default function BuyWizard({ initialProduct, onComplete }: BuyWizardProps
     </div>
   );
 }
-
-
-
-
-

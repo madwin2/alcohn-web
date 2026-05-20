@@ -15,7 +15,7 @@ export default function Section({
   padding = 'default',
   id
 }: SectionProps) {
-  const bgClass = bg === 'neutral' ? 'bg-neutral-50' : 'bg-white';
+  const bgClass = bg === 'neutral' ? 'atelier-page' : 'bg-[var(--alcohn-surface)]';
   const paddingClass = {
     default: 'py-20 md:py-24',
     large: 'py-24 md:py-32',
@@ -25,7 +25,7 @@ export default function Section({
   return (
     <section 
       id={id} 
-      className={`snap-start snap-always h-[calc(100vh-4rem)] flex items-center justify-center ${bgClass} ${paddingClass} ${className}`}
+      className={`md:snap-start md:snap-always min-h-[calc(100svh-4rem)] md:h-[calc(100vh-4rem)] flex items-center justify-center ${bgClass} ${paddingClass} ${className}`}
       data-snap-section
     >
       <div className="w-full">

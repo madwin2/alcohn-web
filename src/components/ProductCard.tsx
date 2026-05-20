@@ -46,10 +46,10 @@ export default function ProductCard({ product, materialFilter = 'todos', index =
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   return (
-    <article className="group border border-neutral-200 bg-white">
+    <article className="group material-card">
       {/* Imagen más grande */}
-      <div className="p-6 pb-0">
-        <div className="aspect-[3/2] bg-white relative overflow-hidden">
+      <div className="p-3 pb-0 md:p-4 md:pb-0">
+        <div className="material-frame aspect-[3/2] relative overflow-hidden">
           {getImageSrc() ? (
             <Image
               src={getImageSrc()}
@@ -69,11 +69,11 @@ export default function ProductCard({ product, materialFilter = 'todos', index =
       </div>
 
       {/* Contenido con líneas separadoras */}
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-5 md:p-6">
         {/* Código + Meta */}
-        <div className="space-y-2 pb-4 border-b border-neutral-200">
+        <div className="space-y-2 pb-4 border-b border-[var(--alcohn-line)]">
           <ProductCode code={productCode} />
-          <div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
+          <div className="craft-label">
             BRONCE · CNC · USO: {materialLabel}
           </div>
         </div>
@@ -92,17 +92,17 @@ export default function ProductCard({ product, materialFilter = 'todos', index =
         </p>
 
         {/* Separador */}
-        <div className="border-t border-neutral-200 pt-4">
+        <div className="border-t border-[var(--alcohn-line)] pt-4">
           {/* Precio */}
           <div className="mb-4">
             <p className="text-sm text-neutral-600">
-              <span className="text-[10px] uppercase tracking-wider text-neutral-500 mr-2">Desde</span>
+              <span className="craft-label mr-2">Desde</span>
               {priceDisplay}
             </p>
           </div>
 
           {/* CTAs - Botones industriales */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <ActionButton
               href={`/productos/${product.slug}`}
               variant="secondary"

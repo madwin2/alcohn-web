@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import SectionTitle from '@/components/SectionTitle';
+import PageIntro from '@/components/PageIntro';
 import FaqList from '@/components/FaqList';
+import SalesCtaBand from '@/components/SalesCtaBand';
 import { faqs } from '@/data/faq';
 
 export const metadata = {
@@ -10,28 +10,42 @@ export const metadata = {
 
 export default function FaqPage() {
   return (
-    <div className="min-h-screen py-12">
-      <div className="container mx-auto px-4">
-        <SectionTitle
-          title="Preguntas frecuentes"
-          subtitle="Respondemos lo que más nos preguntan. Si no encontrás tu respuesta, hablamos."
+    <div className="atelier-page min-h-screen py-10 md:py-16">
+      <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+        <PageIntro
+          label="FAQ de compra"
+          title="Respuestas a preguntas comunes"
+          description="Reunimos las dudas que suelen repetirse comunmente. Para que tengas toda la informacion de la manera mas rapida y simple posible."
+          primaryCta={{
+            label: 'Diseñar mi sello',
+            href: '/buy?mode=custom',
+          }}
+          secondaryCta={{
+            label: 'Comprar estándar',
+            href: '/sellos/estandar',
+            variant: 'secondary',
+          }}
+          highlights={[
+            'Materiales compatibles explicados',
+            'Medidas y muestra antes de fabricar',
+            'Pago y tiempos sin vueltas',
+          ]}
         />
 
-        <FaqList faqs={faqs} />
-
-        <section className="text-center py-12">
-          <p className="text-lg text-gray-600 mb-4">
-            ¿No encontraste tu respuesta?
-          </p>
-          <Link
-            href="/contacto"
-            className="inline-block bg-accent text-primary px-8 py-4 rounded-md font-semibold hover:bg-accent-light transition-colors"
-          >
-            Hablar por WhatsApp
-          </Link>
+        <section className="mb-20">
+          <FaqList faqs={faqs} />
         </section>
+
+        <SalesCtaBand
+          title="Cuando ya entendés el producto, el mejor paso es probar tu logo"
+          copy="El diseñador online te guía por uso, medida, muestra y precio. Si algo necesita revisión, queda registrado para que Alcohn pueda seguirlo."
+          primaryLabel="Diseñar mi sello"
+          primaryHref="/buy?mode=custom"
+          secondaryLabel="Ver proceso"
+          secondaryHref="/proceso"
+          dark
+        />
       </div>
     </div>
   );
 }
-

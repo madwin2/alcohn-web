@@ -13,7 +13,7 @@ export default function CartButton() {
     <>
       <button
         onClick={() => setIsDrawerOpen(true)}
-        className="relative inline-flex items-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-medium bg-white text-neutral-900 border border-white hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900"
+        className="relative inline-flex min-h-[44px] items-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-medium bg-white text-neutral-900 border border-white hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900"
         aria-label={`Carrito de compras${itemCount > 0 ? ` con ${itemCount} ${itemCount === 1 ? 'artículo' : 'artículos'}` : ''}`}
       >
         <span>Carrito</span>

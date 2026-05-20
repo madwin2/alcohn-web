@@ -7,9 +7,15 @@ interface WhatsappButtonProps {
   data?: CotizacionData;
   className?: string;
   children?: React.ReactNode;
+  variant?: 'dark' | 'light';
 }
 
-export default function WhatsappButton({ data, className = "", children }: WhatsappButtonProps) {
+export default function WhatsappButton({
+  data,
+  className = '',
+  children,
+  variant = 'dark',
+}: WhatsappButtonProps) {
   const buildMessage = () => {
     const baseMessage = config.whatsapp.message.base;
     
@@ -39,15 +45,22 @@ export default function WhatsappButton({ data, className = "", children }: Whats
   const message = buildMessage();
   const whatsappUrl = `https://wa.me/${config.whatsapp.number}?text=${message}`;
 
+  const layoutStyles =
+    'inline-flex min-h-[44px] items-center justify-center px-4 py-2 text-xs font-semibold uppercase transition-all';
+  const variantStyles = {
+    dark: 'border border-[var(--alcohn-line-strong)] bg-[var(--alcohn-ink)] text-white shadow-[0_16px_40px_rgba(17,16,14,0.18)] hover:border-[var(--alcohn-bronze)] hover:bg-[var(--alcohn-ink-soft)]',
+    light:
+      'border border-white bg-white text-black hover:bg-[var(--alcohn-paper)] hover:text-black',
+  };
+
   return (
     <a
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-block bg-green-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-600 transition-colors text-center ${className}`}
+      className={`${layoutStyles} ${variantStyles[variant]} ${className}`.trim()}
     >
       {children || "Hablar por WhatsApp"}
     </a>
   );
 }
-

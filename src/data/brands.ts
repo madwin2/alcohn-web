@@ -5,6 +5,10 @@ export interface Brand {
 
 export const brands: Brand[] = [
   {
+    name: "Cheval",
+    logo: "/images/brands/Cheval.png"
+  },
+  {
     name: "Brooksfield",
     logo: "/images/brands/Marcas Brooksfield.png"
   },
@@ -48,7 +52,10 @@ export const brands: Brand[] = [
     name: "Vit",
     logo: "/images/brands/Marcas Vit.png"
   },
+  {
+    name: "Terrazas de los Andes",
+    logo: "/images/brands/Terrazas de los Andes.png"
+  },
 ];
-
 
 

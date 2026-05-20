@@ -3,6 +3,7 @@ import { Product } from '@/data/products';
 import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
+import PurchaseInclusions from './PurchaseInclusions';
 
 interface ProductSheetProps {
   product: Product;
@@ -45,9 +46,9 @@ export default function ProductSheet({ product }: ProductSheetProps) {
       {/* Main Product Info - Sheet Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
         {/* Images Column */}
-        <div className="space-y-4">
+        <div className="space-y-4 order-2 lg:order-1">
           {/* Main Image */}
-          <div className="aspect-square bg-white relative overflow-hidden border border-neutral-200">
+          <div className="material-frame aspect-square relative overflow-hidden">
             {product.images.default ? (
               <Image
                 src={product.images.default}
@@ -69,7 +70,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
           {/* Thumbnails */}
           <div className="grid grid-cols-3 gap-4">
             {product.images.default && (
-              <div className="aspect-square bg-white relative overflow-hidden border border-neutral-200">
+              <div className="material-frame aspect-square relative overflow-hidden">
                 <Image
                   src={product.images.default}
                   alt={`${product.name} - Vista general`}
@@ -80,7 +81,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
               </div>
             )}
             {product.images.onLeather && (
-              <div className="aspect-square bg-white relative overflow-hidden border border-neutral-200">
+              <div className="material-frame aspect-square relative overflow-hidden">
                 <Image
                   src={product.images.onLeather}
                   alt={`${product.name} - En cuero`}
@@ -91,7 +92,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
               </div>
             )}
             {product.images.onWood && (
-              <div className="aspect-square bg-white relative overflow-hidden border border-neutral-200">
+              <div className="material-frame aspect-square relative overflow-hidden">
                 <Image
                   src={product.images.onWood}
                   alt={`${product.name} - En madera`}
@@ -105,11 +106,11 @@ export default function ProductSheet({ product }: ProductSheetProps) {
         </div>
 
         {/* Sheet Column */}
-        <div className="space-y-8">
+        <div className="space-y-8 order-1 lg:order-2">
           {/* Código + Meta */}
-          <div className="space-y-3 pb-6 border-b border-neutral-200">
+          <div className="space-y-3 pb-6 border-b border-[var(--alcohn-line)]">
             <ProductCode code={productCode} />
-            <div className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
+            <div className="craft-label">
               BRONCE · CNC · USO: {materialLabel}
             </div>
           </div>
@@ -127,9 +128,49 @@ export default function ProductSheet({ product }: ProductSheetProps) {
             {product.description}
           </p>
 
+          {/* Price */}
+          <div className="pt-6 border-t border-[var(--alcohn-line)]">
+            <p className="text-lg text-neutral-600">
+              <span className="craft-label mr-3">Desde</span>
+              {priceDisplay}
+            </p>
+          </div>
+
+          {/* CTAs - Botones industriales */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-[var(--alcohn-line)]">
+            <ActionButton
+              href={`/buy?product=${product.slug}`}
+              variant="primary"
+              className="flex-1"
+            >
+              Subir logo y ver precio
+            </ActionButton>
+            <ActionButton
+              href="/proceso"
+              variant="secondary"
+              className="flex-1"
+            >
+              Ver como funciona
+            </ActionButton>
+          </div>
+          <p className="text-xs text-neutral-500">
+            Muestra y precio antes de fabricar. Pago con tarjeta o seña por transferencia.
+          </p>
+
+          <div className="atelier-panel p-4">
+            <h3 className="craft-label mb-3">
+              Compra online
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-neutral-700">
+              <p><span className="font-medium text-neutral-900">1.</span> Subis tu logo.</p>
+              <p><span className="font-medium text-neutral-900">2.</span> Ves medida, muestra y precio.</p>
+              <p><span className="font-medium text-neutral-900">3.</span> Pagas online antes de fabricar.</p>
+            </div>
+          </div>
+
           {/* Key Specs Block */}
-          <div className="pt-6 border-t border-neutral-200 space-y-3">
-            <h3 className="text-xs uppercase tracking-wider text-neutral-600 font-medium mb-4">
+          <div className="pt-6 border-t border-[var(--alcohn-line)] space-y-3">
+            <h3 className="craft-label mb-4">
               ESPECIFICACIONES CLAVE
             </h3>
             {keySpecs.map((spec, index) => (
@@ -143,35 +184,15 @@ export default function ProductSheet({ product }: ProductSheetProps) {
               </div>
             ))}
           </div>
-
-          {/* Price */}
-          <div className="pt-6 border-t border-neutral-200">
-            <p className="text-lg text-neutral-600">
-              <span className="text-[10px] uppercase tracking-wider text-neutral-500 mr-3">Desde</span>
-              {priceDisplay}
-            </p>
-          </div>
-
-          {/* CTAs - Botones industriales */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-neutral-200">
-            <ActionButton
-              href={`/buy?product=${product.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="primary"
-              className="flex-1"
-            >
-              Iniciar proceso
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              className="flex-1"
-            >
-              Descargar ficha PDF
-            </ActionButton>
-          </div>
         </div>
       </div>
+
+      <PurchaseInclusions
+        variant={product.category === 'abecedario' ? 'abecedario' : 'personalizado'}
+        items={product.specs.incluye}
+        title={product.category === 'abecedario' ? 'Qué incluye el set' : 'Qué incluye tu sello'}
+        showKitIllustration={product.category === 'sello'}
+      />
 
       {/* Specifications Table - Mejorada */}
       <section className="border-t border-neutral-300 pt-16">
@@ -244,29 +265,37 @@ export default function ProductSheet({ product }: ProductSheetProps) {
 
       {/* Technical Diagram - Frame técnico */}
       <section className="border-t border-neutral-300 pt-16">
-        <div className="relative">
-          <div className="absolute top-0 right-0 px-3 py-1 border-l border-b border-neutral-300 bg-white">
-            <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
-              DIAGRAMA A
-            </span>
-          </div>
-          <div className="border border-neutral-200 p-16 flex items-center justify-center min-h-[400px] bg-white">
-            <div className="text-center text-neutral-400">
-              <svg
-                className="w-24 h-24 mx-auto mb-4 text-neutral-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p className="text-sm">Diagrama técnico</p>
-              <p className="text-xs mt-2 text-neutral-400">Se incluye en PDF</p>
+        <div className="dark-system-panel p-6 md:p-10 text-white">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.34fr_0.66fr] gap-10">
+            <div>
+              <p className="text-[10px] font-semibold uppercase text-white/56 mb-4">
+                Proceso técnico
+              </p>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">
+                De archivo a herramienta de marca
+              </h2>
+              <p className="mt-5 text-sm leading-relaxed text-white/62">
+                No vendemos una imagen grabada: fabricamos una pieza de bronce pensada para marcar productos reales con lectura, profundidad y repetibilidad.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 border border-white/12">
+              {[
+                ['01', 'Logo', 'Archivo, foto o vector'],
+                ['02', 'Medida', 'Escala según uso real'],
+                ['03', 'CNC', 'Bronce mecanizado'],
+                ['04', 'Marca', 'Prueba sobre material'],
+              ].map(([code, title, copy]) => (
+                <div key={code} className="border-b sm:border-b-0 sm:border-r last:border-r-0 border-white/12 p-5">
+                  <p className="text-[10px] font-semibold uppercase text-white/42">{code}</p>
+                  <h3 className="mt-8 text-lg font-semibold tracking-tight text-white">
+                    {title}
+                  </h3>
+                  <p className="mt-3 text-xs leading-relaxed text-white/52">
+                    {copy}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

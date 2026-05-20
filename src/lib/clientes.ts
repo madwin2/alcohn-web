@@ -1,71 +1,63 @@
-// Datos de clientes extraídos de las imágenes
-// La información viene de las imágenes "data" en public/images/clientes
+// Datos extraídos de las capturas "data" (perfil de Instagram de cada cliente)
 
 export interface ClienteData {
   nombre: string;
   instagram?: string;
-  paginaWeb?: string;
-  logo?: string;
 }
 
 export interface Cliente {
   nombre: string;
-  imagenes: string[]; // [sin numero, 1, 2]
-  imagenData: string; // imagen con "data"
+  imagenes: string[];
   data: ClienteData;
 }
 
-// Mapeo manual de datos de clientes basado en las imágenes disponibles
-// Estos datos deberían venir de las imágenes "data", pero por ahora los definimos aquí
-// TODO: Actualizar estos datos según la información real de las imágenes "data"
 export const clientesData: Record<string, ClienteData> = {
   amano: {
     nombre: 'Amano',
-    instagram: '@amano',
+    instagram: '@amano.salta',
   },
   artemisa: {
     nombre: 'Artemisa',
-    instagram: '@artemisa',
+    instagram: '@universo.artemisa',
   },
   elfaro: {
     nombre: 'El Faro',
-    instagram: '@elfaro',
+    instagram: '@elfaro.ef',
   },
   elpasuco: {
     nombre: 'El Pasuco',
-    instagram: '@elpasuco',
+    instagram: '@el_pasuco',
   },
   elpicahueso: {
-    nombre: 'El Pica Hueso',
-    instagram: '@elpicahueso',
+    nombre: 'Pica Hueso',
+    instagram: '@el_pica_hueso',
   },
   gorila: {
-    nombre: 'Gorila',
-    instagram: '@gorila',
+    nombre: 'Good Gorilla',
+    instagram: '@goodgorillaok',
   },
   hyn: {
-    nombre: 'HYN',
-    instagram: '@hyn',
+    nombre: 'Here&Now - Accesorios',
+    instagram: '@hn.leatherworks',
   },
   luy: {
-    nombre: 'Luy',
-    instagram: '@luy',
+    nombre: 'Alejandro Luy',
+    instagram: '@alejandro_luy',
   },
   monk: {
     nombre: 'Monk',
-    instagram: '@monk',
+    instagram: '@monk.tabaco',
   },
   'sabor a roble': {
     nombre: 'Sabor a Roble',
     instagram: '@saboraroble',
   },
   weberly: {
-    nombre: 'Weberly',
-    instagram: '@weberly',
+    nombre: 'Weberly Knives',
+    instagram: '@weberlyknives',
   },
 };
 
-// Función para obtener la lista de clientes con sus imágenes
 export function getClientes(): Cliente[] {
   const nombresClientes = [
     'amano',
@@ -92,15 +84,11 @@ export function getClientes(): Cliente[] {
       `/images/clientes/${nombreArchivo}2.png`,
     ];
     
-    const imagenData = `/images/clientes/${nombreArchivo} data.png`;
-    
     return {
       nombre,
       imagenes,
-      imagenData,
       data: clientesData[nombreNormalizado] || {
         nombre,
-        instagram: `@${nombreNormalizado.replace(/\s+/g, '')}`,
       },
     };
   });

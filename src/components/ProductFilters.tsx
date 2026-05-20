@@ -20,10 +20,10 @@ export default function ProductFilters({
   onSortChange,
 }: ProductFiltersProps) {
   return (
-    <div className="mb-16 pb-8 border-t border-b border-neutral-300 pt-8">
+    <div className="mb-16 pb-8 border-t border-b border-[var(--alcohn-line)] pt-8">
       {/* Título de módulo */}
       <div className="mb-6">
-        <h2 className="text-xs uppercase tracking-wider text-neutral-600 font-medium">
+        <h2 className="craft-label">
           CONFIGURAR VISTA
         </h2>
       </div>
@@ -31,18 +31,18 @@ export default function ProductFilters({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-end">
         {/* Material Filter */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-neutral-500 font-medium mb-3">
+          <label className="block craft-label mb-3">
             Qué querés marcar
           </label>
-          <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-px bg-neutral-300 p-px">
+          <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2">
             {(['todos', 'cuero', 'madera', 'ambos'] as const).map((material) => (
               <button
                 key={material}
                 onClick={() => onMaterialChange(material)}
-                className={`px-4 py-2 text-xs uppercase tracking-wider font-medium transition-colors whitespace-nowrap ${
+                className={`min-h-[40px] px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-colors whitespace-nowrap border ${
                   selectedMaterial === material
-                    ? 'bg-neutral-900 text-white'
-                    : 'bg-white text-neutral-700 hover:bg-neutral-50'
+                    ? 'bg-[var(--alcohn-ink)] text-white border-[var(--alcohn-ink)]'
+                    : 'bg-[var(--alcohn-surface)] text-neutral-700 border-[var(--alcohn-line)] hover:border-[var(--alcohn-bronze)] hover:bg-white'
                 }`}
               >
                 {material === 'todos' ? 'Todos' : material}
@@ -53,13 +53,13 @@ export default function ProductFilters({
 
         {/* Category Filter */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-neutral-500 font-medium mb-3">
+          <label className="block craft-label mb-3">
             Categoría
           </label>
           <select
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value as ProductCategory | 'todos')}
-            className="w-full px-3 py-2 text-xs uppercase tracking-wider border border-neutral-300 bg-white text-neutral-700 font-medium focus:outline-none focus:border-neutral-900 transition-colors"
+            className="w-full min-h-[40px] px-3 py-2 text-xs uppercase tracking-wider border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] text-neutral-700 font-semibold focus:outline-none focus:border-[var(--alcohn-bronze)] transition-colors"
           >
             <option value="todos">Todos</option>
             <option value="sello">Sellos</option>
@@ -69,13 +69,13 @@ export default function ProductFilters({
 
         {/* Sort Filter */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-neutral-500 font-medium mb-3">
+          <label className="block craft-label mb-3">
             Ordenar por
           </label>
           <select
             value={selectedSort}
             onChange={(e) => onSortChange(e.target.value as typeof selectedSort)}
-            className="w-full px-3 py-2 text-xs uppercase tracking-wider border border-neutral-300 bg-white text-neutral-700 font-medium focus:outline-none focus:border-neutral-900 transition-colors"
+            className="w-full min-h-[40px] px-3 py-2 text-xs uppercase tracking-wider border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] text-neutral-700 font-semibold focus:outline-none focus:border-[var(--alcohn-bronze)] transition-colors"
           >
             <option value="destacados">Destacados</option>
             <option value="menor-precio">Menor precio</option>
