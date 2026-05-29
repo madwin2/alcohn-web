@@ -22,6 +22,8 @@ export default function IntentCard({
   priority = false,
   className = '',
 }: IntentCardProps) {
+  const mobileDescription = description.split('. ')[0]?.trim();
+
   return (
     <div className={`material-card flex flex-col p-3 ${className}`}>
       {/* Image Preview */}
@@ -44,8 +46,9 @@ export default function IntentCard({
           <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
             {title}
           </h3>
-          <p className="text-sm text-neutral-600 leading-relaxed max-w-md">
-            {description}
+          <p className="max-w-md text-sm leading-relaxed text-neutral-600">
+            <span className="md:hidden">{mobileDescription?.endsWith('.') ? mobileDescription : `${mobileDescription}.`}</span>
+            <span className="hidden md:inline">{description}</span>
           </p>
         </div>
         

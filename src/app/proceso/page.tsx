@@ -1,11 +1,31 @@
+import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import Timeline from '@/components/Timeline';
 import { processSteps } from '@/data/process';
+import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Cómo funciona - Alcohn',
   description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado. Desde el envío de tu logo hasta la entrega final.',
+  alternates: {
+    canonical: '/proceso',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: '/proceso',
+    siteName: SITE_NAME,
+    title: 'Cómo funciona - Alcohn',
+    description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado.',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cómo funciona - Alcohn',
+    description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado.',
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
 
 const facts = [
@@ -27,9 +47,18 @@ const facts = [
   },
 ];
 
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: 'Inicio', path: '/' },
+  { name: 'Cómo funciona', path: '/proceso' },
+]);
+
 export default function ProcesoPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Proceso Alcohn"
@@ -44,11 +73,6 @@ export default function ProcesoPage() {
             href: '/como-usar-sellos',
             variant: 'secondary',
           }}
-          highlights={[
-            'Logo y datos guardados',
-            'Muestra previa antes de fabricar',
-            'CNC, control y despacho',
-          ]}
         />
 
         <section className="mb-20">

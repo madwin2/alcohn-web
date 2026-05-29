@@ -1,9 +1,30 @@
+import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
+import MobileCarousel from '@/components/MobileCarousel';
+import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd, localBusinessJsonLd } from '@/lib/seo';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
   description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
+  alternates: {
+    canonical: '/sobre-alcohn',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: '/sobre-alcohn',
+    siteName: SITE_NAME,
+    title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
+    description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
+    description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
 
 const values = [
@@ -14,9 +35,22 @@ const values = [
   ['Innovacion', 'Buscamos siempre la innovacion en el diseño y la tecnologia.'],
 ];
 
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: 'Inicio', path: '/' },
+  { name: 'Sobre Alcohn', path: '/sobre-alcohn' },
+]);
+
 export default function SobreAlcohnPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Sobre Alcohn"
@@ -31,6 +65,7 @@ export default function SobreAlcohnPage() {
             href: '/casos-reales',
             variant: 'secondary',
           }}
+          hideHighlightsOnMobile
           highlights={[
             'Fabricación en Mar del Plata',
             'Piezas de bronce con terminación precisa',
@@ -68,9 +103,9 @@ export default function SobreAlcohnPage() {
                 Precisión, material y criterio
               </h2>
             </div>
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+            <MobileCarousel rowClassName="relative z-10 md:grid md:grid-cols-2 lg:grid-cols-5" hint="Deslizá valores">
               {values.map(([title, copy]) => (
-                <article key={title} className="border-b md:border-r last:border-r-0 border-[var(--alcohn-line)] p-5 md:p-6">
+                <article key={title} className="mobile-snap-card border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-5 md:min-w-0 md:border-b md:border-r md:bg-transparent md:last:border-r-0 md:p-6">
                   <h3 className="text-lg font-semibold tracking-tight text-neutral-950">
                     {title}
                   </h3>
@@ -79,7 +114,7 @@ export default function SobreAlcohnPage() {
                   </p>
                 </article>
               ))}
-            </div>
+            </MobileCarousel>
           </div>
         </section>
 

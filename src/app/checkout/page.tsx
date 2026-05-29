@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -13,6 +13,16 @@ import { consumeCheckoutPrefill, cartLooksLikeWizardPersonalizado } from '@/lib/
 import { peekWizardSupabaseSession, clearWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import { createCheckoutIntent, uploadComprobante } from '@/lib/supabase/mockupApiClient';
 import { sanitizeCartItemsForDb } from '@/lib/supabase/cartItems';
+import CheckoutShippingForm, {
+  type CheckoutShippingFormHandle,
+} from '@/components/checkout/CheckoutShippingForm';
+import { fetchShippingCost } from '@/lib/shipping/client';
+import {
+  peekCheckoutShipping,
+  saveCheckoutShipping,
+} from '@/lib/shipping/storage';
+import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
+import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -33,6 +43,7 @@ export default function CheckoutPage() {
   const [checkoutSaving, setCheckoutSaving] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [openpayTestAmount, setOpenpayTestAmount] = useState<number | null>(null);
+  const [openpaySimulateSuccess, setOpenpaySimulateSuccess] = useState(false);
   // Guardar datos del pedido antes de limpiar el carrito
   const [orderData, setOrderData] = useState<{
     items: typeof items;
@@ -41,22 +52,59 @@ export default function CheckoutPage() {
 
   const [prefillFromWizard, setPrefillFromWizard] = useState(false);
   const appliedCheckoutPrefillRef = useRef(false);
+  const shippingFormRef = useRef<CheckoutShippingFormHandle>(null);
+  const [shippingSectionError, setShippingSectionError] = useState<string | null>(null);
+  const [shippingMetodo, setShippingMetodo] = useState<ShippingMetodoUi>('retiro');
+  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
+  const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
 
   const subtotal = getSubtotal();
+  const totalConEnvio = subtotal + shippingCost;
   const hasCartContent = items.length > 0 || orderData !== null;
   const currentItems = orderData?.items || items;
   const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
+  const orderSubtotal = orderData?.subtotal ?? subtotal;
+  const orderTotalConEnvio = orderSubtotal + shippingCost;
 
   useEffect(() => {
     fetch('/api/checkout/openpay')
       .then((r) => r.json())
-      .then((data: { testAmountArs?: number | null }) => {
+      .then((data: { testAmountArs?: number | null; simulateSuccess?: boolean }) => {
         if (typeof data.testAmountArs === 'number' && data.testAmountArs > 0) {
           setOpenpayTestAmount(data.testAmountArs);
         }
+        if (data.simulateSuccess) setOpenpaySimulateSuccess(true);
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const stored = peekCheckoutShipping();
+    if (stored) {
+      setShippingMetodo(stored.metodo);
+      setShippingCost(stored.costo);
+      setShippingMetodoChosen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (shippingMetodo === 'retiro') {
+      setShippingCost(0);
+      return;
+    }
+    const tipo = shippingMetodo === 'domicilio' ? 'Domicilio' : 'Sucursal';
+    let cancelled = false;
+    fetchShippingCost(tipo).then((cost) => {
+      if (!cancelled) {
+        setShippingCost(cost);
+        saveCheckoutShipping(shippingMetodo, cost);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [shippingMetodo]);
 
   useEffect(() => {
     if (appliedCheckoutPrefillRef.current) return;
@@ -93,7 +141,9 @@ export default function CheckoutPage() {
       }
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es requerido';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
 
@@ -101,11 +151,32 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleShippingSubmit = (form: ShippingFormData) => {
+    setShippingForm({
+      ...form,
+      nombreCompleto: form.nombreCompleto || formData.nombre,
+      telefono: form.telefono || formData.whatsapp,
+      email: form.email || formData.email,
+    });
+    saveCheckoutShipping(shippingMetodo, shippingCost);
+    setShippingSectionError(null);
+    setStep(2);
+  };
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setStep(2);
+    if (!validateForm()) return;
+
+    if (!shippingMetodoChosen) {
+      setShippingSectionError('Elegí cómo querés recibir tu pedido antes de continuar.');
+      return;
     }
+
+    if (!shippingFormRef.current?.trySubmit()) {
+      setShippingSectionError(null);
+      return;
+    }
+    setShippingSectionError(null);
   };
 
   const buildCheckoutIntentPayload = (metodo: 'Openpay' | 'Transferencia') => {
@@ -124,7 +195,33 @@ export default function CheckoutPage() {
       provincia: formData.provincia,
       ciudad: formData.ciudad,
       notas: formData.notas,
+      envio: shippingForm
+        ? {
+            metodo: shippingMetodo,
+            form: shippingForm,
+          }
+        : undefined,
+      envio_costo: shippingCost > 0 ? shippingCost : 0,
+      envio_metodo: shippingMetodo,
     };
+  };
+
+  const openpayItems = () => {
+    const base = (orderData?.items ?? items).map((item) => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      qty: item.qty,
+    }));
+    if (shippingCost > 0) {
+      base.push({
+        id: 'envio-correo',
+        title: `Envío (${SHIPPING_METODO_LABELS[shippingMetodo]})`,
+        price: shippingCost,
+        qty: 1,
+      });
+    }
+    return base;
   };
 
   const handleOpenpayCheckout = async () => {
@@ -136,12 +233,14 @@ export default function CheckoutPage() {
       setOrderData({ items: [...items], subtotal });
       setOrderId(intent.orden_id);
 
-      const payloadItems = items.map((item) => ({
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        qty: item.qty,
-      }));
+      if (openpaySimulateSuccess) {
+        clearCart();
+        clearWizardSupabaseSession();
+        window.location.href = `/checkout/openpay/success?orden_id=${encodeURIComponent(intent.orden_id)}`;
+        return;
+      }
+
+      const payloadItems = openpayItems();
       const res = await fetch('/api/checkout/openpay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -200,7 +299,10 @@ export default function CheckoutPage() {
       (formData.provincia ? `Provincia: ${formData.provincia}\n` : '') +
       (formData.ciudad ? `Ciudad: ${formData.ciudad}\n` : '') +
       `\n*Pedido:*\n${itemsText}\n\n` +
-      `*Subtotal: $${currentSubtotal.toLocaleString('es-AR')}*\n` +
+      (shippingCost > 0
+        ? `*Envío: $${shippingCost.toLocaleString('es-AR')}*\n`
+        : '') +
+      `*Total: $${(currentSubtotal + shippingCost).toLocaleString('es-AR')}*\n` +
       `*Seña a transferir: $${config.seña.amount.toLocaleString('es-AR')}*\n\n` +
       (formData.notas ? `*Notas:* ${formData.notas}\n\n` : '') +
       `Adjunto el comprobante de transferencia.`;
@@ -273,20 +375,66 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="atelier-page min-h-screen py-16">
+    <div className="atelier-page min-h-screen py-6 md:py-16 pb-24 md:pb-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 mb-4 tracking-tight">
-            Finalizar pedido
+        <div className="mb-4 md:mb-12">
+          <p className="craft-label mb-2 md:hidden">Paso {step} de 3</p>
+          <h1 className="text-[1.85rem] md:text-5xl font-semibold text-neutral-900 mb-1 md:mb-4 tracking-tight">
+            {step === 3 ? 'Pedido generado' : step === 2 ? 'Confirmar y pagar' : 'Finalizar pedido'}
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+        {/* Resumen mobile compacto (steps 1 y 2) */}
+        {step !== 3 && (
+          <details className="lg:hidden mb-4 border border-[var(--alcohn-line)] bg-white open:bg-white">
+            <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+              <div className="flex flex-col min-w-0">
+                <span className="craft-label text-[10px]">{currentItems.length} {currentItems.length === 1 ? 'artículo' : 'artículos'}</span>
+                <span className="text-base font-semibold text-neutral-900">
+                  Total ${orderTotalConEnvio.toLocaleString('es-AR')}
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                Ver detalle
+                <svg className="h-3 w-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </summary>
+            <div className="border-t border-[var(--alcohn-line)] px-4 py-4 space-y-3">
+              {currentItems.map((item) => (
+                <div key={item.id} className="flex items-start justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium text-neutral-900 truncate">{item.title}</p>
+                    <p className="text-xs text-neutral-500">{item.variantSize} · x{item.qty}</p>
+                  </div>
+                  <p className="font-semibold text-neutral-900 whitespace-nowrap">
+                    ${(item.price * item.qty).toLocaleString('es-AR')}
+                  </p>
+                </div>
+              ))}
+              <div className="border-t border-neutral-200 pt-3 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Subtotal</span>
+                  <span className="font-semibold text-neutral-900">${orderSubtotal.toLocaleString('es-AR')}</span>
+                </div>
+                {shippingCost > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Envío ({SHIPPING_METODO_LABELS[shippingMetodo]})</span>
+                    <span className="font-semibold text-neutral-900">${shippingCost.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </details>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10 lg:gap-16">
           {/* Formulario / Resumen */}
           <div className="lg:col-span-2">
             {step === 1 ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
                 <div>
                   <h2 className="text-xl font-semibold text-neutral-900 mb-6 tracking-tight">
                     Datos de contacto
@@ -305,12 +453,13 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         id="nombre"
+                        autoComplete="name"
                         value={formData.nombre}
                         onChange={(e) => {
                           setFormData({ ...formData, nombre: e.target.value });
                           if (errors.nombre) setErrors({ ...errors, nombre: '' });
                         }}
-                        className={`w-full px-4 py-3 border text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
+                        className={`w-full px-4 py-3 border text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
                           errors.nombre ? 'border-red-500' : 'border-neutral-300'
                         }`}
                         required
@@ -327,12 +476,14 @@ export default function CheckoutPage() {
                       <input
                         type="tel"
                         id="whatsapp"
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={formData.whatsapp}
                         onChange={(e) => {
                           setFormData({ ...formData, whatsapp: e.target.value });
                           if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
                         }}
-                        className={`w-full px-4 py-3 border text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
+                        className={`w-full px-4 py-3 border text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
                           errors.whatsapp ? 'border-red-500' : 'border-neutral-300'
                         }`}
                         placeholder="+54 9 223 123-4567"
@@ -348,66 +499,100 @@ export default function CheckoutPage() {
 
                     <div>
                       <label htmlFor="email" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-                        Email (opcional)
+                        Email *
                       </label>
                       <input
                         type="email"
                         id="email"
+                        autoComplete="email"
+                        inputMode="email"
                         value={formData.email}
                         onChange={(e) => {
                           setFormData({ ...formData, email: e.target.value });
                           if (errors.email) setErrors({ ...errors, email: '' });
                         }}
-                        className={`w-full px-4 py-3 border text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
+                        className={`w-full px-4 py-3 border text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1 ${
                           errors.email ? 'border-red-500' : 'border-neutral-300'
                         }`}
+                        required
                       />
                       {errors.email && (
                         <p className="mt-1 text-xs text-red-600">{errors.email}</p>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="provincia" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-                          Provincia (opcional)
-                        </label>
-                        <input
-                          type="text"
-                          id="provincia"
-                          value={formData.provincia}
-                          onChange={(e) => setFormData({ ...formData, provincia: e.target.value })}
-                          className="w-full px-4 py-3 border border-neutral-300 text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
-                        />
-                      </div>
+                  </div>
+                </div>
 
-                      <div>
-                        <label htmlFor="ciudad" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-                          Ciudad (opcional)
-                        </label>
-                        <input
-                          type="text"
-                          id="ciudad"
-                          value={formData.ciudad}
-                          onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
-                          className="w-full px-4 py-3 border border-neutral-300 text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
-                        />
-                      </div>
+                <div className="pt-10 mt-10 border-t border-neutral-200 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">
+                      Datos de envío
+                    </h2>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <p className="text-sm text-neutral-600">
+                        {shippingMetodoChosen
+                          ? `Elegiste: ${SHIPPING_METODO_LABELS[shippingMetodo]}`
+                          : 'Elegí cómo querés recibir tu pedido.'}
+                      </p>
+                      {shippingMetodoChosen && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShippingMetodoChosen(false);
+                            setShippingSectionError(null);
+                          }}
+                          className="text-xs font-medium uppercase tracking-wider text-neutral-600 underline hover:text-neutral-900 transition-colors"
+                        >
+                          Cambiar
+                        </button>
+                      )}
                     </div>
-
-                    <div>
-                      <label htmlFor="notas" className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
-                        Notas adicionales (opcional)
-                      </label>
-                      <textarea
-                        id="notas"
-                        value={formData.notas}
-                        onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                        rows={4}
-                        className="w-full px-4 py-3 border border-neutral-300 text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
-                        placeholder="Alguna indicación especial, fecha de entrega deseada, etc."
+                    {!shippingMetodoChosen && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                        {(
+                          [
+                            ['domicilio', 'Domicilio'],
+                            ['sucursal', 'Sucursal'],
+                            ['retiro', SHIPPING_METODO_LABELS.retiro],
+                          ] as const
+                        ).map(([id, label]) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              setShippingMetodo(id);
+                              setShippingMetodoChosen(true);
+                              setShippingSectionError(null);
+                            }}
+                            className={`technical-sheet p-4 text-left text-sm font-medium transition-colors hover:border-[var(--alcohn-bronze)] ${
+                              shippingMetodo === id
+                                ? 'border-[var(--alcohn-bronze)] bg-white'
+                                : ''
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {shippingSectionError && (
+                      <p className="mb-4 text-sm text-red-600" role="alert">
+                        {shippingSectionError}
+                      </p>
+                    )}
+                    {shippingMetodoChosen && (
+                      <CheckoutShippingForm
+                        ref={shippingFormRef}
+                        embedded
+                        showActions={false}
+                        metodo={shippingMetodo}
+                        nombreCompleto={formData.nombre}
+                        telefono={formData.whatsapp}
+                        email={formData.email}
+                        onSubmit={handleShippingSubmit}
                       />
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -416,7 +601,7 @@ export default function CheckoutPage() {
                     type="submit"
                     className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
-                    Continuar
+                    Continuar al pago
                   </button>
                 </div>
               </form>
@@ -450,13 +635,24 @@ export default function CheckoutPage() {
                         {formData.notas && (
                           <p className="mt-2"><strong>Notas:</strong> {formData.notas}</p>
                         )}
+                        <p className="mt-2">
+                          <strong>Envío:</strong> {SHIPPING_METODO_LABELS[shippingMetodo]}
+                          {shippingCost > 0 && ` — $${shippingCost.toLocaleString('es-AR')}`}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-6 border-t border-neutral-200 space-y-3">
-                  {openpayTestAmount != null && (
+                  {openpaySimulateSuccess && (
+                    <p className="text-xs text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-sm text-center">
+                      Modo desarrollo: al pagar con tarjeta <strong>no</strong> se abre Openpay. Se
+                      simula el pago exitoso y vas directo a la pantalla de confirmación (el pedido
+                      en Supabase se registra igual).
+                    </p>
+                  )}
+                  {openpayTestAmount != null && !openpaySimulateSuccess && (
                     <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-sm text-center">
                       Modo prueba Openpay: la tarjeta se cobrará{' '}
                       <strong>${openpayTestAmount.toLocaleString('es-AR')}</strong> (el pedido en
@@ -467,17 +663,26 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={handleOpenpayCheckout}
                     disabled={openpayLoading || checkoutSaving}
-                    className="w-full border border-neutral-900 bg-white text-neutral-900 px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                    className={`w-full border px-6 py-3 text-sm font-medium uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${
+                      openpaySimulateSuccess
+                        ? 'border-emerald-800 bg-emerald-800 text-white hover:bg-emerald-700 focus:ring-emerald-800'
+                        : 'border-neutral-900 bg-white text-neutral-900 hover:bg-neutral-50 focus:ring-neutral-900'
+                    }`}
                   >
                     {openpayLoading
-                      ? 'Conectando con Openpay…'
-                      : openpayTestAmount != null
-                        ? `Pagar $${openpayTestAmount.toLocaleString('es-AR')} con tarjeta (prueba Openpay)`
-                        : `Pagar $${subtotal.toLocaleString('es-AR')} con tarjeta (Openpay)`}
+                      ? openpaySimulateSuccess
+                        ? 'Simulando pago…'
+                        : 'Conectando con Openpay…'
+                      : openpaySimulateSuccess
+                        ? 'Simular pago exitoso (solo desarrollo)'
+                        : openpayTestAmount != null
+                          ? `Pagar $${openpayTestAmount.toLocaleString('es-AR')} con tarjeta (prueba Openpay)`
+                          : `Pagar $${totalConEnvio.toLocaleString('es-AR')} con tarjeta (Openpay)`}
                   </button>
                   <p className="text-xs text-neutral-500 text-center">
-                    Te llevamos al checkout seguro de BBVA Openpay. La intención de pago vence en unos
-                    minutos.
+                    {openpaySimulateSuccess
+                      ? 'No se cobra en la pasarela. Sirve para probar checkout, envío y confirmación.'
+                      : 'Te llevamos al checkout seguro de BBVA Openpay. La intención de pago vence en unos minutos.'}
                   </p>
                   {openpayError && (
                     <p className="text-xs text-red-600 text-center" role="alert">
@@ -510,7 +715,7 @@ export default function CheckoutPage() {
                     onClick={() => setStep(1)}
                     className="w-full text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
                   >
-                    ← Volver a editar datos
+                    ← Volver a datos del pedido
                   </button>
                 </div>
               </div>
@@ -624,7 +829,7 @@ export default function CheckoutPage() {
                         id="receipt"
                         accept="image/*,.pdf"
                         onChange={handleUploadReceipt}
-                        className="w-full px-4 py-3 border border-neutral-300 text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
+                        className="w-full px-4 py-3 border border-neutral-300 text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
                       />
                       <p className="mt-1 text-xs text-neutral-500">
                         Subí una foto o PDF del comprobante de transferencia
@@ -671,14 +876,18 @@ export default function CheckoutPage() {
           </div>
 
           {/* Sidebar resumen */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <div className="lg:sticky lg:top-24">
               <div className="technical-sheet p-6 space-y-6">
                 <h2 className="text-lg font-semibold text-neutral-900 tracking-tight">
                   Resumen
                 </h2>
                 
-                <CartSummary subtotal={orderData?.subtotal || subtotal} />
+                <CartSummary
+                  subtotal={orderSubtotal}
+                  shippingCost={shippingCost}
+                  shippingLabel={SHIPPING_METODO_LABELS[shippingMetodo]}
+                />
 
                 <PurchaseInclusions
                   variant={isPersonalizedOrder ? 'personalizado' : 'estandar'}
@@ -691,9 +900,8 @@ export default function CheckoutPage() {
                     <strong>Información de pago:</strong>
                   </p>
                   <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>• Pago total con tarjeta (Openpay) o seña por transferencia</li>
-                    <li>• Seña de $10.000 para empezar (transferencia)</li>
-                    <li>• Resto cuando está listo</li>
+                    <li>• Pago total con tarjeta (Openpay)</li>
+                    <li>• Pago total con transferencia</li>
                     <li>• Factura C disponible</li>
                   </ul>
                 </div>

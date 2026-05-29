@@ -2,6 +2,7 @@
 
 import { CotizacionData } from '@/types';
 import { config } from '@/lib/config';
+import { trackEvent } from '@/lib/analytics/client';
 
 interface WhatsappButtonProps {
   data?: CotizacionData;
@@ -45,6 +46,14 @@ export default function WhatsappButton({
   const message = buildMessage();
   const whatsappUrl = `https://wa.me/${config.whatsapp.number}?text=${message}`;
 
+  const handleClick = () => {
+    void trackEvent('whatsapp_click', {
+      metadata: {
+        hasCotizacionData: Boolean(data),
+      },
+    });
+  };
+
   const layoutStyles =
     'inline-flex min-h-[44px] items-center justify-center px-4 py-2 text-xs font-semibold uppercase transition-all';
   const variantStyles = {
@@ -59,6 +68,7 @@ export default function WhatsappButton({
       target="_blank"
       rel="noopener noreferrer"
       className={`${layoutStyles} ${variantStyles[variant]} ${className}`.trim()}
+      onClick={handleClick}
     >
       {children || "Hablar por WhatsApp"}
     </a>

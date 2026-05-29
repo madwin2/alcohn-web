@@ -56,15 +56,16 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+        <h2 className="mb-2 text-lg font-semibold text-gray-900 md:text-2xl">
           Datos para guardar tu cotización
         </h2>
-        <p className="text-gray-600 leading-relaxed">
-          En 2 minutos podés ver medidas, muestra y precio. Pedimos estos datos al inicio para
-          guardar tu cotización, recuperar el proceso si salís de la página y enviarte la muestra si
-          el logo necesita revisión.
+        <p className="text-sm leading-relaxed text-gray-600 md:text-base">
+          <span className="md:hidden">Completá estos 3 datos para seguir.</span>
+          <span className="hidden md:inline">
+            En 2 minutos ves medidas, muestra y precio. Guardamos estos datos para retomar el pedido y enviarte la muestra si hace falta revisión.
+          </span>
         </p>
       </div>
 
@@ -76,12 +77,13 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
           <input
             type="text"
             id="nombre"
+            autoComplete="name"
             value={nombre}
             onChange={(e) => {
               setNombre(e.target.value);
               if (errors.nombre) setErrors({ ...errors, nombre: undefined });
             }}
-            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+            className={`w-full border bg-white px-3 py-3 text-base md:text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] md:px-4 md:py-3 ${
               errors.nombre ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: Juan Pérez"
@@ -98,12 +100,14 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
           <input
             type="tel"
             id="whatsapp"
+            autoComplete="tel"
+            inputMode="tel"
             value={whatsapp}
             onChange={(e) => {
               setWhatsapp(e.target.value);
               if (errors.whatsapp) setErrors({ ...errors, whatsapp: undefined });
             }}
-            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+            className={`w-full border bg-white px-3 py-3 text-base md:text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] md:px-4 md:py-3 ${
               errors.whatsapp ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: +54 9 223 123-4567"
@@ -111,7 +115,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
           {errors.whatsapp && (
             <p className="mt-1 text-sm text-red-600">{errors.whatsapp}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-[11px] text-gray-500 md:text-xs">
             Incluí el código de país. Ej: +54 9 223 123-4567
           </p>
         </div>
@@ -123,12 +127,14 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
           <input
             type="email"
             id="email"
+            autoComplete="email"
+            inputMode="email"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
               if (errors.email) setErrors({ ...errors, email: undefined });
             }}
-            className={`w-full px-4 py-3 border bg-white text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] ${
+            className={`w-full border bg-white px-3 py-3 text-base md:text-sm text-neutral-950 focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] md:px-4 md:py-3 ${
               errors.email ? 'border-red-500' : 'border-[var(--alcohn-line)]'
             }`}
             placeholder="Ej: juan.perez@email.com"
@@ -140,7 +146,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
 
         <button
           type="submit"
-          className="w-full min-h-[44px] px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] focus:ring-offset-2"
+          className="sticky bottom-0 z-20 w-full min-h-[44px] px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] focus:ring-offset-2"
         >
           Continuar
         </button>

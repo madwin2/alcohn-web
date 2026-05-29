@@ -26,6 +26,8 @@ import { isSupabaseConfigured, getSupabaseAdmin } from '@/lib/supabase/admin';
 import { upsertClienteServer } from '@/lib/supabase/upsertClienteServer';
 import { parseCartItemsFromBody } from '@/lib/supabase/cartItems';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
+import { saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
+import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -55,6 +57,32 @@ interface IntentBody {
   provincia?: unknown;
   ciudad?: unknown;
   notas?: unknown;
+  envio?: {
+    metodo?: unknown;
+    form?: unknown;
+  };
+  envio_costo?: unknown;
+  envio_metodo?: unknown;
+}
+
+function parseEnvioMetodo(v: unknown): ShippingMetodoUi | null {
+  if (v === 'domicilio' || v === 'sucursal' || v === 'retiro') return v;
+  return null;
+}
+
+function parseShippingForm(raw: unknown): ShippingFormData | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  return {
+    nombreCompleto: typeof o.nombreCompleto === 'string' ? o.nombreCompleto : '',
+    email: typeof o.email === 'string' ? o.email : '',
+    telefono: typeof o.telefono === 'string' ? o.telefono : '',
+    provincia: typeof o.provincia === 'string' ? o.provincia : '',
+    localidad: typeof o.localidad === 'string' ? o.localidad : '',
+    domicilio: typeof o.domicilio === 'string' ? o.domicilio : '',
+    codigoPostal: typeof o.codigoPostal === 'string' ? o.codigoPostal : '',
+    codigoSucursal: typeof o.codigoSucursal === 'string' ? o.codigoSucursal : '',
+  };
 }
 
 export async function POST(req: Request) {
@@ -183,18 +211,31 @@ export async function POST(req: Request) {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const webCheckoutRef = randomUUID().replace(/-/g, '').slice(0, 32);
 
+  const envioCostoRaw = body.envio_costo;
+  const envioCosto =
+    typeof envioCostoRaw === 'number' && envioCostoRaw > 0
+      ? envioCostoRaw
+      : typeof envioCostoRaw === 'string'
+        ? Number(envioCostoRaw)
+        : 0;
+  const envioMetodoRaw =
+    typeof body.envio_metodo === 'string' ? body.envio_metodo.trim() : '';
+
   const notasWeb: Record<string, unknown> = {
     provincia: typeof body.provincia === 'string' ? body.provincia.trim() : '',
     ciudad: typeof body.ciudad === 'string' ? body.ciudad.trim() : '',
     notas: typeof body.notas === 'string' ? body.notas.trim() : '',
     subtotal_carrito: subtotal,
     items_count: items.reduce((n, i) => n + i.qty, 0),
+    envio_costo: Number.isFinite(envioCosto) && envioCosto > 0 ? envioCosto : 0,
+    envio_metodo: envioMetodoRaw || undefined,
   };
 
   const estadoPagoWeb = estadoPagoForMetodo(metodoPago);
 
   const { data: orden, error: ordErr } = await supabase
     .from('ordenes')
+    // Tipado Supabase del proyecto resuelve Insert como never en esta tabla
     .insert({
       cliente_id: clienteId,
       origen: 'Web',
@@ -205,7 +246,7 @@ export async function POST(req: Request) {
       web_checkout_ref: webCheckoutRef,
       carrito_json: items,
       notas_web: notasWeb,
-    })
+    } as never)
     .select('id')
     .single();
 
@@ -221,22 +262,61 @@ export async function POST(req: Request) {
     );
   }
 
+  const ordenId = (orden as { id: string }).id;
+
   if (mockupId) {
     const now = new Date().toISOString();
     await supabase
       .from('mockup_solicitudes')
       .update({
-        orden_id: orden.id,
+        orden_id: ordenId,
         cliente_id: clienteId,
         checkout_completado_at: now,
         checkout_iniciado_at: now,
         carrito_json: items,
-      })
+      } as never)
       .eq('id', mockupId);
   }
 
+  const envioBlock = body.envio;
+  const envioMetodo = parseEnvioMetodo(envioBlock?.metodo);
+  const envioForm = parseShippingForm(envioBlock?.form);
+  if (envioMetodo && envioForm) {
+    try {
+      const nombreFallback =
+        hasClienteForm && typeof c!.nombre === 'string' ? (c!.nombre as string) : undefined;
+      await saveShippingForOrder(supabase, {
+        ordenId,
+        clienteId: clienteId!,
+        metodo: envioMetodo,
+        form: envioForm,
+        nombreCompletoFallback: nombreFallback,
+      });
+      const envioNotas = {
+        ...notasWeb,
+        envio_metodo: envioMetodo,
+      };
+      await supabase
+        .from('ordenes')
+        .update({ notas_web: envioNotas } as never)
+        .eq('id', ordenId);
+    } catch (shipErr) {
+      console.error('[checkout/intent] envio', shipErr);
+      await supabase.from('ordenes').delete().eq('id', ordenId);
+      return NextResponse.json(
+        {
+          error:
+            shipErr instanceof Error
+              ? shipErr.message
+              : 'No se pudieron validar los datos de envío',
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   return NextResponse.json({
-    orden_id: orden.id,
+    orden_id: ordenId,
     cliente_id: clienteId,
     web_checkout_ref: webCheckoutRef,
     estado_pago_web: estadoPagoWeb,

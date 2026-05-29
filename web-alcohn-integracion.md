@@ -145,7 +145,8 @@ La app interna puede consultarlas para un futuro tablero web sin pelearse con el
 - [ ] **No** insertar `sellos` hasta que el pago esté confirmado (Opción A).
 - [ ] **No** disparar `webhook-bot` con `pedido_registrado` desde la web.
 - [ ] Subir comprobantes a bucket `comprobantes` y reflejar `comprobante_*` en la orden.
-- [ ] Subir logos / mockups a `logos-web` y `mockups-web` (no a los buckets de la app).
+- [ ] Subir logos / mockups a `logos-web` y `mockups-web` durante el wizard.
+- [ ] Al confirmar pago (Openpay success / transferencia validada), copiar el logo al bucket `base` y setear `sellos.archivo_base` (app de gestión).
 - [ ] Antes de salir a producción: correr el SQL `001` en staging y verificar que la app sigue listando pedidos / mockups normalmente.
 
 ---

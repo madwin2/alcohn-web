@@ -245,6 +245,42 @@ export interface SelloInsert {
   senia?: number;
 }
 
+export interface WebAnalyticsEventRow {
+  id: string;
+  event_name: string;
+  page_path: string;
+  page_url: string | null;
+  referrer: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  visitor_id: string | null;
+  session_id: string | null;
+  metadata: Record<string, unknown>;
+  ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
+export interface WebAnalyticsEventInsert {
+  event_name: string;
+  page_path: string;
+  page_url?: string | null;
+  referrer?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  visitor_id?: string | null;
+  session_id?: string | null;
+  metadata?: Record<string, unknown>;
+  ip?: string | null;
+  user_agent?: string | null;
+}
+
 /**
  * Tipado mínimo para que el cliente Supabase devuelva tipos correctos en
  * `from('clientes')`, etc. No incluye todas las relaciones / RPC del proyecto.
@@ -271,6 +307,11 @@ export interface AlcohnDatabase {
         Row: SelloInsert & { id: string };
         Insert: SelloInsert;
         Update: Partial<SelloInsert>;
+      };
+      web_analytics_events: {
+        Row: WebAnalyticsEventRow;
+        Insert: WebAnalyticsEventInsert;
+        Update: Partial<WebAnalyticsEventInsert>;
       };
     };
     Views: Record<string, never>;

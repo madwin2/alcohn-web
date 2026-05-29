@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { config } from '@/lib/config';
+import { trackEvent } from '@/lib/analytics/client';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -11,9 +12,15 @@ export default function ContactForm() {
     mensaje: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    void trackEvent('lead_form_submit', {
+      metadata: {
+        channel: 'whatsapp',
+      },
+    });
     const message = [
       'Hola Alcohn, tengo una consulta desde la web.',
       `Nombre: ${formData.nombre}`,
@@ -27,6 +34,15 @@ export default function ContactForm() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!hasStarted) {
+      setHasStarted(true);
+      void trackEvent('lead_form_start', {
+        metadata: {
+          formId: 'contact_whatsapp_form',
+        },
+      });
+    }
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -34,7 +50,7 @@ export default function ContactForm() {
     if (submitted) setSubmitted(false);
   };
 
-  const inputClass = 'w-full border border-[var(--alcohn-line-strong)] bg-white px-4 py-3 text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:ring-offset-1';
+  const inputClass = 'w-full border border-[var(--alcohn-line-strong)] bg-white px-4 py-3 text-base md:text-sm text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:ring-offset-1';
   const labelClass = 'block craft-label mb-2';
 
   return (

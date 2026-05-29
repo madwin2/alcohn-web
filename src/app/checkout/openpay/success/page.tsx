@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
@@ -10,6 +10,7 @@ function OpenpaySuccessContent() {
   const ordenId = searchParams.get('orden_id');
   const { clearCart } = useCart();
   const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const confirmSentRef = useRef(false);
 
   useEffect(() => {
     clearCart();
@@ -17,6 +18,9 @@ function OpenpaySuccessContent() {
 
   useEffect(() => {
     if (!ordenId) return;
+    if (confirmSentRef.current) return;
+    confirmSentRef.current = true;
+
     let cancelled = false;
     setSyncState('loading');
     fetch(`/api/orders/${ordenId}/confirmar-pago`, { method: 'POST' })
@@ -45,8 +49,7 @@ function OpenpaySuccessContent() {
           Pago recibido
         </h1>
         <p className="text-sm text-neutral-600 mb-4">
-          Si completaste el pago en Openpay, tu operación quedó registrada. Te contactaremos por
-          WhatsApp para coordinar el envío y los detalles del pedido.
+          Muchas gracias por tu compra. Te vamos a contactar por WhatsApp para confirmarte la compra y por ese medio te vamos a mantener al tanto del estado de fabricacion de tu sello.
         </p>
         {ordenId && syncState === 'loading' && (
           <p className="text-xs text-neutral-500 mb-4">Registrando tu pedido…</p>

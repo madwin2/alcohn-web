@@ -6,55 +6,55 @@ export interface Brand {
 export const brands: Brand[] = [
   {
     name: "Cheval",
-    logo: "/images/brands/Cheval.png"
+    logo: "/images/brands/Cheval.webp"
   },
   {
     name: "Brooksfield",
-    logo: "/images/brands/Marcas Brooksfield.png"
+    logo: "/images/brands/Marcas Brooksfield.webp"
   },
   {
     name: "Dash",
-    logo: "/images/brands/Marcas Dash.png"
+    logo: "/images/brands/Marcas Dash.webp"
   },
   {
     name: "EN",
-    logo: "/images/brands/Marcas EN.png"
+    logo: "/images/brands/Marcas EN.webp"
   },
   {
     name: "JC",
-    logo: "/images/brands/Marcas JC.png"
+    logo: "/images/brands/Marcas JC.webp"
   },
   {
     name: "Kosi",
-    logo: "/images/brands/Marcas Kosi.png"
+    logo: "/images/brands/Marcas Kosi.webp"
   },
   {
     name: "Lee",
-    logo: "/images/brands/Marcas Lee.png"
+    logo: "/images/brands/Marcas Lee.webp"
   },
   {
     name: "Mistral",
-    logo: "/images/brands/Marcas Mistral.png"
+    logo: "/images/brands/Marcas Mistral.webp"
   },
   {
     name: "MSP",
-    logo: "/images/brands/Marcas MSP.png"
+    logo: "/images/brands/Marcas MSP.webp"
   },
   {
     name: "Tucci",
-    logo: "/images/brands/Marcas Tucci.png"
+    logo: "/images/brands/Marcas Tucci.webp"
   },
   {
     name: "UNRaf",
-    logo: "/images/brands/Marcas UNRaf.png"
+    logo: "/images/brands/Marcas UNRaf.webp"
   },
   {
     name: "Vit",
-    logo: "/images/brands/Marcas Vit.png"
+    logo: "/images/brands/Marcas Vit.webp"
   },
   {
     name: "Terrazas de los Andes",
-    logo: "/images/brands/Terrazas de los Andes.png"
+    logo: "/images/brands/Terrazas de los Andes.webp"
   },
 ];
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateRealisticMockup } from '@/lib/mockupGenerator';
+import sharp from 'sharp';
 
 /**
  * Genera mockup con mockup_generator.py (Pillow) si hay Python;
@@ -27,10 +28,16 @@ export async function POST(request: NextRequest) {
     const mockupBase64 = buffer.toString('base64');
     const mockupDataUrl = `data:image/jpeg;base64,${mockupBase64}`;
 
+    const thumbnailBuffer = await sharp(buffer)
+      .resize(320, 240, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 70 })
+      .toBuffer();
+    const thumbnailDataUrl = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+
     return NextResponse.json({
       success: true,
       mockupUrl: mockupDataUrl,
-      thumbnailUrl: mockupDataUrl,
+      thumbnailUrl: thumbnailDataUrl,
       metadata: {
         generatedAt: new Date().toISOString(),
         generator: method === 'python' ? 'mockup_generator.py (Pillow)' : 'sharp + textura',

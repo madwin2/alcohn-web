@@ -6,14 +6,16 @@ import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import StampSpecifications from '@/components/StampSpecifications';
 import StampProductCarousel from '@/components/sellos/StampProductCarousel';
+import MobileCarousel from '@/components/MobileCarousel';
+import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 import {
   getStampUseCaseBuyHref,
   getStampUseCaseBySlug,
   stampUseCases,
 } from '@/data/stampUseCases';
 import { getProductCarouselImages } from '@/lib/stampProductCarousel';
+import { SITE_NAME, absoluteUrl } from '@/lib/seo';
 
 type PageParams = {
   params: {
@@ -31,13 +33,32 @@ export function generateMetadata({ params }: PageParams): Metadata {
   if (!useCase) {
     return {
       title: 'Sellos personalizados - Alcohn',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
+
+  const canonical = `/sellos/${useCase.slug}`;
 
   return {
     title: `${useCase.seoTitle} - Alcohn`,
     description: useCase.description,
+    alternates: {
+      canonical,
+    },
     openGraph: {
+      type: 'website',
+      locale: 'es_AR',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: `${useCase.seoTitle} - Alcohn`,
+      description: useCase.description,
+      images: [useCase.heroImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: `${useCase.seoTitle} - Alcohn`,
       description: useCase.description,
       images: [useCase.heroImage],
@@ -53,27 +74,89 @@ export default function SelloUseCasePage({ params }: PageParams) {
   }
 
   const buyHref = getStampUseCaseBuyHref(useCase);
+  const canonical = `/sellos/${useCase.slug}`;
   const productCarouselImages = getProductCarouselImages(useCase);
   const relatedUseCases = stampUseCases
     .filter((item) => item.slug !== useCase.slug)
     .slice(0, 3);
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `Sello de bronce para ${useCase.material}`,
+    description: useCase.description,
+    image: [absoluteUrl(useCase.heroImage)],
+    category: 'Sellos de bronce personalizados',
+    brand: {
+      '@type': 'Brand',
+      name: SITE_NAME,
+    },
+    additionalProperty: [
+      {
+        '@type': 'PropertyValue',
+        name: 'Material de uso',
+        value: useCase.material,
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Oficio',
+        value: useCase.oficio,
+      },
+    ],
+    url: absoluteUrl(canonical),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Inicio',
+        item: absoluteUrl('/'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Productos',
+        item: absoluteUrl('/productos'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: useCase.title,
+        item: absoluteUrl(canonical),
+      },
+    ],
+  };
+
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <PageIntro
           label={useCase.searchIntent}
           title={useCase.title}
           description={useCase.description}
+          mobileDescription={useCase.intro}
           primaryCta={{
             label: 'Subir logo y ver precio',
             href: buyHref,
           }}
           secondaryCta={{
-            label: 'Ver sellos personalizados',
-            href: '/sellos/personalizados',
+            label: 'Ver todos los materiales',
+            href: '/productos',
             variant: 'secondary',
           }}
+          hideHighlightsOnMobile
           highlights={[
             `Uso principal: ${useCase.material}`,
             'Muestra, medida y precio antes de fabricar',
@@ -81,8 +164,8 @@ export default function SelloUseCasePage({ params }: PageParams) {
           ]}
         />
 
-        <section className="mb-20 grid grid-cols-1 gap-4 lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="material-frame relative min-h-[360px] overflow-hidden md:min-h-[560px]">
+        <section className="mb-12 md:mb-20 grid grid-cols-1 gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="material-frame relative min-h-[280px] overflow-hidden md:min-h-[560px]">
             <Image
               src={useCase.heroImage}
               alt={useCase.heroAlt}
@@ -91,37 +174,47 @@ export default function SelloUseCasePage({ params }: PageParams) {
               sizes="(max-width: 1024px) 100vw, 58vw"
               priority
             />
-            <div className="absolute inset-x-0 bottom-0 border-t border-white/18 bg-black/72 p-5 text-white backdrop-blur-sm md:p-7">
+            <div className="absolute inset-x-0 bottom-0 border-t border-white/18 bg-black/72 p-4 text-white backdrop-blur-sm md:p-7">
               <p className="text-[10px] font-semibold uppercase text-white/60">Aplicación real</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">{useCase.material}</h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/72">{useCase.intro}</p>
+              <h2 className="mt-1.5 text-xl font-semibold tracking-tight md:mt-2 md:text-3xl">{useCase.material}</h2>
+              <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-white/75 md:mt-2 md:text-sm">
+                <span className="md:hidden">{useCase.intro.split('. ')[0]}.</span>
+                <span className="hidden md:inline">{useCase.intro}</span>
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <div className="technical-sheet p-6 md:p-8">
-              <p className="craft-label mb-5">Producto base</p>
-              <h2 className="text-2xl font-semibold tracking-tight text-neutral-950 md:text-3xl">
-                Un sello personalizado, ajustado al uso correcto.
+            <div className="technical-sheet flex h-full flex-col p-5 md:p-8">
+              <p className="craft-label mb-3 md:mb-4">Producto base</p>
+              <h2 className="text-lg font-semibold tracking-tight text-neutral-950 md:text-2xl">
+                Sello de bronce para {useCase.material.toLowerCase()}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-neutral-700">
-                Todos nuestros sellos sirven para todos los materiales. La idea de esta pagiana: es mostrarte ejemplos útiles,
-                recomendar medidas y puedas elegir el sello que mejor se adapta a tu uso.
+              <p className="mt-2 text-sm leading-relaxed text-neutral-700 md:mt-3">
+                El mismo sello sirve en todos los materiales. Acá ves ejemplos y medidas pensadas para{' '}
+                {useCase.oficio.toLowerCase()}.
               </p>
 
-              <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {useCase.proofPoints.map((point) => (
-                  <div key={point} className="technical-dash bg-white/45 p-4">
-                    <p className="text-sm font-semibold leading-snug text-neutral-950">{point}</p>
-                  </div>
-                ))}
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--alcohn-line)] pt-4 sm:gap-6 md:mt-5 md:pt-5">
+                <div>
+                  <p className="craft-label mb-1.5">Material</p>
+                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                    Bronce CNC de alta precisión.
+                  </p>
+                </div>
+                <div>
+                  <p className="craft-label mb-1.5">Profundidad</p>
+                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                    3&nbsp;mm desbaste, 1,7&nbsp;mm grabado.
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <ActionButton href={buyHref} variant="primary">
+              <div className="mt-5 flex flex-col gap-3 pt-4 border-t border-[var(--alcohn-line)] sm:flex-row md:mt-auto md:pt-6 md:border-0 sm:pt-8">
+                <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">
                   Diseñar para {useCase.material.toLowerCase()}
                 </ActionButton>
-                <ActionButton href="#medidas" variant="ghost">
+                <ActionButton href="#medidas" variant="ghost" className="w-full sm:w-auto">
                   Ver medidas
                 </ActionButton>
               </div>
@@ -131,122 +224,130 @@ export default function SelloUseCasePage({ params }: PageParams) {
           </div>
         </section>
 
-        <StampSpecifications />
+        <div className="flex flex-col gap-20">
+          <PurchaseInclusions
+            showKitIllustration
+            copy="Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado."
+          />
 
-        <section className="mb-20">
-          <div className="mb-8 grid grid-cols-1 items-end gap-6 lg:grid-cols-[0.65fr_0.35fr]">
-            <div>
-              <p className="craft-label mb-4">Fotos correctas para decidir</p>
-              <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
-                Ejemplos de {useCase.material.toLowerCase()} y del sello que vas a comprar.
-              </h2>
-            </div>
-            <p className="text-sm leading-relaxed text-neutral-700">
-              Las fotos de producto son comunes a todos los usos; las aplicaciones cambian para que el cliente vea
-              una referencia cercana a su material.
-            </p>
-          </div>
+          <section>
+            <h2 className="mb-8 text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:mb-10 md:text-4xl">
+              Ejemplos en {useCase.material.toLowerCase()}
+            </h2>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {useCase.gallery.map((item) => (
-              <article key={item.src} className="material-card overflow-hidden p-0">
-                <div className="material-frame relative aspect-square overflow-hidden">
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    fill
-                    className="object-cover transition-transform duration-500 hover:scale-[1.04]"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                </div>
-                {item.caption ? (
-                  <p className="px-2 pb-2 pt-4 text-sm font-medium leading-snug text-neutral-800">
-                    {item.caption}
-                  </p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <PurchaseInclusions
-          className="mb-20"
-          showKitIllustration
-          copy="Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado."
-        />
-
-        <section id="medidas" className="mb-20">
-          <div className="technical-sheet">
-            <div className="border-b border-[var(--alcohn-line)] p-6 md:p-10 lg:p-12">
-              <p className="craft-label mb-4">Guía de compra</p>
-              <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
-                Medidas recomendadas para {useCase.material.toLowerCase()}.
-              </h2>
-              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700 md:text-base">
-                La medida final depende del logo y de la superficie real. Estas referencias ayudan a llegar al
-                diseñador con una decisión más clara.
-              </p>
+            <div className="md:hidden">
+              <MobileOverlayCarousel
+                showDots
+                squareMedia
+                items={useCase.gallery.map((item) => ({
+                  key: item.src,
+                  image: item.src,
+                  alt: item.alt,
+                  caption: item.caption ? { label: '', title: item.caption } : undefined,
+                }))}
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3">
-              {useCase.recommendedSizes.map((item) => (
-                <article key={item.label} className="border-b border-[var(--alcohn-line)] p-6 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0 md:p-8">
-                  <p className="craft-label mb-5">{item.label}</p>
-                  <h3 className="text-2xl font-semibold tracking-tight text-neutral-950">{item.size}</h3>
-                  <p className="mt-4 text-sm leading-relaxed text-neutral-700">{item.copy}</p>
+            <MobileCarousel
+              className="hidden md:block"
+              rowClassName="md:grid md:grid-cols-2 lg:grid-cols-4"
+              hint="Deslizá ejemplos"
+            >
+              {useCase.gallery.map((item) => (
+                <article key={item.src} className="mobile-snap-card material-card overflow-hidden p-0 md:min-w-0">
+                  <div className="material-frame relative aspect-square overflow-hidden">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      fill
+                      className="object-cover transition-transform duration-500 hover:scale-[1.04]"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                  </div>
+                  {item.caption ? (
+                    <p className="px-2 pb-2 pt-4 text-sm font-medium leading-snug text-neutral-800">
+                      {item.caption}
+                    </p>
+                  ) : null}
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
+            </MobileCarousel>
+          </section>
 
-        <section className="mb-20">
-          <div className="mb-8">
-            <p className="craft-label mb-4">Dudas frecuentes</p>
-            <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 md:text-5xl">
-              Antes de diseñar tu sello.
-            </h2>
-          </div>
-
-          <div className="technical-sheet divide-y divide-[var(--alcohn-line)]">
-            {useCase.faqs.map((faq) => (
-              <div key={faq.question} className="grid grid-cols-1 gap-4 p-6 md:grid-cols-[0.38fr_0.62fr] md:p-8">
-                <h3 className="text-lg font-semibold leading-snug text-neutral-950">{faq.question}</h3>
-                <p className="text-sm leading-relaxed text-neutral-700">{faq.answer}</p>
+          <section id="medidas">
+            <div className="technical-sheet">
+              <div className="border-b border-[var(--alcohn-line)] p-6 md:p-10 lg:p-12">
+                <p className="craft-label mb-4">Guía de compra</p>
+                <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
+                  Medidas recomendadas para {useCase.material.toLowerCase()}.
+                </h2>
+                <p className="mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700 md:text-base">
+                  La medida final depende del logo y de la superficie real. Estas referencias ayudan a llegar al
+                  diseñador con una decisión más clara.
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
 
-        <section className="mb-20">
-          <div className="mb-8">
-            <p className="craft-label mb-4">Otros usos</p>
-            <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 md:text-5xl">
-              También puede servirte.
-            </h2>
-          </div>
+              <MobileCarousel rowClassName="md:grid md:grid-cols-3" hint="Deslizá medidas">
+                {useCase.recommendedSizes.map((item) => (
+                  <article key={item.label} className="mobile-snap-card border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-6 md:min-w-0 md:border-b-0 md:border-r md:bg-transparent md:last:border-r-0 md:p-8">
+                    <p className="craft-label mb-5">{item.label}</p>
+                    <h3 className="text-2xl font-semibold tracking-tight text-neutral-950">{item.size}</h3>
+                    <p className="mt-4 text-sm leading-relaxed text-neutral-700">{item.copy}</p>
+                  </article>
+                ))}
+              </MobileCarousel>
+            </div>
+          </section>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {relatedUseCases.map((item) => (
-              <Link key={item.slug} href={`/sellos/${item.slug}`} className="material-card group block p-3">
-                <div className="material-frame relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={item.heroImage}
-                    alt={item.heroAlt}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
+          <section>
+            <div className="mb-8">
+              <p className="craft-label mb-4">Dudas frecuentes</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 md:text-5xl">
+                Antes de diseñar tu sello.
+              </h2>
+            </div>
+
+            <div className="technical-sheet divide-y divide-[var(--alcohn-line)]">
+              {useCase.faqs.map((faq) => (
+                <div key={faq.question} className="grid grid-cols-1 gap-4 p-6 md:grid-cols-[0.38fr_0.62fr] md:p-8">
+                  <h3 className="text-lg font-semibold leading-snug text-neutral-950">{faq.question}</h3>
+                  <p className="text-sm leading-relaxed text-neutral-700">{faq.answer}</p>
                 </div>
-                <div className="p-3">
-                  <p className="craft-label mb-2">{item.material}</p>
-                  <h3 className="text-lg font-semibold leading-snug text-neutral-950">{item.title}</h3>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
 
+          <section>
+            <div className="mb-8">
+              <p className="craft-label mb-4">Otros usos</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 md:text-5xl">
+                También puede servirte.
+              </h2>
+            </div>
+
+            <MobileCarousel rowClassName="md:grid md:grid-cols-3" hint="Deslizá usos relacionados">
+              {relatedUseCases.map((item) => (
+                <Link key={item.slug} href={`/sellos/${item.slug}`} className="mobile-snap-card material-card group block p-3 md:min-w-0">
+                  <div className="material-frame relative aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={item.heroImage}
+                      alt={item.heroAlt}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-3">
+                    <p className="craft-label mb-2">{item.material}</p>
+                    <h3 className="text-lg font-semibold leading-snug text-neutral-950">{item.title}</h3>
+                  </div>
+                </Link>
+              ))}
+            </MobileCarousel>
+          </section>
+        </div>
+
+        <div className="mt-20">
         <SalesCtaBand
           title={`Diseñá tu sello para ${useCase.material.toLowerCase()} y avanzá con precio real`}
           copy="Subí tu logo, elegí cómo lo vas a usar, revisá la muestra y dejá el pedido listo para pagar online."
@@ -256,6 +357,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
           secondaryHref="/productos"
           dark
         />
+        </div>
       </div>
     </div>
   );

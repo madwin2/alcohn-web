@@ -1,14 +1,369 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import sharp from 'sharp';
+import { measureLogoAspectRatio } from '@/lib/logoMeasure';
 
-/** Vercel/Next: debe cubrir imagen GPT + análisis de proporción sin cortar antes que el cliente. */
+/** Vercel/Next: cubre fallback IA en casos complejos. */
 export const maxDuration = 120;
 
 // Inicializar cliente de OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+type ForegroundAnalysis = {
+  width: number;
+  height: number;
+  useAlphaMask: boolean;
+  maskStrength: Float32Array;
+  foregroundCount: number;
+  foregroundRatio: number;
+  avgSaturation: number;
+  hueSpread: number;
+  likelySingleInk: boolean;
+  likelyComplexImage: boolean;
+};
+
+type AiOptimizationStrategy = {
+  recommended: 'deterministic_black' | 'ai_regenerate';
+  background: 'transparent' | 'plain' | 'complex';
+  logoKind: 'clean_logo' | 'logo_with_background' | 'photo_or_complex';
+  confidence: number;
+  reason: string;
+};
+
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+const getMedian = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+};
+
+const rgbToHsv = (r: number, g: number, b: number): { h: number; s: number; v: number } => {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const d = max - min;
+
+  let h = 0;
+  if (d > 1e-6) {
+    if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+    else if (max === gn) h = ((bn - rn) / d + 2) / 6;
+    else h = ((rn - gn) / d + 4) / 6;
+  }
+  const s = max <= 1e-6 ? 0 : d / max;
+  return { h, s, v: max };
+};
+
+async function getRgbaFromBuffer(buffer: Buffer): Promise<{
+  data: Buffer;
+  width: number;
+  height: number;
+}> {
+  const { data, info } = await sharp(buffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return {
+    data,
+    width: info.width,
+    height: info.height,
+  };
+}
+
+async function normalizeInputBufferForStamp(buffer: Buffer, mimeType: string): Promise<Buffer> {
+  const isSvg = mimeType === 'image/svg+xml';
+  const base = isSvg
+    ? sharp(buffer, { density: 1200 }) // evita rasterizado chico en SVG
+    : sharp(buffer);
+
+  const meta = await base.metadata();
+  const w = meta.width ?? 0;
+  const h = meta.height ?? 0;
+  const maxSide = Math.max(w, h);
+
+  // Logos muy chicos terminan pixelados en el mockup al ampliarse.
+  // Los elevamos a una base razonable para preservar bordes.
+  if (maxSide > 0 && maxSide < 1200) {
+    const scale = 1200 / maxSide;
+    return base
+      .resize(Math.max(1, Math.round(w * scale)), Math.max(1, Math.round(h * scale)), {
+        fit: 'fill',
+        kernel: sharp.kernel.lanczos3,
+      })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+  }
+
+  return base.png({ compressionLevel: 9 }).toBuffer();
+}
+
+async function analyzeForeground(buffer: Buffer): Promise<ForegroundAnalysis> {
+  const { data, width, height } = await getRgbaFromBuffer(buffer);
+  const borderR: number[] = [];
+  const borderG: number[] = [];
+  const borderB: number[] = [];
+  const borderA: number[] = [];
+
+  const addBorder = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    borderR.push(data[i]);
+    borderG.push(data[i + 1]);
+    borderB.push(data[i + 2]);
+    borderA.push(data[i + 3]);
+  };
+
+  for (let x = 0; x < width; x++) {
+    addBorder(x, 0);
+    addBorder(x, height - 1);
+  }
+  for (let y = 0; y < height; y++) {
+    addBorder(0, y);
+    addBorder(width - 1, y);
+  }
+
+  const bgR = getMedian(borderR);
+  const bgG = getMedian(borderG);
+  const bgB = getMedian(borderB);
+  const avgBorderAlpha =
+    borderA.length > 0 ? borderA.reduce((acc, v) => acc + v, 0) / borderA.length : 255;
+  const useAlphaMask = avgBorderAlpha < 250;
+
+  const maskStrength = new Float32Array(width * height);
+  let foregroundCount = 0;
+  let sumSaturation = 0;
+  let satWeight = 0;
+  let hueX = 0;
+  let hueY = 0;
+  let hueWeight = 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+
+      let fgStrength = 0;
+      if (useAlphaMask) {
+        fgStrength = a / 255;
+      } else {
+        const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+        fgStrength = clamp01((dist - 20) / 100);
+        if (a < 16) fgStrength = 0;
+      }
+
+      maskStrength[y * width + x] = fgStrength;
+      if (fgStrength > 0.15) {
+        foregroundCount++;
+        const hsv = rgbToHsv(r, g, b);
+        const w = fgStrength;
+        sumSaturation += hsv.s * w;
+        satWeight += w;
+        if (hsv.s > 0.12 && hsv.v > 0.08) {
+          const angle = hsv.h * Math.PI * 2;
+          hueX += Math.cos(angle) * w;
+          hueY += Math.sin(angle) * w;
+          hueWeight += w;
+        }
+      }
+    }
+  }
+
+  const pixelCount = Math.max(1, width * height);
+  const foregroundRatio = foregroundCount / pixelCount;
+  const avgSaturation = satWeight > 0 ? sumSaturation / satWeight : 0;
+
+  let hueSpread = 0.5;
+  if (hueWeight > 0) {
+    const R = Math.sqrt(hueX * hueX + hueY * hueY) / hueWeight;
+    hueSpread = clamp01((1 - R) * 0.5);
+  }
+
+  const likelySingleInk =
+    foregroundRatio > 0.003 &&
+    foregroundRatio < 0.8 &&
+    (avgSaturation < 0.28 || hueSpread < 0.2);
+
+  const likelyComplexImage =
+    foregroundRatio > 0.25 &&
+    avgSaturation > 0.22 &&
+    hueSpread > 0.16 &&
+    !likelySingleInk;
+
+  return {
+    width,
+    height,
+    useAlphaMask,
+    maskStrength,
+    foregroundCount,
+    foregroundRatio,
+    avgSaturation,
+    hueSpread,
+    likelySingleInk,
+    likelyComplexImage,
+  };
+}
+
+async function convertToBlackFromMask(buffer: Buffer): Promise<Buffer> {
+  const { data, width, height } = await getRgbaFromBuffer(buffer);
+  const analysis = await analyzeForeground(buffer);
+  const out = Buffer.alloc(width * height * 4);
+
+  for (let i = 0; i < width * height; i++) {
+    const src = i * 4;
+    const dst = src;
+    const alphaSource = data[src + 3] / 255;
+    const mask = analysis.maskStrength[i];
+    let alpha: number;
+    if (analysis.useAlphaMask) {
+      alpha = Math.round(alphaSource * 255);
+    } else {
+      // En imágenes opacas, usar recorte más firme evita letras "lavadas/pixeladas".
+      alpha = mask > 0.34 ? 255 : 0;
+    }
+
+    out[dst] = 0;
+    out[dst + 1] = 0;
+    out[dst + 2] = 0;
+    out[dst + 3] = alpha;
+  }
+
+  return sharp(out, { raw: { width, height, channels: 4 } })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
+async function maskSimilarity(aBuffer: Buffer, bBuffer: Buffer): Promise<number> {
+  const [a, b] = await Promise.all([analyzeForeground(aBuffer), analyzeForeground(bBuffer)]);
+  const side = 64;
+
+  const aMaskPng = await sharp(aBuffer)
+    .ensureAlpha()
+    .resize(side, side, { fit: 'fill' })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const bMaskPng = await sharp(bBuffer)
+    .ensureAlpha()
+    .resize(side, side, { fit: 'fill' })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const ad = aMaskPng.data;
+  const bd = bMaskPng.data;
+  let intersection = 0;
+  let union = 0;
+
+  for (let i = 0; i < side * side; i++) {
+    const ai = i * 4;
+    const bi = i * 4;
+    const aPixel = a.useAlphaMask
+      ? ad[ai + 3] > 32
+      : (ad[ai] + ad[ai + 1] + ad[ai + 2]) / 3 < 220;
+    const bPixel = b.useAlphaMask
+      ? bd[bi + 3] > 32
+      : (bd[bi] + bd[bi + 1] + bd[bi + 2]) / 3 < 220;
+    if (aPixel && bPixel) intersection++;
+    if (aPixel || bPixel) union++;
+  }
+
+  if (union === 0) return 0;
+  return intersection / union;
+}
+
+function bufferToDataUrl(buffer: Buffer): string {
+  return `data:image/png;base64,${buffer.toString('base64')}`;
+}
+
+async function prepareInputForAi(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .resize(1400, 1400, { fit: 'inside', withoutEnlargement: true })
+    .png({ compressionLevel: 9, palette: true })
+    .toBuffer();
+}
+
+async function analyzeOptimizationStrategyWithAI(
+  imageDataUrl: string
+): Promise<AiOptimizationStrategy | null> {
+  const prompt = `Analiza esta imagen para optimizarla como logo de sello.
+
+Decidí SOLO una estrategia:
+- "deterministic_black": cuando es claramente un logo y alcanza con convertir a negro preservando geometría.
+- "ai_regenerate": cuando tiene fondo complejo, composición no aislada o requiere interpretación visual.
+
+Responde SOLO JSON válido:
+{
+  "recommended": "deterministic_black" | "ai_regenerate",
+  "background": "transparent" | "plain" | "complex",
+  "logoKind": "clean_logo" | "logo_with_background" | "photo_or_complex",
+  "confidence": number,
+  "reason": "string"
+}`;
+
+  const parseStrategy = (content: string): AiOptimizationStrategy | null => {
+    try {
+      const match = content.match(/\{[\s\S]*\}/);
+      const raw = JSON.parse(match ? match[0] : content) as Partial<AiOptimizationStrategy>;
+      const recommended =
+        raw.recommended === 'deterministic_black' || raw.recommended === 'ai_regenerate'
+          ? raw.recommended
+          : null;
+      const background =
+        raw.background === 'transparent' || raw.background === 'plain' || raw.background === 'complex'
+          ? raw.background
+          : null;
+      const logoKind =
+        raw.logoKind === 'clean_logo' ||
+        raw.logoKind === 'logo_with_background' ||
+        raw.logoKind === 'photo_or_complex'
+          ? raw.logoKind
+          : null;
+      if (!recommended || !background || !logoKind) return null;
+      return {
+        recommended,
+        background,
+        logoKind,
+        confidence: Number.isFinite(Number(raw.confidence)) ? Number(raw.confidence) : 0.5,
+        reason: typeof raw.reason === 'string' ? raw.reason : '',
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const tryModel = async (model: string): Promise<AiOptimizationStrategy | null> => {
+    const response = await openai.chat.completions.create({
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 250,
+    });
+    const content = response.choices[0]?.message?.content || '';
+    return parseStrategy(content);
+  };
+
+  try {
+    return (
+      (await tryModel('gpt-5.2-chat-latest')) ??
+      (await tryModel('gpt-4o')) ??
+      (await tryModel('gpt-4o-mini'))
+    );
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,255 +389,129 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Optimizando logo con gpt-image-1.5...');
+    console.log('Optimizando logo...');
 
-    // Convertir File a Buffer y redimensionar la imagen
+    // Convertir File a Buffer
     const arrayBuffer = await file.arrayBuffer();
-    const originalBuffer = Buffer.from(arrayBuffer);
-    
-    // Redimensionar y comprimir la imagen para cumplir con el límite estricto de 16KB de OpenAI
-    // IMPORTANTE: OpenAI images.edit requiere PNG, no JPEG
-    let imageBuffer = await sharp(originalBuffer)
-      .resize(256, 256, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .png({ compressionLevel: 9, quality: 80 }) // PNG con máxima compresión
-      .toBuffer();
-    
-    // Si aún es muy grande, reducir más el tamaño
-    if (imageBuffer.length > 15000) {
-      imageBuffer = await sharp(originalBuffer)
-        .resize(128, 128, {
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .png({ compressionLevel: 9, quality: 70 })
-        .toBuffer();
-    }
-    
-    // Verificar que imageBuffer es realmente un Buffer
-    if (!Buffer.isBuffer(imageBuffer)) {
-      throw new Error('Error procesando imagen: el resultado no es un Buffer válido');
-    }
-    
-    console.log('Imagen procesada. Tamaño original:', originalBuffer.length, 'bytes. Tamaño final:', imageBuffer.length, 'bytes');
-    console.log('Tipo de imageBuffer:', typeof imageBuffer, 'Es Buffer?', Buffer.isBuffer(imageBuffer));
+    const uploadedBuffer = Buffer.from(arrayBuffer);
+    const originalBuffer = await normalizeInputBufferForStamp(uploadedBuffer, file.type || '');
+    const foreground = await analyzeForeground(originalBuffer);
+    const deterministicCandidate = await convertToBlackFromMask(originalBuffer);
+    const deterministicDataUrl = bufferToDataUrl(deterministicCandidate);
+    const originalDataUrl = bufferToDataUrl(originalBuffer);
+    const aiStrategy = await analyzeOptimizationStrategyWithAI(originalDataUrl);
+    const aiPrefersDeterministic = aiStrategy?.recommended === 'deterministic_black';
+    const aiPrefersRegenerate = aiStrategy?.recommended === 'ai_regenerate';
+    const aiSeesComplexBackground = aiStrategy?.background === 'complex';
 
-    // Optimizar el logo usando gpt-image-1.5
-    // El prompt es muy específico: mantener el logo original, solo optimizarlo a monocromático
-    const prompt = `Convierte este logo a monocromático, a un tinta, negro con fondo blanco. 
-
-CRÍTICO - NO MODIFIQUES EL DISEÑO:
-- El logo debe quedar EXACTAMENTE IGUAL. Mismo diseño, mismas formas, mismas proporciones, mismos detalles, mismos textos.
-- NO cambies ninguna línea, curva, forma, letra, símbolo o elemento del logo.
-- NO agregues ni quites nada del diseño original.
-- NO modifiques el estilo, la tipografía, ni ningún aspecto visual.
-
-SOLO CONVERSIÓN DE COLOR:
-- Convierte todos los colores a negro sólido puro.
-- El fondo debe ser blanco puro (no transparente).
-- Elimina degradados, sombras y efectos, pero mantén todas las formas exactamente iguales.
-- El resultado debe ser el mismo logo pero en blanco y negro.`;
-
-    try {
-      // Convertir el Buffer procesado de vuelta a File para OpenAI
-      const processedFile = new File([new Uint8Array(imageBuffer)], 'logo.png', { type: 'image/png' });
-      
-      console.log('Enviando imagen a OpenAI. Tamaño:', imageBuffer.length, 'bytes');
-      
-      const response = await openai.images.edit({
-        model: 'gpt-image-1.5',
-        image: processedFile, // File object que OpenAI espera
-        prompt: prompt,
-        size: '1024x1024',
-        quality: 'high',
-        background: 'opaque',
-      });
-
-      const optimizedImageBase64 = response.data?.[0]?.b64_json;
-
-      if (!optimizedImageBase64) {
-        return NextResponse.json(
-          { success: false, error: 'No se pudo generar la imagen optimizada' },
-          { status: 500 }
-        );
-      }
-
-      // Convertir a data URL
-      const optimizedImageDataUrl = `data:image/png;base64,${optimizedImageBase64}`;
-
-      console.log('Logo optimizado exitosamente con gpt-image-1.5');
-
-      // Analizar el aspect ratio del diseño en la imagen optimizada
-      let aspectRatio = 1.0; // Valor por defecto
-      try {
-        const aspectRatioPrompt = `Analiza esta imagen de logo optimizado. Calcula el aspect ratio (ancho/alto) del DISEÑO DEL LOGO (no de la imagen completa). Si el logo es cuadrado, el aspect ratio es 1.0. Si es más ancho que alto, será mayor a 1.0. Si es más alto que ancho, será menor a 1.0. Solo analiza el área del diseño del logo, ignorando espacios vacíos o fondos blancos.
-
-Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin markdown, sin texto adicional):
-{
-  "aspectRatio": number
-}`;
-
-        const aspectResponse = await openai.chat.completions.create({
-          model: 'gpt-5.2-chat-latest',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: aspectRatioPrompt,
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: optimizedImageDataUrl,
-                  },
-                },
-              ],
-            },
-          ],
-          max_tokens: 200,
-          response_format: { type: 'json_object' },
-        });
-
-        const aspectText = aspectResponse.choices[0]?.message?.content || '{}';
-        const jsonMatch = aspectText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const aspectData = JSON.parse(jsonMatch[0]);
-          if (typeof aspectData.aspectRatio === 'number' && aspectData.aspectRatio > 0) {
-            aspectRatio = aspectData.aspectRatio;
-            console.log('Aspect ratio del diseño optimizado:', aspectRatio);
-          }
-        }
-      } catch (aspectError: any) {
-        console.warn('No se pudo calcular el aspect ratio del diseño optimizado, usando valor por defecto:', aspectError.message);
-        // Intentar con modelos alternativos
-        try {
-          const aspectResponse2 = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: `Analiza esta imagen de logo optimizado. Calcula el aspect ratio (ancho/alto) del DISEÑO DEL LOGO (no de la imagen completa). Responde ÚNICAMENTE en formato JSON: {"aspectRatio": number}`,
-                  },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: optimizedImageDataUrl,
-                    },
-                  },
-                ],
-              },
-            ],
-            max_tokens: 200,
-            response_format: { type: 'json_object' },
-          });
-          const aspectText2 = aspectResponse2.choices[0]?.message?.content || '{}';
-          const jsonMatch2 = aspectText2.match(/\{[\s\S]*\}/);
-          if (jsonMatch2) {
-            const aspectData2 = JSON.parse(jsonMatch2[0]);
-            if (typeof aspectData2.aspectRatio === 'number' && aspectData2.aspectRatio > 0) {
-              aspectRatio = aspectData2.aspectRatio;
-            }
-          }
-        } catch (aspectError2: any) {
-          console.warn('Fallback de aspect ratio también falló, usando 1.0');
-        }
-      }
-
+    // Solo usar conversión determinística cuando la heurística Y la IA coinciden.
+    if (foreground.likelySingleInk && (aiPrefersDeterministic || aiStrategy == null)) {
+      const measured = await measureLogoAspectRatio(deterministicDataUrl);
       return NextResponse.json({
         success: true,
-        optimizedLogo: optimizedImageDataUrl,
-        aspectRatio: aspectRatio,
-        description: 'Logo optimizado a monocromático (negro sobre fondo blanco) manteniendo el diseño original.',
+        optimizedLogo: deterministicDataUrl,
+        aspectRatio: measured.aspectRatio,
+        method: 'tool_single_ink_to_black',
+        aiStrategy,
+        description:
+          'Conversión técnica directa a negro preservando forma y proporciones (sin regeneración IA).',
       });
+    }
+
+    // Si IA no pide regeneración y la imagen tampoco parece compleja, usamos técnica como fallback.
+    if (!aiPrefersRegenerate && !aiSeesComplexBackground && !foreground.likelyComplexImage) {
+      const measured = await measureLogoAspectRatio(deterministicDataUrl);
+      return NextResponse.json({
+        success: true,
+        optimizedLogo: deterministicDataUrl,
+        aspectRatio: measured.aspectRatio,
+        method: 'tool_shape_safe_default',
+        aiStrategy,
+        description:
+          'Optimización técnica priorizando fidelidad de forma (sin regeneración IA).',
+      });
+    }
+
+    // Regeneración IA cuando el análisis IA/heurístico lo justifica.
+    const imageBuffer = await prepareInputForAi(originalBuffer);
+    const prompt = `Convierte este logo para sello a una versión legible en negro.
+
+REGLA ESTRICTA:
+- Conserva EXACTAMENTE la geometría del diseño original: proporciones, líneas, tipografía, espaciado y símbolos.
+- No redibujes ni reinventes el logo.
+- Solo ajusta color/contraste para que quede funcional en sello.
+
+Si no podés mantener el diseño exactamente, devolvé la versión más fiel posible sin cambios estructurales.`;
+
+    let aiBase64: string | null = null;
+    let aiModel = 'gpt-image-1.5';
+
+    try {
+      const processedFile = new File([new Uint8Array(imageBuffer)], 'logo.png', {
+        type: 'image/png',
+      });
+      const response = await openai.images.edit({
+        model: 'gpt-image-1.5',
+        image: processedFile,
+        prompt,
+        size: '1024x1024',
+        quality: 'high',
+        background: 'transparent',
+      });
+      aiBase64 = response.data?.[0]?.b64_json ?? null;
     } catch (error: any) {
-      console.error('Error optimizando logo con gpt-image-1.5:', error);
-      
-      // Si falla gpt-image-1.5, intentar con gpt-image-1
-      if (error.message?.includes('model') || error.status === 403) {
-        console.log('gpt-image-1.5 no disponible, intentando con gpt-image-1...');
-        try {
-          // Convertir el Buffer procesado de vuelta a File para el fallback
-          const processedFile2 = new File([new Uint8Array(imageBuffer)], 'logo.png', { type: 'image/png' });
-          
-          const response2 = await openai.images.edit({
-            model: 'gpt-image-1',
-            image: processedFile2, // File object que OpenAI espera
-            prompt: prompt,
-            size: '1024x1024',
-            quality: 'high',
-            background: 'opaque',
-            input_fidelity: 'high',
-          });
-
-          const optimizedImageBase642 = response2.data?.[0]?.b64_json;
-
-          if (!optimizedImageBase642) {
-            throw new Error('No se pudo generar la imagen optimizada');
-          }
-
-          const optimizedImageDataUrl2 = `data:image/png;base64,${optimizedImageBase642}`;
-
-          console.log('Logo optimizado exitosamente con gpt-image-1');
-
-          // Analizar el aspect ratio del diseño en la imagen optimizada (fallback)
-          let aspectRatio2 = 1.0; // Valor por defecto
-          try {
-            const aspectRatioPrompt2 = `Analiza esta imagen de logo optimizado. Calcula el aspect ratio (ancho/alto) del DISEÑO DEL LOGO (no de la imagen completa). Responde ÚNICAMENTE en formato JSON: {"aspectRatio": number}`;
-            const aspectResponse2 = await openai.chat.completions.create({
-              model: 'gpt-4o',
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    {
-                      type: 'text',
-                      text: aspectRatioPrompt2,
-                    },
-                    {
-                      type: 'image_url',
-                      image_url: {
-                        url: optimizedImageDataUrl2,
-                      },
-                    },
-                  ],
-                },
-              ],
-              max_tokens: 200,
-              response_format: { type: 'json_object' },
-            });
-            const aspectText2 = aspectResponse2.choices[0]?.message?.content || '{}';
-            const jsonMatch2 = aspectText2.match(/\{[\s\S]*\}/);
-            if (jsonMatch2) {
-              const aspectData2 = JSON.parse(jsonMatch2[0]);
-              if (typeof aspectData2.aspectRatio === 'number' && aspectData2.aspectRatio > 0) {
-                aspectRatio2 = aspectData2.aspectRatio;
-              }
-            }
-          } catch (aspectError2: any) {
-            console.warn('No se pudo calcular el aspect ratio del diseño optimizado (fallback), usando valor por defecto');
-          }
-
-          return NextResponse.json({
-            success: true,
-            optimizedLogo: optimizedImageDataUrl2,
-            aspectRatio: aspectRatio2,
-            description: 'Logo optimizado a monocromático (negro sobre fondo blanco) manteniendo el diseño original.',
-          });
-        } catch (error2: any) {
-          console.error('Error con gpt-image-1:', error2);
-          throw error;
-        }
+      if (error?.status === 403 || error?.message?.includes('model')) {
+        aiModel = 'gpt-image-1';
+        const processedFile = new File([new Uint8Array(imageBuffer)], 'logo.png', {
+          type: 'image/png',
+        });
+        const response = await openai.images.edit({
+          model: 'gpt-image-1',
+          image: processedFile,
+          prompt,
+          size: '1024x1024',
+          quality: 'high',
+          background: 'transparent',
+          input_fidelity: 'high',
+        });
+        aiBase64 = response.data?.[0]?.b64_json ?? null;
       } else {
         throw error;
       }
     }
+
+    if (!aiBase64) {
+      throw new Error('No se pudo generar la imagen optimizada');
+    }
+
+    const aiBuffer = Buffer.from(aiBase64, 'base64');
+    const similarity = await maskSimilarity(originalBuffer, aiBuffer);
+
+    // Si la IA deformó mucho, descartamos y usamos herramienta determinística.
+    if (similarity < 0.86) {
+      const measured = await measureLogoAspectRatio(deterministicDataUrl);
+      return NextResponse.json({
+        success: true,
+        optimizedLogo: deterministicDataUrl,
+        aspectRatio: measured.aspectRatio,
+        method: 'tool_fallback_after_ai_shape_drift',
+        aiStrategy,
+        description:
+          'Se evitó regeneración por cambios de forma. Se aplicó conversión técnica a negro.',
+      });
+    }
+
+    const aiDataUrl = bufferToDataUrl(aiBuffer);
+    const measured = await measureLogoAspectRatio(aiDataUrl);
+    return NextResponse.json({
+      success: true,
+      optimizedLogo: aiDataUrl,
+      aspectRatio: measured.aspectRatio,
+      method: `ai_regeneration_${aiModel}`,
+      similarityScore: similarity,
+      aiStrategy,
+      description: 'Logo optimizado con IA manteniendo estructura validada.',
+    });
   } catch (error: any) {
     console.error('Error optimizando logo:', error);
     

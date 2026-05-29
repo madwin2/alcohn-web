@@ -33,7 +33,7 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
           </h3>
           <button
             onClick={() => removeItem(item.id)}
-            className="flex-shrink-0 p-1 hover:bg-neutral-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
+            className="flex-shrink-0 inline-flex h-10 w-10 sm:h-auto sm:w-auto items-center justify-center p-1 hover:bg-neutral-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
             aria-label={`Eliminar ${item.title}`}
           >
             <svg className="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +52,7 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
           <div className="flex items-center gap-2">
             <button
               onClick={() => updateQuantity(item.id, item.qty - 1)}
-              className="w-7 h-7 flex items-center justify-center border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
+              className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
               aria-label="Disminuir cantidad"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
             </span>
             <button
               onClick={() => updateQuantity(item.id, item.qty + 1)}
-              className="w-7 h-7 flex items-center justify-center border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
+              className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-1"
               aria-label="Aumentar cantidad"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

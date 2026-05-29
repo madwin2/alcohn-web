@@ -3,35 +3,61 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BuyWizard from '@/components/BuyWizard';
+import {
+  getWizardOptionBySlug,
+  type WizardMaterial,
+} from '@/data/stampUseCases';
 
-type WizardMaterial = 'cuero' | 'madera' | 'ambos' | 'ceramica' | 'alimentos' | 'otros';
-
-const WIZARD_MATERIALS: WizardMaterial[] = ['cuero', 'madera', 'ambos', 'ceramica', 'alimentos', 'otros'];
+const WIZARD_MATERIALS: WizardMaterial[] = [
+  'cuero',
+  'madera',
+  'ambos',
+  'ceramica',
+  'alimentos',
+  'otros',
+];
 
 function getWizardMaterial(value: string | null): WizardMaterial | undefined {
   if (!value) return undefined;
-  return WIZARD_MATERIALS.includes(value as WizardMaterial) ? (value as WizardMaterial) : undefined;
+  return WIZARD_MATERIALS.includes(value as WizardMaterial)
+    ? (value as WizardMaterial)
+    : undefined;
 }
 
 function BuyPageContent() {
   const searchParams = useSearchParams();
   const productSlug = searchParams.get('product');
-  const initialMaterial = getWizardMaterial(searchParams.get('material'));
+  const usoSlug = searchParams.get('uso');
+  const fromUso = usoSlug ? getWizardOptionBySlug(usoSlug) : undefined;
+  const initialMaterial =
+    fromUso?.buyMaterial ?? getWizardMaterial(searchParams.get('material'));
+  const initialUsoSlug = fromUso?.slug ?? (usoSlug || undefined);
 
   return (
-    <div className="atelier-page min-h-screen py-10 md:py-16">
-      <div className="container mx-auto px-4">
-        <div className="mb-12 text-center">
+    <div className="buy-page atelier-page h-[calc(100svh-4rem)] overflow-hidden py-3 md:min-h-screen md:h-auto md:py-16">
+      <div className="container mx-auto flex h-full min-h-0 flex-col px-4">
+        <div className="hidden text-center md:mb-12 md:block">
           <p className="craft-label mb-4">Compra online con muestra previa</p>
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4 tracking-tight">
+          <h1 className="mb-3 text-[1.95rem] font-semibold tracking-tight text-gray-900 md:mb-4 md:text-4xl">
             Diseñá tu sello, mirá la muestra y pagá online
           </h1>
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Primero guardamos tus datos para poder retomar el pedido si el archivo necesita revisión. Después elegís uso, medida, muestra, precio y forma de pago.
+          <p className="mx-auto max-w-2xl text-base text-gray-700 md:text-lg">
+            <span className="md:hidden">
+              Guardamos tus datos y luego elegís uso, medida, muestra y pago.
+            </span>
+            <span className="hidden md:inline">
+              Primero guardamos tus datos para poder retomar el pedido si el archivo necesita revisión. Después elegís uso, medida, muestra, precio y forma de pago.
+            </span>
           </p>
         </div>
 
-        <BuyWizard initialProduct={productSlug || undefined} initialMaterial={initialMaterial} />
+        <div className="min-h-0 flex-1">
+          <BuyWizard
+            initialProduct={productSlug || undefined}
+            initialMaterial={initialMaterial}
+            initialUsoSlug={initialUsoSlug}
+          />
+        </div>
       </div>
     </div>
   );

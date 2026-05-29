@@ -19,7 +19,7 @@ export default function ActionButton({
   rel,
   className = '',
 }: ActionButtonProps) {
-  const baseStyles = 'inline-flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-offset-1';
+  const baseStyles = 'inline-flex min-h-[42px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-[0.05em] font-semibold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-offset-1 md:min-h-[44px] md:px-4 md:py-2 md:text-xs md:tracking-wider';
   
   const variantStyles = {
     primary: 'bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] hover:bg-[var(--alcohn-ink-soft)] hover:border-bronze focus:ring-neutral-900',

@@ -4,6 +4,7 @@ import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
 import PurchaseInclusions from './PurchaseInclusions';
+import MobileCarousel from './MobileCarousel';
 
 interface ProductSheetProps {
   product: Product;
@@ -42,11 +43,11 @@ export default function ProductSheet({ product }: ProductSheetProps) {
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-12 md:space-y-20">
       {/* Main Product Info - Sheet Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 lg:gap-24">
         {/* Images Column */}
-        <div className="space-y-4 order-2 lg:order-1">
+        <div className="space-y-3 md:space-y-4 order-1 lg:order-1">
           {/* Main Image */}
           <div className="material-frame aspect-square relative overflow-hidden">
             {product.images.default ? (
@@ -68,7 +69,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
           </div>
 
           {/* Thumbnails */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
             {product.images.default && (
               <div className="material-frame aspect-square relative overflow-hidden">
                 <Image
@@ -106,9 +107,9 @@ export default function ProductSheet({ product }: ProductSheetProps) {
         </div>
 
         {/* Sheet Column */}
-        <div className="space-y-8 order-1 lg:order-2">
+        <div className="space-y-5 md:space-y-8 order-2 lg:order-2">
           {/* Código + Meta */}
-          <div className="space-y-3 pb-6 border-b border-[var(--alcohn-line)]">
+          <div className="space-y-2 md:space-y-3 pb-4 md:pb-6 border-b border-[var(--alcohn-line)]">
             <ProductCode code={productCode} />
             <div className="craft-label">
               BRONCE · CNC · USO: {materialLabel}
@@ -116,7 +117,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
           </div>
 
           {/* Name */}
-          <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 tracking-tight leading-tight">
+          <h1 className="text-[1.85rem] md:text-5xl font-semibold text-neutral-900 tracking-tight leading-tight">
             {product.name}
           </h1>
 
@@ -124,20 +125,20 @@ export default function ProductSheet({ product }: ProductSheetProps) {
           <SpecChips specs={specChips} />
 
           {/* Description */}
-          <p className="text-lg text-neutral-700 leading-relaxed max-w-lg">
+          <p className="text-[15px] md:text-lg text-neutral-700 leading-relaxed max-w-lg">
             {product.description}
           </p>
 
           {/* Price */}
-          <div className="pt-6 border-t border-[var(--alcohn-line)]">
-            <p className="text-lg text-neutral-600">
+          <div className="pt-4 md:pt-6 border-t border-[var(--alcohn-line)]">
+            <p className="text-base md:text-lg text-neutral-600">
               <span className="craft-label mr-3">Desde</span>
-              {priceDisplay}
+              <span className="font-semibold text-neutral-900">{priceDisplay}</span>
             </p>
           </div>
 
           {/* CTAs - Botones industriales */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-[var(--alcohn-line)]">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 md:pt-6 border-t border-[var(--alcohn-line)]">
             <ActionButton
               href={`/buy?product=${product.slug}`}
               variant="primary"
@@ -161,11 +162,17 @@ export default function ProductSheet({ product }: ProductSheetProps) {
             <h3 className="craft-label mb-3">
               Compra online
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-neutral-700">
-              <p><span className="font-medium text-neutral-900">1.</span> Subis tu logo.</p>
-              <p><span className="font-medium text-neutral-900">2.</span> Ves medida, muestra y precio.</p>
-              <p><span className="font-medium text-neutral-900">3.</span> Pagas online antes de fabricar.</p>
-            </div>
+            <MobileCarousel rowClassName="sm:grid sm:grid-cols-3 sm:gap-3" hint="Deslizá pasos">
+              {[
+                'Subis tu logo.',
+                'Ves medida, muestra y precio.',
+                'Pagas online antes de fabricar.',
+              ].map((step, index) => (
+                <p key={step} className="mobile-snap-card border border-[var(--alcohn-line)] bg-white/70 p-4 text-sm text-neutral-700 sm:min-w-0 sm:border-0 sm:bg-transparent sm:p-0">
+                  <span className="font-medium text-neutral-900">{index + 1}.</span> {step}
+                </p>
+              ))}
+            </MobileCarousel>
           </div>
 
           {/* Key Specs Block */}
@@ -279,14 +286,14 @@ export default function ProductSheet({ product }: ProductSheetProps) {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 border border-white/12">
+            <MobileCarousel rowClassName="sm:grid sm:grid-cols-4" hint="Deslizá etapas">
               {[
                 ['01', 'Logo', 'Archivo, foto o vector'],
                 ['02', 'Medida', 'Escala según uso real'],
                 ['03', 'CNC', 'Bronce mecanizado'],
                 ['04', 'Marca', 'Prueba sobre material'],
               ].map(([code, title, copy]) => (
-                <div key={code} className="border-b sm:border-b-0 sm:border-r last:border-r-0 border-white/12 p-5">
+                <div key={code} className="mobile-snap-card border border-white/12 bg-black/10 p-5 sm:min-w-0 sm:border-b-0 sm:border-r sm:bg-transparent sm:last:border-r-0">
                   <p className="text-[10px] font-semibold uppercase text-white/42">{code}</p>
                   <h3 className="mt-8 text-lg font-semibold tracking-tight text-white">
                     {title}
@@ -296,7 +303,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
                   </p>
                 </div>
               ))}
-            </div>
+            </MobileCarousel>
           </div>
         </div>
       </section>

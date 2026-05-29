@@ -100,6 +100,21 @@ export async function createCheckoutIntent(input: {
   provincia?: string;
   ciudad?: string;
   notas?: string;
+  envio_costo?: number;
+  envio_metodo?: 'domicilio' | 'sucursal' | 'retiro';
+  envio?: {
+    metodo: 'domicilio' | 'sucursal' | 'retiro';
+    form: {
+      nombreCompleto: string;
+      email: string;
+      telefono: string;
+      provincia: string;
+      localidad: string;
+      domicilio: string;
+      codigoPostal: string;
+      codigoSucursal: string;
+    };
+  };
 }): Promise<{
   orden_id: string;
   cliente_id: string;

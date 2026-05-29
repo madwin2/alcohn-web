@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   createOpenpayCheckoutOrder,
   getOpenpayTestAmountArs,
+  isOpenpaySimulateSuccessEnabled,
   linesForOpenpayCharge,
   sumLinesSubtotal,
   type OpenpayCartLine,
@@ -12,7 +13,8 @@ export const runtime = 'nodejs';
 /** Indica si Openpay cobrará un monto fijo de prueba (OPENPAY_TEST_AMOUNT_ARS). */
 export async function GET() {
   const testAmountArs = getOpenpayTestAmountArs();
-  return NextResponse.json({ testAmountArs });
+  const simulateSuccess = isOpenpaySimulateSuccessEnabled();
+  return NextResponse.json({ testAmountArs, simulateSuccess });
 }
 
 type Body = {
@@ -44,6 +46,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
+  const ordenId =
+    typeof body.orden_id === 'string' && body.orden_id.trim().length > 0
+      ? body.orden_id.trim()
+      : undefined;
+
+  if (isOpenpaySimulateSuccessEnabled()) {
+    return NextResponse.json({
+      simulateSuccess: true,
+      orden_id: ordenId,
+    });
+  }
+
   const items = Array.isArray(body.items) ? body.items.filter(isValidLine) : [];
   if (items.length === 0) {
     return NextResponse.json({ error: 'Se requiere al menos un ítem válido' }, { status: 400 });
@@ -68,11 +82,6 @@ export async function POST(req: NextRequest) {
       { status: 503 }
     );
   }
-
-  const ordenId =
-    typeof body.orden_id === 'string' && body.orden_id.trim().length > 0
-      ? body.orden_id.trim()
-      : undefined;
 
   try {
     const { checkoutUrl } = await createOpenpayCheckoutOrder({

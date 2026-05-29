@@ -50,12 +50,27 @@ function resolveTipo(item: CartItem): SelloInsert['tipo'] {
   return 'Clasico';
 }
 
+/** Ítems de carrito que no son sellos fabricables (p. ej. línea de envío en Openpay). */
+export function isNonSelloCartLine(item: CartItem): boolean {
+  return item.id.startsWith('envio-') || item.designSlug.startsWith('envio-');
+}
+
 export function buildSellosInsertsFromCart(
   ordenId: string,
   items: CartItem[],
-  options?: { mockup_solicitud_id?: string | null }
+  options?: {
+    mockup_solicitud_id?: string | null;
+    /** Costo de envío Correo (se suma al primer sello para que valor_total lo incluya). */
+    envio_costo?: number;
+  }
 ): SelloInsert[] {
-  return items.map((item) => {
+  const productItems = items.filter((item) => !isNonSelloCartLine(item));
+  const envioCosto =
+    typeof options?.envio_costo === 'number' && options.envio_costo > 0
+      ? options.envio_costo
+      : 0;
+
+  const rows = productItems.map((item) => {
     const dims = parseVariantSizeToCm(item.variantSize);
     const isPersonalized =
       item.collection === 'Personalizado' ||
@@ -93,4 +108,14 @@ export function buildSellosInsertsFromCart(
       },
     };
   });
+
+  if (envioCosto > 0 && rows.length > 0) {
+    rows[0].valor = Number(rows[0].valor) + envioCosto;
+    const envioNote = `Envío $${envioCosto.toLocaleString('es-AR')}`;
+    rows[0].nota = rows[0].nota ? `${rows[0].nota} · ${envioNote}` : envioNote;
+    const cfg = rows[0].item_config as Record<string, unknown>;
+    rows[0].item_config = { ...cfg, envio_costo: envioCosto };
+  }
+
+  return rows;
 }

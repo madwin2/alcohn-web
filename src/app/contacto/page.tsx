@@ -1,16 +1,49 @@
+import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import ContactForm from '@/components/ContactForm';
 import WhatsappButton from '@/components/WhatsappButton';
 import ActionButton from '@/components/ActionButton';
+import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd, localBusinessJsonLd } from '@/lib/seo';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Contacto - Alcohn',
   description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
+  alternates: {
+    canonical: '/contacto',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: '/contacto',
+    siteName: SITE_NAME,
+    title: 'Contacto - Alcohn',
+    description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Contacto - Alcohn',
+    description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: 'Inicio', path: '/' },
+  { name: 'Contacto', path: '/contacto' },
+]);
 
 export default function ContactoPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Contacto"
@@ -25,23 +58,18 @@ export default function ContactoPage() {
             href: '/sellos/estandar',
             variant: 'secondary',
           }}
-          highlights={[
-            'Compra online como camino principal',
-            'WhatsApp para casos especiales',
-            'Datos claros para seguimiento',
-          ]}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-[0.44fr_0.56fr] gap-8 lg:gap-12">
           <aside className="space-y-6">
-            <section className="technical-sheet p-6 md:p-8">
+            <section className="technical-sheet hidden p-6 md:block md:p-8">
               <div className="relative z-10">
                 <p className="craft-label mb-4">Atajos de compra</p>
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-950 mb-4">
                   Evitá esperar una respuesta si ya sabés qué querés
                 </h2>
                 <p className="text-sm leading-relaxed text-neutral-700 mb-6">
-                  Para logo propio, usá el diseñador. Para motivos listos, entrá a estándar. Para dudas técnicas, revisá FAQ o proceso antes de escribir.
+                  Si tenes el logo y queres ver como quedaria podes usar el diseñador online. Para diseños estandar, podes entrar a sellos estándar. Para dudas técnicas, revisá FAQ.
                 </p>
                 <div className="flex flex-col gap-3">
                   <ActionButton href="/buy?mode=custom" variant="primary">

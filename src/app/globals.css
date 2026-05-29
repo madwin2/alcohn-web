@@ -96,6 +96,19 @@ body {
     color: var(--alcohn-bronze-dark);
   }
 
+  .logo-cloud-brand {
+    opacity: 0.8;
+    filter: grayscale(1) contrast(1.14) brightness(0.88);
+    transition: opacity 200ms ease, filter 200ms ease;
+  }
+
+  @media (hover: hover) {
+    .logo-cloud-brand:hover {
+      opacity: 0.96;
+      filter: grayscale(0) contrast(1.05) brightness(1);
+    }
+  }
+
   .technical-sheet {
     position: relative;
     overflow: hidden;
@@ -204,6 +217,25 @@ body {
     animation: caret-blink 900ms steps(1, end) infinite;
   }
 
+  .logo-cloud-typed-line {
+    position: relative;
+    display: block;
+  }
+
+  .logo-cloud-typed-line__reserve {
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .logo-cloud-typed-line__value {
+    position: absolute;
+    inset: 0;
+    display: block;
+    text-align: center;
+  }
+
   .motion-reveal {
     animation: reveal-up 680ms ease both;
   }
@@ -274,6 +306,384 @@ body {
   .motion-reveal-delay,
   .blueprint-annotation {
     animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Evita zoom automático en iOS al hacer focus en inputs (Safari zoom < 16px) */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Respeta safe-area en bottoms sticky / FAB */
+  .mobile-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+  }
+
+  .text-5xl {
+    font-size: 2.2rem;
+    line-height: 1.06;
+  }
+
+  .text-4xl {
+    font-size: 1.95rem;
+    line-height: 1.08;
+  }
+
+  .text-3xl {
+    font-size: 1.65rem;
+    line-height: 1.14;
+  }
+
+  .text-2xl {
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  body {
+    background: var(--alcohn-paper);
+  }
+
+  .atelier-page {
+    background: var(--alcohn-paper);
+  }
+
+  .technical-sheet {
+    box-shadow: 0 14px 36px rgba(17, 16, 14, 0.06);
+  }
+
+  .technical-sheet::before {
+    background-size: 168px 168px;
+    opacity: 0.12;
+  }
+
+  .mobile-clean-sheet {
+    border: 1px solid var(--alcohn-line);
+    box-shadow: none;
+  }
+
+  .mobile-clean-sheet::before {
+    display: none;
+  }
+
+  .blueprint-sheet::after {
+    opacity: 0.5;
+  }
+
+  .craft-label {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .title-keyword {
+    padding: 0.08em 0.18em;
+  }
+
+  .mobile-snap-row {
+    gap: 0.55rem;
+  }
+
+  .mobile-snap-row--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+  }
+
+  .mobile-snap-row--scroll {
+    display: flex;
+    overflow-x: auto;
+    padding: 0.45rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-snap-row--scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-snap-card {
+    min-width: 0;
+  }
+
+  .mobile-snap-row--scroll .mobile-snap-card {
+    flex: 0 0 78%;
+    scroll-snap-align: start;
+  }
+
+  .mobile-snap-row--scroll .mobile-snap-card.cliente-gallery-thumb {
+    flex: 0 0 38%;
+    width: 38%;
+    max-width: 38%;
+    scroll-snap-align: start;
+  }
+
+  .cliente-gallery-thumb p {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+  }
+
+  .mobile-carousel {
+    position: relative;
+  }
+
+  .mobile-carousel-ui {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    padding: 0 0.6rem 0.35rem;
+  }
+
+  .mobile-carousel-center {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .mobile-carousel-hint {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(17, 16, 14, 0.56);
+  }
+
+  .mobile-carousel-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.33rem;
+  }
+
+  .mobile-carousel-dot {
+    height: 0.3rem;
+    width: 0.3rem;
+    border-radius: 999px;
+    background: rgba(17, 16, 14, 0.24);
+    transition: transform 150ms ease, background-color 150ms ease;
+  }
+
+  .mobile-carousel-dot.is-active {
+    transform: scale(1.16);
+    background: rgba(17, 16, 14, 0.64);
+  }
+
+  .mobile-carousel-arrow {
+    display: inline-flex;
+    height: 1.55rem;
+    width: 1.55rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(17, 16, 14, 0.2);
+    background: rgba(255, 255, 255, 0.72);
+    color: rgba(17, 16, 14, 0.78);
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .mobile-story-carousel {
+    overflow: hidden;
+  }
+
+  .mobile-story-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-story-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-story-slide {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .mobile-story-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--alcohn-paper-deep);
+  }
+
+  .mobile-story-media img {
+    display: block;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .mobile-story-media > a {
+    z-index: 0;
+  }
+
+  .mobile-story-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(17, 16, 14, 0.42);
+    color: #fff;
+    font-size: 1.1rem;
+    line-height: 1;
+    transform: translateY(-50%);
+    backdrop-filter: blur(4px);
+  }
+
+  .mobile-story-arrow--left {
+    left: 0.5rem;
+  }
+
+  .mobile-story-arrow--right {
+    right: 0.5rem;
+  }
+
+  .mobile-story-caption {
+    border-top: 1px solid var(--alcohn-line);
+    padding: 0.85rem 1rem 1rem;
+    background: var(--alcohn-surface);
+  }
+
+  .mobile-story-media--overlay {
+    aspect-ratio: 4 / 5;
+  }
+
+  .mobile-story-media--square {
+    aspect-ratio: 1 / 1;
+  }
+
+  .mobile-story-media-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 16, 14, 0.12) 0%,
+      rgba(17, 16, 14, 0.48) 65%,
+      rgba(17, 16, 14, 0.72) 100%
+    );
+    pointer-events: none;
+  }
+
+  .mobile-story-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem 1rem 2.35rem;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  .mobile-story-dots {
+    position: absolute;
+    bottom: 0.65rem;
+    left: 50%;
+    z-index: 3;
+    display: flex;
+    transform: translateX(-50%);
+    align-items: center;
+    gap: 0.33rem;
+  }
+
+  .mobile-story-dot {
+    height: 0.32rem;
+    width: 0.32rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.38);
+    padding: 0;
+    pointer-events: auto;
+  }
+
+  .mobile-story-dot.is-active {
+    transform: scale(1.2);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .text-xs {
+    font-size: 0.77rem;
+    line-height: 1.2rem;
+  }
+
+  .text-sm {
+    font-size: 0.91rem;
+    line-height: 1.42rem;
+  }
+
+  .brand-marquee {
+    overflow: hidden;
+    background: var(--alcohn-surface);
+  }
+
+  .brand-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: brand-marquee-scroll 28s linear infinite;
+  }
+
+  .logo-cloud-typed-line {
+    min-height: 2.15em;
+  }
+
+  .brand-marquee--mobile {
+    min-height: 6.5rem;
+  }
+
+  .brand-marquee-item {
+    display: flex;
+    min-width: 118px;
+    height: 72px;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--alcohn-line);
+    padding: 0 0.75rem;
+  }
+
+  .brand-marquee--mobile .brand-marquee-item {
+    min-width: 148px;
+    height: 104px;
+    padding: 0 1rem;
+  }
+
+  .brand-marquee-item img {
+    max-height: 38px;
+    max-width: 100px;
+    object-fit: contain;
+  }
+
+  .brand-marquee--mobile .brand-marquee-item .logo-cloud-brand {
+    max-height: 54px;
+    max-width: 124px;
+    opacity: 0.94;
+    filter: grayscale(1) contrast(1.28) brightness(0.68);
+  }
+}
+
+@keyframes brand-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 

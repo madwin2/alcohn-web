@@ -65,7 +65,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+            className="p-2 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
             aria-label="Cerrar carrito"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

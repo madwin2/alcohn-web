@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import ReactCrop, { type Crop, type PercentCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import Stepper from './Stepper';
 import ContactStep from './buy/ContactStep';
 import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
 import { useCart } from '@/contexts/CartContext';
 import { saveCheckoutPrefill } from '@/lib/checkoutPrefill';
+import { fetchShippingCost } from '@/lib/shipping/client';
+import { saveCheckoutShipping } from '@/lib/shipping/storage';
+import type { ShippingMetodoUi } from '@/lib/shipping/types';
+import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
   syncWizardContact,
@@ -18,17 +24,39 @@ import {
   markMockupPendingApproval,
   markCheckoutStarted,
 } from '@/lib/wizardSupabaseSync';
-import { patchMockupSolicitud } from '@/lib/supabase/mockupApiClient';
+import { patchMockupSolicitud, uploadMockupImage } from '@/lib/supabase/mockupApiClient';
+import {
+  getWizardOptionBySlug,
+  wizardMaterialOptions,
+  type WizardMaterialOption,
+} from '@/data/stampUseCases';
+import StampSizeScalePreview from '@/components/buy/StampSizeScalePreview';
+import WizardCollapsible from '@/components/buy/WizardCollapsible';
+import WizardCustomSizeFields from '@/components/buy/WizardCustomSizeFields';
+import {
+  WizardSizePickerRow,
+  WizardSizeSummaryPanel,
+  type WizardSizeTierOption,
+} from '@/components/buy/WizardSizeStepMobile';
+import { cotizarMm, parseSizeMm } from '@/lib/cotizador/fetchCotizacion';
+import {
+  fitProportionalStampSize,
+  isValidStampSizeMm,
+} from '@/lib/cotizador/stampSizeLimits';
 
 interface BuyWizardData {
   nombre?: string;
   whatsapp?: string;
   email?: string;
   material?: 'cuero' | 'madera' | 'ambos' | 'ceramica' | 'alimentos' | 'otros';
+  /** Uso elegido (misma clave que la grilla de la home). */
+  usoSlug?: string;
   logoFile?: File | null;
   logoPreview?: string;
   logoOriginal?: string; // Logo original antes de optimización
   logoOptimized?: string; // Logo optimizado por OpenAI
+  /** true cuando la "optimización" no cambió el diseño (p.ej. solo fondo) */
+  logoOptimizationIsCosmetic?: boolean;
   logoAnalysis?: {
     isOptimal?: boolean; // true si es ideal para sello de bronce
     hasPlainBackground?: boolean; // true si tiene fondo blanco/transparente
@@ -36,12 +64,25 @@ interface BuyWizardData {
     needsOptimization?: boolean; // true si necesita optimización
     reason?: string; // Razón de la decisión
     aspectRatio?: number;
+    /** Bbox del dibujo (trim), en píxeles — para escala en la vista previa. */
+    contentWidthPx?: number;
+    contentHeightPx?: number;
   };
   selectedSize?: string;
+  /** Precio tarjeta / link (precio_link_ars del cotizador). */
   selectedPrice?: number;
+  /** Precio transferencia (precio_transferencia_ars del cotizador). */
+  selectedTransferPrice?: number;
   customSize?: { width: number; height: number };
   approximateSizeKey?: 'pequeño' | 'medio' | 'grande'; // Si viene de una medida aproximada
-  sizeOptions?: Array<{ size: string; price: number; recommended?: boolean; ratio: number }>;
+  sizeOptions?: Array<{
+    size: string;
+    price: number;
+    transferPrice?: number;
+    recommended?: boolean;
+    ratio: number;
+    tier?: 'pequeño' | 'mediano' | 'grande';
+  }>;
   previewGenerated?: boolean;
   needsManualPreview?: boolean; // true si necesita muestra manual vía WhatsApp
   isAnalyzing?: boolean; // true mientras se analiza el logo
@@ -49,6 +90,22 @@ interface BuyWizardData {
   mockupUrl?: string; // URL del mockup generado
   thumbnailUrl?: string; // URL del thumbnail del mockup
   isGeneratingMockup?: boolean; // true mientras se genera el mockup
+  mockupTextureMaterial?: 'cuero' | 'madera';
+  mockupUsesFallbackTexture?: boolean;
+}
+
+const DEFAULT_MOCKUP_SIZE = '40x40mm';
+
+/** Solo cuero y madera tienen generador de muestra; el resto usa textura de referencia. */
+function resolveMockupGeneration(material: WizardMaterial): {
+  mockupMaterial: 'cuero' | 'madera';
+  usesFallback: boolean;
+} {
+  if (material === 'madera') return { mockupMaterial: 'madera', usesFallback: false };
+  if (material === 'cuero') return { mockupMaterial: 'cuero', usesFallback: false };
+  const mockupMaterial =
+    material === 'ceramica' || material === 'otros' ? 'madera' : 'cuero';
+  return { mockupMaterial, usesFallback: true };
 }
 
 type WizardMaterial = NonNullable<BuyWizardData['material']>;
@@ -56,6 +113,7 @@ type WizardMaterial = NonNullable<BuyWizardData['material']>;
 interface BuyWizardProps {
   initialProduct?: string;
   initialMaterial?: WizardMaterial;
+  initialUsoSlug?: string;
   onComplete?: (data: BuyWizardData) => void;
 }
 
@@ -68,10 +126,27 @@ const WIZARD_MATERIAL_LABELS: Record<string, string> = {
   otros: 'Otros',
 };
 
-/** Miniatura del carrito: mockup si es URL corta; si no, textura según material (evita data URLs enormes en localStorage). */
+function wizardUsoDisplayLabel(data: BuyWizardData): string {
+  if (data.usoSlug) {
+    const opt = getWizardOptionBySlug(data.usoSlug);
+    if (opt) return `${opt.oficio} (${opt.materialLabel})`;
+  }
+  return data.material ? WIZARD_MATERIAL_LABELS[data.material] || data.material : '';
+}
+
+const MAX_CART_DATA_URL_LENGTH = 180_000;
+
+/** Miniatura del carrito: prioriza thumbnail/mockup; solo cae a textura base si no hay preview usable. */
 function wizardCartImageUrl(d: BuyWizardData): string {
   const u = d.thumbnailUrl || d.mockupUrl || '';
-  if (u && !u.startsWith('data:')) return u;
+  if (!u) {
+    if (d.material === 'madera') return '/mockup-textures/madera.jpg';
+    return '/mockup-textures/cuero.jpg';
+  }
+
+  // Aceptamos data URLs chicas (thumbnail) para mostrar la muestra real sin inflar demasiado localStorage.
+  if (!u.startsWith('data:') || u.length <= MAX_CART_DATA_URL_LENGTH) return u;
+
   if (d.material === 'madera') return '/mockup-textures/madera.jpg';
   return '/mockup-textures/cuero.jpg';
 }
@@ -215,35 +290,78 @@ const findSmallestGrande = (aspectRatio: number): { width: number; height: numbe
   return { width: candidates[0].width, height: candidates[0].height };
 };
 
-// Precios base por categoría
-const basePrices = {
-  chico: 44000,
-  mediano: 55000,
-  grande: 66000,
-};
-
-// Descuento por transferencia (10%)
-const TRANSFER_DISCOUNT = 0.10;
-
-// Función para calcular precio basado en categoría y área
-const calculatePrice = (category: SizeCategory, width: number, height: number): number => {
-  if (!category) return basePrices.mediano; // Default
-  
-  const area = width * height;
-  const baseArea = category === 'chico' ? 400 : category === 'mediano' ? 1600 : 3600; // Áreas de referencia
-  const multiplier = area / baseArea;
-  const basePrice = basePrices[category];
-  
-  // Ajustar precio según área (con límites razonables)
-  return Math.round(basePrice * Math.max(0.8, Math.min(1.5, multiplier)));
-};
-
-// Mapeo de tamaños recomendados a medidas específicas (usado como fallback)
-const sizeMap: Record<string, { size: string; price: number }> = {
+/** Fallback si el cotizador no responde (URL legacy / sin red). */
+const sizeMapFallback: Record<string, { size: string; price: number }> = {
   pequeño: { size: '25x25mm', price: 44000 },
   medio: { size: '40x40mm', price: 55000 },
   grande: { size: '60x60mm', price: 66000 },
 };
+
+const SIZE_TIER_LABELS = ['Pequeño', 'Mediano', 'Grande'] as const;
+
+function buildWizardSizeTierOptions(
+  sizeOptions: BuyWizardData['sizeOptions']
+): WizardSizeTierOption[] {
+  if (sizeOptions?.length) {
+    return sizeOptions.map((o, i) => ({
+      key: o.tier ?? String(i),
+      label: SIZE_TIER_LABELS[i] ?? o.tier ?? `Opción ${i + 1}`,
+      size: o.size,
+      price: o.price,
+      transferPrice: o.transferPrice,
+      recommended: o.recommended,
+    }));
+  }
+  return (['pequeño', 'medio', 'grande'] as const).map((key) => ({
+    key,
+    label: ({ pequeño: 'Pequeño', medio: 'Mediano', grande: 'Grande' } as const)[key],
+    size: sizeMapFallback[key].size,
+    price: sizeMapFallback[key].price,
+    recommended: key === 'medio',
+  }));
+}
+
+function tierToApproximateKey(
+  tier?: 'pequeño' | 'mediano' | 'grande'
+): 'pequeño' | 'medio' | 'grande' | undefined {
+  if (tier === 'mediano') return 'medio';
+  if (tier === 'pequeño' || tier === 'grande') return tier;
+  return undefined;
+}
+
+type SizeOptionForQuote = {
+  size: string;
+  recommended?: boolean;
+  ratio: number;
+  refCm?: { ancho: number; largo: number };
+};
+
+async function enrichSizesWithCatalogPrices<T extends SizeOptionForQuote>(
+  sizes: T[]
+): Promise<Array<T & { price: number; transferPrice: number }>> {
+  return Promise.all(
+    sizes.map(async (s) => {
+      let widthMm: number;
+      let heightMm: number;
+      const dim = parseSizeMm(s.size);
+      if (dim) {
+        widthMm = dim.width;
+        heightMm = dim.height;
+      } else if (s.refCm) {
+        widthMm = Math.round(s.refCm.ancho * 10);
+        heightMm = Math.round(s.refCm.largo * 10);
+      } else {
+        return { ...s, price: 0, transferPrice: 0 };
+      }
+      const q = await cotizarMm(widthMm, heightMm);
+      return {
+        ...s,
+        price: q?.precio_link_ars ?? 0,
+        transferPrice: q?.precio_transferencia_ars ?? 0,
+      };
+    })
+  );
+}
 
 function medianOfSortedCopy(values: number[]): number {
   if (values.length === 0) return 0;
@@ -426,81 +544,6 @@ async function fetchWithTimeout(
   }
 }
 
-/**
- * Mantiene proporción ancho/alto (ancho = ar × alto).
- * - Lado largo según categoría (chico/mediano/grande).
- * - Lado corto mínimo 5 mm (sellos muy anchos tipo 15:1); el largo mínimo 10 mm.
- */
-function stampDimensionsFromLongSide(
-  longSideMm: number,
-  aspectWidthOverHeight: number,
-  minLongMm: number,
-  maxMm: number
-): { width: number; height: number } {
-  const ar = Math.max(0.05, Math.min(30, aspectWidthOverHeight));
-  const minShortMm = 5;
-
-  if (ar >= 1) {
-    let w = Math.min(maxMm, Math.max(minLongMm, Math.round(longSideMm)));
-    let h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
-    w = Math.min(maxMm, Math.max(minLongMm, Math.round(h * ar)));
-    h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
-    if (w > maxMm) {
-      w = maxMm;
-      h = Math.max(minShortMm, Math.min(maxMm, Math.round(w / ar)));
-    }
-    if (h > maxMm) {
-      h = maxMm;
-      w = Math.max(minLongMm, Math.min(maxMm, Math.round(h * ar)));
-    }
-    return { width: w, height: h };
-  }
-
-  let h = Math.min(maxMm, Math.max(minLongMm, Math.round(longSideMm)));
-  let w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
-  h = Math.min(maxMm, Math.max(minLongMm, Math.round(w / ar)));
-  w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
-  if (h > maxMm) {
-    h = maxMm;
-    w = Math.max(minShortMm, Math.min(maxMm, Math.round(h * ar)));
-  }
-  if (w > maxMm) {
-    w = maxMm;
-    h = Math.max(minLongMm, Math.min(maxMm, Math.round(w / ar)));
-  }
-  return { width: w, height: h };
-}
-
-const LONG_SIDE_TIERS_MM = { chico: 52, mediano: 78, grande: 100 } as const;
-
-const calculateSuggestedSizes = (
-  aspectRatio: number
-): Array<{ size: string; price: number; recommended?: boolean; category?: SizeCategory; ratio: number }> => {
-  const ar = Math.max(0.05, Math.min(30, aspectRatio));
-  const tiers: Array<{ key: keyof typeof LONG_SIDE_TIERS_MM; recommended: boolean }> = [
-    { key: 'chico', recommended: false },
-    { key: 'mediano', recommended: true },
-    { key: 'grande', recommended: false },
-  ];
-
-  return tiers.map(({ key, recommended }) => {
-    const longMm = LONG_SIDE_TIERS_MM[key];
-    const { width, height } = stampDimensionsFromLongSide(longMm, ar, 10, 100);
-    const category = getSizeCategory(width, height);
-    const finalCategory =
-      category || (key === 'chico' ? 'chico' : key === 'mediano' ? 'mediano' : 'grande');
-    const price = calculatePrice(finalCategory, width, height);
-    const ratio = width / height;
-    return {
-      size: `${width}x${height}mm`,
-      price,
-      recommended,
-      category: finalCategory,
-      ratio: Number.isFinite(ratio) ? ratio : ar,
-    };
-  });
-};
-
 // Función para analizar el logo con OpenAI (con proporción medida en el cliente si falla la API)
 const analyzeLogoWithAI = async (
   imageUrl: string,
@@ -582,6 +625,192 @@ const dataUrlToFile = (dataUrl: string, filename = 'logo.png'): File => {
   return new File([bytes], filename, { type: mime });
 };
 
+const loadImageFromDataUrl = (dataUrl: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('No se pudo cargar la imagen para procesarla.'));
+    image.src = dataUrl;
+  });
+
+const extractNormalizedLogoMask = async (
+  dataUrl: string,
+  size = 64
+): Promise<{ mask: Uint8Array; fillRatio: number } | null> => {
+  if (!dataUrl.startsWith('data:image')) return null;
+  const image = await loadImageFromDataUrl(dataUrl);
+  const maxSide = 768;
+  const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+  const width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+  const height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+
+  const sourceCanvas = document.createElement('canvas');
+  sourceCanvas.width = width;
+  sourceCanvas.height = height;
+  const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  if (!sourceCtx) return null;
+  sourceCtx.drawImage(image, 0, 0, width, height);
+
+  let sourceData: ImageData;
+  try {
+    sourceData = sourceCtx.getImageData(0, 0, width, height);
+  } catch {
+    return null;
+  }
+  const pixels = sourceData.data;
+
+  let borderAlphaTotal = 0;
+  let borderCount = 0;
+  const addBorderAlpha = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    borderAlphaTotal += pixels[i + 3];
+    borderCount++;
+  };
+  for (let x = 0; x < width; x++) {
+    addBorderAlpha(x, 0);
+    addBorderAlpha(x, height - 1);
+  }
+  for (let y = 0; y < height; y++) {
+    addBorderAlpha(0, y);
+    addBorderAlpha(width - 1, y);
+  }
+
+  const useAlphaMask = borderCount > 0 ? borderAlphaTotal / borderCount < 252 : false;
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const alpha = pixels[i + 3];
+      const luminance = 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2];
+      const isForeground = useAlphaMask ? alpha > 32 : alpha > 10 && luminance < 220;
+
+      if (isForeground) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < minX || maxY < minY) return null;
+
+  const boxWidth = maxX - minX + 1;
+  const boxHeight = maxY - minY + 1;
+  if (boxWidth < 2 || boxHeight < 2) return null;
+
+  const normalizedCanvas = document.createElement('canvas');
+  normalizedCanvas.width = size;
+  normalizedCanvas.height = size;
+  const normalizedCtx = normalizedCanvas.getContext('2d', { willReadFrequently: true });
+  if (!normalizedCtx) return null;
+  normalizedCtx.clearRect(0, 0, size, size);
+  normalizedCtx.drawImage(
+    sourceCanvas,
+    minX,
+    minY,
+    boxWidth,
+    boxHeight,
+    0,
+    0,
+    size,
+    size
+  );
+
+  const normalizedData = normalizedCtx.getImageData(0, 0, size, size).data;
+  const mask = new Uint8Array(size * size);
+  let foregroundPixels = 0;
+  for (let i = 0; i < size * size; i++) {
+    const p = i * 4;
+    const alpha = normalizedData[p + 3];
+    const luminance =
+      0.2126 * normalizedData[p] +
+      0.7152 * normalizedData[p + 1] +
+      0.0722 * normalizedData[p + 2];
+    const isForeground = useAlphaMask ? alpha > 32 : alpha > 10 && luminance < 220;
+    if (isForeground) {
+      mask[i] = 1;
+      foregroundPixels++;
+    }
+  }
+
+  return {
+    mask,
+    fillRatio: foregroundPixels / (size * size),
+  };
+};
+
+const isCosmeticLogoOptimization = async (
+  originalDataUrl: string,
+  optimizedDataUrl: string
+): Promise<boolean> => {
+  try {
+    const [originalMaskData, optimizedMaskData] = await Promise.all([
+      extractNormalizedLogoMask(originalDataUrl),
+      extractNormalizedLogoMask(optimizedDataUrl),
+    ]);
+    if (!originalMaskData || !optimizedMaskData) return false;
+
+    const len = originalMaskData.mask.length;
+    let intersection = 0;
+    let union = 0;
+
+    for (let i = 0; i < len; i++) {
+      const a = originalMaskData.mask[i] === 1;
+      const b = optimizedMaskData.mask[i] === 1;
+      if (a && b) intersection++;
+      if (a || b) union++;
+    }
+
+    if (union === 0) return false;
+
+    const iou = intersection / union;
+    const fillRatioDiff = Math.abs(originalMaskData.fillRatio - optimizedMaskData.fillRatio);
+    return iou >= 0.94 && fillRatioDiff <= 0.08;
+  } catch {
+    return false;
+  }
+};
+
+const cropImageDataUrl = async (
+  dataUrl: string,
+  cropPercent: PercentCrop,
+  originalMimeType: string
+): Promise<string> => {
+  const image = await loadImageFromDataUrl(dataUrl);
+  const nw = image.naturalWidth || 1;
+  const nh = image.naturalHeight || 1;
+
+  const px = Math.max(0, Math.min(100, cropPercent.x ?? 0)) / 100;
+  const py = Math.max(0, Math.min(100, cropPercent.y ?? 0)) / 100;
+  const pw = Math.max(0, Math.min(100, cropPercent.width ?? 0)) / 100;
+  const ph = Math.max(0, Math.min(100, cropPercent.height ?? 0)) / 100;
+
+  const sx = Math.max(0, Math.round(nw * px));
+  const sy = Math.max(0, Math.round(nh * py));
+  const width = Math.max(1, Math.round(nw * pw));
+  const height = Math.max(1, Math.round(nh * ph));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('No se pudo preparar el recorte del logo.');
+
+  ctx.drawImage(image, sx, sy, width, height, 0, 0, width, height);
+  const mimeType =
+    originalMimeType === 'image/jpeg' || originalMimeType === 'image/jpg'
+      ? 'image/jpeg'
+      : 'image/png';
+  return canvas.toDataURL(mimeType, mimeType === 'image/jpeg' ? 0.92 : undefined);
+};
+
 // Función para optimizar el logo con OpenAI
 const optimizeLogoWithAI = async (imageUrl: string): Promise<{ optimizedLogo: string; aspectRatio: number }> => {
   try {
@@ -627,8 +856,14 @@ const optimizeLogoWithAI = async (imageUrl: string): Promise<{ optimizedLogo: st
   }
 };
 
-/** Proporción del logo recortado (Python Pillow o Sharp trim en el servidor). */
-const measureLogoOnServer = async (dataUrl: string): Promise<number | null> => {
+/** Medición del dibujo recortado (trim) en el servidor. */
+const measureLogoOnServer = async (
+  dataUrl: string
+): Promise<{
+  aspectRatio: number;
+  contentWidthPx: number;
+  contentHeightPx: number;
+} | null> => {
   try {
     const response = await fetchWithTimeout(
       '/api/logo/measure',
@@ -643,17 +878,33 @@ const measureLogoOnServer = async (dataUrl: string): Promise<number | null> => {
     const result = await parseJsonResponse(response);
     if (!response.ok || !result.success) return null;
     const ar = Number(result.aspectRatio);
-    return Number.isFinite(ar) && ar > 0 ? Math.max(0.05, Math.min(30, ar)) : null;
+    const contentWidthPx = Number(result.widthPx);
+    const contentHeightPx = Number(result.heightPx);
+    if (!Number.isFinite(ar) || ar <= 0) return null;
+    return {
+      aspectRatio: Math.max(0.05, Math.min(30, ar)),
+      contentWidthPx:
+        Number.isFinite(contentWidthPx) && contentWidthPx > 0 ? contentWidthPx : 0,
+      contentHeightPx:
+        Number.isFinite(contentHeightPx) && contentHeightPx > 0 ? contentHeightPx : 0,
+    };
   } catch {
     return null;
   }
 };
 
-export default function BuyWizard({ initialProduct, initialMaterial, onComplete }: BuyWizardProps) {
+export default function BuyWizard({
+  initialProduct,
+  initialMaterial,
+  initialUsoSlug,
+  onComplete,
+}: BuyWizardProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addItem } = useCart();
   const [step, setStep] = useState(0); // Empezar en paso 0 (contacto)
+  /** Mobile paso medida: tarjetas estándar vs formulario personalizado */
+  const [mobileSizeMode, setMobileSizeMode] = useState<'standard' | 'custom'>('standard');
   const [data, setData] = useState<BuyWizardData>(() => (
     initialMaterial ? { material: initialMaterial } : {}
   ));
@@ -664,6 +915,25 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
+  const [shippingMethod, setShippingMethod] = useState<ShippingMetodoUi>('retiro');
+  const [shippingCost, setShippingCost] = useState(0);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isRequestingCorrection, setIsRequestingCorrection] = useState(false);
+  const [pendingLogoUpload, setPendingLogoUpload] = useState<{
+    file: File;
+    imageUrl: string;
+  } | null>(null);
+  const [pendingLogoAspectRatio, setPendingLogoAspectRatio] = useState(1);
+  const [cropViewport, setCropViewport] = useState({ width: 1280, height: 800 });
+  const [logoCrop, setLogoCrop] = useState<Crop | undefined>({
+    unit: '%',
+    x: 2,
+    y: 2,
+    width: 96,
+    height: 96,
+  });
+  const [logoCroppedAreaPercent, setLogoCroppedAreaPercent] = useState<PercentCrop | null>(null);
+  const [isApplyingLogoCrop, setIsApplyingLogoCrop] = useState(false);
   const wizardRef = useRef<HTMLDivElement>(null);
   const webSessionIdRef = useRef('');
   const clienteIdRef = useRef<string | null>(null);
@@ -681,11 +951,32 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
   }, [step]);
 
   useEffect(() => {
-    if (!initialMaterial) return;
-    setData((prevData) => (
-      prevData.material ? prevData : { ...prevData, material: initialMaterial }
-    ));
-  }, [initialMaterial]);
+    if (shippingMethod === 'retiro') {
+      setShippingCost(0);
+      return;
+    }
+    const tipo = shippingMethod === 'domicilio' ? 'Domicilio' : 'Sucursal';
+    let cancelled = false;
+    fetchShippingCost(tipo).then((cost) => {
+      if (!cancelled) setShippingCost(cost);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [shippingMethod]);
+
+  useEffect(() => {
+    if (!initialMaterial && !initialUsoSlug) return;
+    const fromUso = initialUsoSlug ? getWizardOptionBySlug(initialUsoSlug) : undefined;
+    setData((prevData) => {
+      if (prevData.material) return prevData;
+      if (fromUso) {
+        return { ...prevData, material: fromUso.buyMaterial, usoSlug: fromUso.slug };
+      }
+      if (initialMaterial) return { ...prevData, material: initialMaterial };
+      return prevData;
+    });
+  }, [initialMaterial, initialUsoSlug]);
 
   // Función helper para obtener el texto de la medida a mostrar
   const getSizeDisplayText = (): string => {
@@ -713,34 +1004,51 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
     if (sizeParam && priceParam) {
       // Medida recomendada (pequeño/medio/grande)
       const sizeKey = sizeParam.toLowerCase();
-      const mappedSize = sizeMap[sizeKey] || {
+      const mappedSize = sizeMapFallback[sizeKey] || {
         size: `${sizeParam}mm`,
         price: parseInt(priceParam, 10),
       };
-      
-      // Si es una medida aproximada, guardar también el key
+
       const approximateKeys: string[] = ['pequeño', 'medio', 'grande'];
       const isApproximate = approximateKeys.includes(sizeKey);
-      
+
       setData((prevData) => ({
         ...prevData,
         selectedSize: mappedSize.size,
         selectedPrice: mappedSize.price,
         ...(isApproximate && { approximateSizeKey: sizeKey as 'pequeño' | 'medio' | 'grande' }),
       }));
+
+      const dim = parseSizeMm(mappedSize.size);
+      if (dim) {
+        void cotizarMm(dim.width, dim.height).then((q) => {
+          if (!q) return;
+          setData((prev) => ({
+            ...prev,
+            selectedPrice: q.precio_link_ars,
+            selectedTransferPrice: q.precio_transferencia_ars,
+          }));
+        });
+      }
       // Empezar en paso 1 (material), no saltar pasos
     } else if (modeParam === 'custom' && wParam && hParam) {
       // Medida personalizada
       const width = parseInt(wParam, 10);
       const height = parseInt(hParam, 10);
-      if (width >= 10 && width <= 100 && height >= 10 && height <= 100) {
+      if (isValidStampSizeMm(width, height)) {
         setData((prevData) => ({
           ...prevData,
           selectedSize: `${width}x${height}mm`,
           customSize: { width, height },
-          selectedPrice: 44000, // Precio base, se ajustará según medida
         }));
-        // Empezar en paso 1 (material), no saltar pasos
+        void cotizarMm(width, height).then((q) => {
+          if (!q) return;
+          setData((prev) => ({
+            ...prev,
+            selectedPrice: q.precio_link_ars,
+            selectedTransferPrice: q.precio_transferencia_ars,
+          }));
+        });
       }
     }
   }, [searchParams]);
@@ -749,36 +1057,135 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
     { label: 'Contacto', key: 'contact' },
     { label: 'Material', key: 'material' },
     { label: 'Logo', key: 'logo' },
-    { label: 'Medida', key: 'size' },
     { label: 'Vista previa', key: 'preview' },
+    { label: 'Medida', key: 'size' },
     { label: 'Pago', key: 'payment' },
   ];
 
-  // Generate size options when logo and material are ready, basado en aspect ratio
   useEffect(() => {
-    if (data.logoFile && data.material && data.logoAnalysis?.aspectRatio && step >= 3 && !data.sizeOptions) {
-      // Calcular medidas basadas en el aspect ratio del diseño del logo
-      const aspectRatio = data.logoAnalysis.aspectRatio;
-      const suggestedSizes = calculateSuggestedSizes(aspectRatio);
-      setData((prevData) => ({ ...prevData, sizeOptions: suggestedSizes }));
-    } else if (data.logoFile && data.material && step >= 3 && !data.sizeOptions && !data.logoAnalysis?.aspectRatio) {
-      // Fallback: proporción 1:1
-      const fallbackSizes = [
-        { size: '30x30mm', price: 44000, recommended: false, ratio: 1 },
-        { size: '40x40mm', price: 55000, recommended: true, ratio: 1 },
-        { size: '50x50mm', price: 66000, recommended: false, ratio: 1 },
-      ];
-      setData((prevData) => ({ ...prevData, sizeOptions: fallbackSizes }));
+    if (!data.isAnalyzing && !data.isOptimizing) {
+      setAnalysisProgress(0);
+      return;
     }
-  }, [data.logoFile, data.material, data.logoAnalysis?.aspectRatio, step, data.sizeOptions]);
+    setAnalysisProgress(data.isOptimizing ? 58 : 12);
+    const id = window.setInterval(() => {
+      setAnalysisProgress((prev) => {
+        const cap = data.isOptimizing ? 94 : 52;
+        return prev >= cap ? prev : prev + 5;
+      });
+    }, 350);
+    return () => window.clearInterval(id);
+  }, [data.isAnalyzing, data.isOptimizing]);
+
+  // Medidas sugeridas + precios (catálogo Supabase vía /api/cotizador/tiers)
+  useEffect(() => {
+    if (!data.logoFile || !data.material || step !== 4) return;
+
+    let cancelled = false;
+    const aspectRatio = data.logoAnalysis?.aspectRatio ?? 1;
+
+    void fetch('/api/cotizador/tiers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aspect_ratio: aspectRatio }),
+    })
+      .then((res) => res.json())
+      .then((json: { tiers?: Array<{
+        size: string;
+        recommended?: boolean;
+        ratio: number;
+        tier: 'pequeño' | 'mediano' | 'grande';
+        refCm?: { ancho: number; largo: number };
+        price: number;
+        transferPrice: number;
+      }>; error?: string }) => {
+        if (cancelled || !json.tiers?.length) return;
+        setData((prev) => ({
+          ...prev,
+          sizeOptions: json.tiers!.map((t) => ({
+            size: t.size,
+            recommended: t.recommended,
+            ratio: t.ratio,
+            tier: t.tier,
+            refCm: t.refCm,
+            price: t.price,
+            transferPrice: t.transferPrice,
+          })),
+        }));
+      })
+      .catch(() => {
+        /* sin fallback: el paso muestra estado vacío hasta reintentar */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data.logoFile, data.material, data.logoAnalysis?.aspectRatio, step]);
+
+  // Mobile / paso medida: preseleccionar la opción recomendada al entrar o al cargar tiers
+  useEffect(() => {
+    if (step !== 4 || data.customSize) return;
+
+    const options = buildWizardSizeTierOptions(data.sizeOptions);
+    if (!options.length) return;
+
+    const matchesOption = options.some((o) => o.size === data.selectedSize);
+    if (matchesOption && data.selectedPrice) return;
+
+    const pick = options.find((o) => o.recommended) ?? options[1] ?? options[0];
+    const tier = data.sizeOptions?.find((o) => o.size === pick.size)?.tier;
+
+    setData((prev) => ({
+      ...prev,
+      selectedSize: pick.size,
+      selectedPrice: pick.price,
+      selectedTransferPrice: pick.transferPrice,
+      approximateSizeKey: tierToApproximateKey(tier),
+      customSize: undefined,
+    }));
+  }, [step, data.sizeOptions, data.customSize, data.selectedSize, data.selectedPrice]);
+
+  useEffect(() => {
+    if (step !== 4) setMobileSizeMode('standard');
+  }, [step]);
+
+  // Medición del bbox del dibujo para la comparación a escala (logos ya subidos antes del cambio)
+  useEffect(() => {
+    if (step !== 4) return;
+    const logoUrl = data.logoOptimized || data.logoPreview;
+    if (!logoUrl || data.logoAnalysis?.contentWidthPx) return;
+
+    let cancelled = false;
+    void measureLogoOnServer(logoUrl).then((measured) => {
+      if (cancelled || !measured?.contentWidthPx || !measured.contentHeightPx) return;
+      setData((prev) => ({
+        ...prev,
+        logoAnalysis: {
+          ...prev.logoAnalysis,
+          aspectRatio: measured.aspectRatio ?? prev.logoAnalysis?.aspectRatio,
+          contentWidthPx: measured.contentWidthPx,
+          contentHeightPx: measured.contentHeightPx,
+        },
+        // Proporción refinada → recotizar Pequeño / Mediano / Grande
+        sizeOptions: undefined,
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    step,
+    data.logoPreview,
+    data.logoOptimized,
+    data.logoAnalysis?.contentWidthPx,
+  ]);
 
   // Generate preview when size is selected (solo para logos óptimos u optimizados)
   // Usa el servicio Python para generar el mockup con texturas y efectos consistentes
   // Generar mockup solo cuando el usuario llegue al paso 4 (vista previa)
   useEffect(() => {
     if (
-      step === 4 && // Solo en el paso de vista previa
-      data.selectedSize &&
+      step === 3 && // Vista previa antes de elegir medida
       !data.previewGenerated &&
       !data.needsManualPreview &&
       data.logoPreview &&
@@ -787,14 +1194,20 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
       data.logoAnalysis
     ) {
       const generateMockup = async () => {
-        setData((prevData) => ({ ...prevData, isGeneratingMockup: true }));
+        const { mockupMaterial, usesFallback } = resolveMockupGeneration(data.material!);
+        setData((prevData) => ({
+          ...prevData,
+          isGeneratingMockup: true,
+          mockupTextureMaterial: mockupMaterial,
+          mockupUsesFallbackTexture: usesFallback,
+        }));
         
         try {
           // Usar el logo optimizado si existe, o el original si ya estaba óptimo
           const logoToUse = data.logoOptimized || data.logoPreview;
           
-          // Preparar el tamaño (extraer dimensiones si es necesario)
-          let sizeStr = data.selectedSize || '40x40mm';
+          // Medida de referencia para la muestra (la definitiva se elige después)
+          let sizeStr = data.selectedSize || DEFAULT_MOCKUP_SIZE;
           let customSizeObj = undefined;
           
           // Si es una medida personalizada, extraer width y height
@@ -807,10 +1220,10 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
           }
           
           // Preparar el request body para el servicio Python
-          const requestBody: any = {
+          const requestBody: Record<string, unknown> = {
             logo: logoToUse,
             size: sizeStr,
-            material: data.material || 'otros',
+            material: mockupMaterial,
           };
           
           // Agregar aspect ratio si está disponible
@@ -882,7 +1295,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
 
       generateMockup();
     }
-  }, [step, data.selectedSize, data.previewGenerated, data.needsManualPreview, data.logoPreview, data.material, data.logoOptimized, data.logoAnalysis, data.customSize, data.isGeneratingMockup]);
+  }, [step, data.previewGenerated, data.needsManualPreview, data.logoPreview, data.material, data.logoOptimized, data.logoAnalysis, data.customSize, data.isGeneratingMockup, data.selectedSize]);
 
   const handleContactSubmit = async (nombre: string, whatsapp: string, email: string) => {
     setData({ ...data, nombre, whatsapp, email });
@@ -897,9 +1310,13 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
     setStep(1);
   };
 
-  const handleMaterialSelect = async (material: WizardMaterial) => {
-    setData((prev) => ({ ...prev, material }));
-    const mid = await ensureMockupSolicitud(clienteIdRef.current, material, {
+  const handleMaterialSelect = async (option: WizardMaterialOption) => {
+    setData((prev) => ({
+      ...prev,
+      material: option.buyMaterial,
+      usoSlug: option.slug,
+    }));
+    const mid = await ensureMockupSolicitud(clienteIdRef.current, option.buyMaterial, {
       nombre: data.nombre,
       whatsapp: data.whatsapp,
       email: data.email,
@@ -910,134 +1327,267 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
     setStep(2);
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const imageUrl = reader.result as string;
+  const processUploadedLogo = useCallback(async (file: File, imageUrl: string) => {
+    // Proporción del dibujo del logo (recorte de contenido), no del lienzo completo
+    const logoContentAspectRatio = await measureLogoContentAspectRatioFromDataUrl(imageUrl);
 
-        // Proporción del dibujo del logo (recorte de contenido), no del lienzo completo
-        const logoContentAspectRatio = await measureLogoContentAspectRatioFromDataUrl(imageUrl);
+    // Guardar logo original
+    setData({
+      ...data,
+      logoFile: file,
+      logoOriginal: imageUrl,
+      logoPreview: imageUrl,
+      logoOptimized: undefined,
+      logoOptimizationIsCosmetic: false,
+      isAnalyzing: true,
+      isOptimizing: false,
+    });
+    setAnalysisError(null);
 
-        // Guardar logo original
-        setData({
-          ...data,
-          logoFile: file,
-          logoOriginal: imageUrl,
-          logoPreview: imageUrl,
-          isAnalyzing: true,
-          isOptimizing: false,
-        });
-        setAnalysisError(null);
+    try {
+      // Paso 1: Analizar el logo con OpenAI (fallback = proporción del contenido del logo)
+      const analysis = await analyzeLogoWithAI(imageUrl, logoContentAspectRatio);
+
+      let finalLogoUrl = imageUrl;
+
+      // Paso 2: Si no está óptimo, optimizarlo
+      let optimizedAspectRatio = analysis.aspectRatio;
+      // Si la API devolvió ~cuadrado pero el archivo no lo es, confiar en la medición local
+      if (Math.abs(logoContentAspectRatio - 1) > 0.08 && Math.abs(optimizedAspectRatio - 1) < 0.02) {
+        optimizedAspectRatio = logoContentAspectRatio;
+      }
+
+      if (analysis.needsOptimization && !analysis.isOptimal) {
+        setData((prev) => ({ ...prev, isOptimizing: true }));
 
         try {
-          // Paso 1: Analizar el logo con OpenAI (fallback = proporción del contenido del logo)
-          const analysis = await analyzeLogoWithAI(imageUrl, logoContentAspectRatio);
-
-          let finalLogoUrl = imageUrl;
-
-          // Paso 2: Si no está óptimo, optimizarlo
-          let optimizedAspectRatio = analysis.aspectRatio;
-          // Si la API devolvió ~cuadrado pero el archivo no lo es, confiar en la medición local
-          if (Math.abs(logoContentAspectRatio - 1) > 0.08 && Math.abs(optimizedAspectRatio - 1) < 0.02) {
-            optimizedAspectRatio = logoContentAspectRatio;
-          }
-
-          if (analysis.needsOptimization && !analysis.isOptimal) {
-            setData((prev) => ({ ...prev, isOptimizing: true }));
-
-            try {
-              const optimizeResult = await optimizeLogoWithAI(imageUrl);
-              finalLogoUrl = optimizeResult.optimizedLogo;
-            } catch (optimizeError: unknown) {
-              console.info('Optimizacion automatica omitida; se usa el logo original.', optimizeError);
-              const omsg = optimizeError instanceof Error ? optimizeError.message : '';
-              setAnalysisError(
-                `No se pudo optimizar el logo automáticamente. Se usa el original. ${omsg ? `(${omsg})` : ''}`
-              );
-            }
-          }
-
-          // Medición real del dibujo (recorte alpha / fondo): Python si está, si no Sharp trim
-          const measuredAr = await measureLogoOnServer(finalLogoUrl);
-          if (measuredAr != null) {
-            optimizedAspectRatio = measuredAr;
-          }
-
-          // Actualizar datos con el análisis y logo final
-          const newData = {
-            ...data,
-            logoFile: file,
-            logoOriginal: imageUrl,
-            logoPreview: finalLogoUrl,
-            logoOptimized: finalLogoUrl !== imageUrl ? finalLogoUrl : undefined,
-            logoAnalysis: {
-              ...analysis,
-              aspectRatio: optimizedAspectRatio,
-            },
-            // Nuevo logo → recalcular medidas y volver a generar mockup
-            sizeOptions: undefined,
-            previewGenerated: false,
-            mockupUrl: undefined,
-            thumbnailUrl: undefined,
-            isGeneratingMockup: false,
-            // Siempre intentamos muestra automática (Python/Sharp + texturas).
-            // Si el resultado no convence, el cliente puede pedir revisión por WhatsApp.
-            needsManualPreview: false,
-            isAnalyzing: false,
-            isOptimizing: false,
-          };
-          setData(newData);
-
-          const mid = mockupSolicitudIdRef.current;
-          if (mid) {
-            void syncWizardLogos(mid, imageUrl, finalLogoUrl !== imageUrl ? finalLogoUrl : undefined);
-          }
-
-          if (newData.selectedSize) {
-            setStep(4); // Vista previa (mockup)
-          } else {
-            setStep(3); // Selección de medida
-          }
-        } catch (error: unknown) {
-          console.error('Error procesando logo:', error);
-          const msg = error instanceof Error ? error.message : 'Error al procesar el logo';
-          setAnalysisError(msg);
-          setData((prev) => ({
-            ...prev,
-            isAnalyzing: false,
-            isOptimizing: false,
-            needsManualPreview: false,
-            logoAnalysis: {
-              isOptimal: false,
-              hasPlainBackground: false,
-              isComplex: false,
-              needsOptimization: false,
-              reason: msg,
-              aspectRatio: logoContentAspectRatio,
-            },
-            sizeOptions: undefined,
-            previewGenerated: false,
-            mockupUrl: undefined,
-            thumbnailUrl: undefined,
-            isGeneratingMockup: false,
-          }));
+          const optimizeResult = await optimizeLogoWithAI(imageUrl);
+          finalLogoUrl = optimizeResult.optimizedLogo;
+        } catch (optimizeError: unknown) {
+          console.info('Optimizacion automatica omitida; se usa el logo original.', optimizeError);
+          const omsg = optimizeError instanceof Error ? optimizeError.message : '';
+          setAnalysisError(
+            `No se pudo optimizar el logo automáticamente. Se usa el original. ${omsg ? `(${omsg})` : ''}`
+          );
         }
+      }
+
+      let cosmeticOptimization = false;
+      if (finalLogoUrl !== imageUrl) {
+        cosmeticOptimization = await isCosmeticLogoOptimization(imageUrl, finalLogoUrl);
+      }
+
+      // Medición real del dibujo (recorte alpha / fondo): Python si está, si no Sharp trim
+      const measured = await measureLogoOnServer(finalLogoUrl);
+      if (measured != null) {
+        optimizedAspectRatio = measured.aspectRatio;
+      }
+
+      // Actualizar datos con el análisis y logo final
+      const newData = {
+        ...data,
+        logoFile: file,
+        logoOriginal: imageUrl,
+        logoPreview: finalLogoUrl,
+        logoOptimized: finalLogoUrl !== imageUrl ? finalLogoUrl : undefined,
+        logoOptimizationIsCosmetic: cosmeticOptimization,
+        logoAnalysis: {
+          ...analysis,
+          aspectRatio: optimizedAspectRatio,
+          contentWidthPx: measured?.contentWidthPx || undefined,
+          contentHeightPx: measured?.contentHeightPx || undefined,
+        },
+        // Nuevo logo → recalcular medidas y volver a generar mockup
+        sizeOptions: undefined,
+        previewGenerated: false,
+        mockupUrl: undefined,
+        thumbnailUrl: undefined,
+        isGeneratingMockup: false,
+        // Siempre intentamos muestra automática (Python/Sharp + texturas).
+        // Si el resultado no convence, el cliente puede pedir revisión por WhatsApp.
+        needsManualPreview: false,
+        isAnalyzing: false,
+        isOptimizing: false,
       };
-      reader.readAsDataURL(file);
+      setData(newData);
+
+      const mid = mockupSolicitudIdRef.current;
+      if (mid) {
+        void syncWizardLogos(mid, imageUrl, finalLogoUrl !== imageUrl ? finalLogoUrl : undefined);
+      }
+
+      setStep(3); // Vista previa (mockup antes de medida y precio)
+    } catch (error: unknown) {
+      console.error('Error procesando logo:', error);
+      const msg = error instanceof Error ? error.message : 'Error al procesar el logo';
+      setAnalysisError(msg);
+      setData((prev) => ({
+        ...prev,
+        isAnalyzing: false,
+        isOptimizing: false,
+        needsManualPreview: false,
+        logoOptimizationIsCosmetic: false,
+        logoAnalysis: {
+          isOptimal: false,
+          hasPlainBackground: false,
+          isComplex: false,
+          needsOptimization: false,
+          reason: msg,
+          aspectRatio: logoContentAspectRatio,
+        },
+        sizeOptions: undefined,
+        previewGenerated: false,
+        mockupUrl: undefined,
+        thumbnailUrl: undefined,
+        isGeneratingMockup: false,
+      }));
+    }
+  }, [data]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageUrl = reader.result as string;
+      setLogoCrop({
+        unit: '%',
+        x: 2,
+        y: 2,
+        width: 96,
+        height: 96,
+      });
+      setLogoCroppedAreaPercent(null);
+      setPendingLogoAspectRatio(1);
+      setPendingLogoUpload({ file, imageUrl });
+      void loadImageFromDataUrl(imageUrl)
+        .then((img) => {
+          const ratio = (img.naturalWidth || 1) / (img.naturalHeight || 1);
+          if (Number.isFinite(ratio) && ratio > 0) setPendingLogoAspectRatio(ratio);
+        })
+        .catch(() => {
+          setPendingLogoAspectRatio(1);
+        });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUseLogoWithoutCrop = async () => {
+    if (!pendingLogoUpload || isApplyingLogoCrop) return;
+    const pending = pendingLogoUpload;
+    setPendingLogoUpload(null);
+    setPendingLogoAspectRatio(1);
+    await processUploadedLogo(pending.file, pending.imageUrl);
+  };
+
+  const handleApplyLogoCrop = async () => {
+    if (!pendingLogoUpload || isApplyingLogoCrop) return;
+    setIsApplyingLogoCrop(true);
+    try {
+      const hasValidCrop =
+        logoCroppedAreaPercent &&
+        Number.isFinite(logoCroppedAreaPercent.width) &&
+        Number.isFinite(logoCroppedAreaPercent.height) &&
+        (logoCroppedAreaPercent.width ?? 0) >= 1 &&
+        (logoCroppedAreaPercent.height ?? 0) >= 1;
+      const croppedImageUrl = hasValidCrop
+        ? await cropImageDataUrl(
+            pendingLogoUpload.imageUrl,
+            logoCroppedAreaPercent,
+            pendingLogoUpload.file.type
+          )
+        : pendingLogoUpload.imageUrl;
+      const logoFile = hasValidCrop
+        ? dataUrlToFile(croppedImageUrl, pendingLogoUpload.file.name || 'logo-crop.png')
+        : pendingLogoUpload.file;
+      setPendingLogoUpload(null);
+      setPendingLogoAspectRatio(1);
+      await processUploadedLogo(logoFile, croppedImageUrl);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'No se pudo recortar el logo.';
+      setAnalysisError(msg);
+    } finally {
+      setIsApplyingLogoCrop(false);
     }
   };
 
-  const handleSizeSelect = (size: string, price: number) => {
+  const hasVisibleOptimization = Boolean(
+    data.logoOptimized && !data.logoOptimizationIsCosmetic
+  );
+  const hasCosmeticOptimization = Boolean(
+    data.logoOptimized && data.logoOptimizationIsCosmetic
+  );
+  const isTallNarrowPendingLogo = pendingLogoAspectRatio > 0 && pendingLogoAspectRatio < 0.72;
+  const cropModalMaxWidthPx = isTallNarrowPendingLogo ? 520 : 920;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateViewport = () => {
+      setCropViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
+  const cropLayout = useMemo(() => {
+    const viewportWidth = cropViewport.width || 1280;
+    const viewportHeight = cropViewport.height || 800;
+
+    const modalOuterMaxWidth = Math.min(viewportWidth * 0.95, cropModalMaxWidthPx);
+    const modalHorizontalPadding = 40; // padding + borde del modal
+    const previewMaxWidth = Math.max(220, modalOuterMaxWidth - modalHorizontalPadding);
+    const previewMaxHeight = Math.max(220, Math.min(viewportHeight * 0.62, viewportHeight - 260));
+    const safeRatio = pendingLogoAspectRatio > 0 ? pendingLogoAspectRatio : 1;
+
+    let previewWidth = previewMaxWidth;
+    let previewHeight = previewWidth / safeRatio;
+    if (previewHeight > previewMaxHeight) {
+      previewHeight = previewMaxHeight;
+      previewWidth = previewHeight * safeRatio;
+    }
+
+    return {
+      modalWidthPx: Math.ceil(Math.min(modalOuterMaxWidth, previewWidth + modalHorizontalPadding)),
+      previewWidthPx: Math.max(220, Math.floor(previewWidth)),
+      previewHeightPx: Math.max(220, Math.floor(previewHeight)),
+    };
+  }, [cropViewport.height, cropViewport.width, cropModalMaxWidthPx, pendingLogoAspectRatio]);
+
+  const handleSizeSelect = (size: string, price: number, transferPrice?: number) => {
     const newData = {
       ...data,
       selectedSize: size,
       selectedPrice: price,
-      approximateSizeKey: undefined, // Limpiar si se selecciona una medida específica
+      selectedTransferPrice: transferPrice,
+      approximateSizeKey: undefined,
     };
     setData(newData);
-    setStep(4); // Vista previa (mockup)
+    setStep(5);
+  };
+
+  const applyCotizacionMm = async (widthMm: number, heightMm: number) => {
+    const q = await cotizarMm(widthMm, heightMm);
+    if (!q) {
+      setData((prev) => ({
+        ...prev,
+        selectedSize: `${widthMm}x${heightMm}mm`,
+        selectedPrice: undefined,
+        selectedTransferPrice: undefined,
+      }));
+      return;
+    }
+    setData((prev) => ({
+      ...prev,
+      selectedSize: `${widthMm}x${heightMm}mm`,
+      selectedPrice: q.precio_link_ars,
+      selectedTransferPrice: q.precio_transferencia_ars,
+      approximateSizeKey: undefined,
+    }));
   };
 
   const handleRequestManualPreview = async () => {
@@ -1058,6 +1608,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
             medidaExacta: data.selectedSize,
             approximateSizeKey: data.approximateSizeKey,
             precio: data.selectedPrice,
+            precio_transferencia: data.selectedTransferPrice,
             tipo: 'manual',
           },
         });
@@ -1074,6 +1625,82 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
     }
   };
 
+  const handleRequestPreviewCorrection = async () => {
+    if (isRequestingCorrection) return;
+    setIsRequestingCorrection(true);
+    try {
+      const mid = mockupSolicitudIdRef.current;
+      let originalLogoUrl = '';
+      let optimizedLogoUrl = '';
+      let generatedMockupUrl = '';
+
+      if (mid) {
+        if (data.logoOriginal) {
+          try {
+            const up = await uploadMockupImage(mid, 'logo_original', data.logoOriginal);
+            originalLogoUrl = up.url;
+          } catch (err) {
+            console.error('[wizard] upload logo_original para corrección', err);
+          }
+        }
+        if (data.logoOptimized) {
+          try {
+            const up = await uploadMockupImage(mid, 'logo_optimizado', data.logoOptimized);
+            optimizedLogoUrl = up.url;
+          } catch (err) {
+            console.error('[wizard] upload logo_optimizado para corrección', err);
+          }
+        }
+        if (data.mockupUrl) {
+          try {
+            const fallbackMaterial = resolveMockupGeneration(data.material ?? 'cuero').mockupMaterial;
+            const kind = fallbackMaterial === 'madera' ? 'mockup_madera' : 'mockup_cuero';
+            const up = await uploadMockupImage(mid, kind, data.mockupUrl);
+            generatedMockupUrl = up.url;
+          } catch (err) {
+            console.error('[wizard] upload mockup para corrección', err);
+          }
+        }
+
+        try {
+          await patchMockupSolicitud(mid, {
+            estado: 'pendiente_aprobacion',
+            metadata_web: {
+              correccion_solicitada: true,
+              correccion_solicitada_at: new Date().toISOString(),
+              correccion_origen: 'whatsapp',
+            },
+          });
+        } catch (err) {
+          console.error('[wizard] pendiente_aprobacion corrección', err);
+        }
+      }
+
+      const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
+      const lines = [
+        'Hola, quiero solicitar corrección de muestra del diseñador online.',
+        mid ? `ID solicitud: ${mid}` : null,
+        data.nombre ? `Nombre: ${data.nombre}` : null,
+        data.whatsapp ? `WhatsApp cliente: ${data.whatsapp}` : null,
+        `Uso/material: ${wizardUsoDisplayLabel(data) || '-'}`,
+        `Medida: ${getSizeDisplayText() || 'sin definir'}`,
+        'Motivo: La muestra automática quedó incorrecta y necesito revisión manual.',
+        originalLogoUrl ? `Logo original: ${originalLogoUrl}` : null,
+        optimizedLogoUrl ? `Logo optimizado: ${optimizedLogoUrl}` : null,
+        generatedMockupUrl ? `Muestra generada: ${generatedMockupUrl}` : null,
+      ].filter(Boolean) as string[];
+
+      const message = encodeURIComponent(lines.join('\n'));
+      const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('[wizard] solicitar corrección por whatsapp', error);
+      setAnalysisError('No se pudo abrir WhatsApp para solicitar la corrección. Probá nuevamente.');
+    } finally {
+      setIsRequestingCorrection(false);
+    }
+  };
+
   /** Lleva al checkout el sello configurado en el wizard (precio tarjeta = selectedPrice). */
   const handleAddWizardToCheckout = () => {
     if (!data.selectedPrice || !data.material || checkoutNavigateBusy) return;
@@ -1085,8 +1712,9 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
         email: (data.email || '').trim(),
       });
     }
+    saveCheckoutShipping(shippingMethod, shippingCost);
     const variantSize = data.selectedSize || getSizeDisplayText();
-    const materialLabel = WIZARD_MATERIAL_LABELS[data.material] || data.material;
+    const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
     const cartLine = {
       title: `Sello personalizado (${materialLabel}, ${variantSize})`,
@@ -1109,14 +1737,14 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
   };
 
   return (
-    <div ref={wizardRef} className="max-w-5xl mx-auto">
+    <div ref={wizardRef} className="buy-wizard mx-auto flex h-full max-w-5xl flex-col">
       <Stepper steps={steps} currentStep={step + 1} />
 
-      <div className="technical-sheet blueprint-sheet p-4 md:p-8 lg:p-10">
-        <div className="mb-8 grid grid-cols-1 gap-4 border-b border-[var(--alcohn-line)] pb-6 md:grid-cols-[1fr_auto] md:items-end">
+      <div className="technical-sheet blueprint-sheet flex flex-1 min-h-0 flex-col overflow-hidden p-3 md:p-8 lg:p-10">
+        <div className="hidden mb-4 grid-cols-1 gap-3 border-b border-[var(--alcohn-line)] pb-3 md:mb-8 md:grid md:grid-cols-[1fr_auto] md:gap-4 md:pb-6 md:items-end">
           <div>
             <p className="craft-label mb-2">Ficha de pedido personalizada</p>
-            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-950">
+            <h2 className="text-[1.95rem] md:text-3xl font-semibold tracking-tight text-neutral-950">
               Diseñá, revisá y pagá con datos guardados
             </h2>
           </div>
@@ -1138,68 +1766,52 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
 
         {/* Step 1: Material Selection */}
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="h-full overflow-hidden md:overflow-y-auto space-y-3 md:space-y-6">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
                 Qué querés marcar
               </h2>
-              <p className="text-gray-600">
-                Seleccioná el material principal para el cual vas a usar el sello.
+              <p className="hidden md:block text-sm text-gray-600 md:text-base">
+                En celular, elegí una opción para avanzar rápido.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(['cuero', 'madera', 'ambos', 'ceramica', 'alimentos', 'otros'] as const).map((material) => (
-                <button
-                  key={material}
-                  onClick={() => handleMaterialSelect(material)}
-                  className={`p-6 border text-left transition-all duration-200 ${
-                    data.material === material
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="font-semibold text-gray-900 mb-1 capitalize">
-                    {material === 'ambos' 
-                      ? 'Cuero y Madera' 
-                      : material === 'ceramica'
-                      ? 'Cerámica'
-                      : material === 'alimentos'
-                      ? 'Alimentos'
-                      : material === 'otros'
-                      ? 'Otros'
-                      : material}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {material === 'cuero'
-                      ? 'Sellos optimizados para cuero'
-                      : material === 'madera'
-                      ? 'Sellos optimizados para madera'
-                      : material === 'ambos'
-                      ? 'Sellos universales para ambos materiales'
-                      : material === 'ceramica'
-                      ? 'Sellos para cerámica en crudo'
-                      : material === 'alimentos'
-                      ? 'Sellos para alimentos'
-                      : 'Otros materiales'}
-                  </div>
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              {wizardMaterialOptions.map((option) => {
+                const isSelected = data.usoSlug === option.slug;
+                const shortMaterialLabel = option.materialLabel.split(' ')[0];
+                return (
+                  <button
+                    key={option.slug}
+                    type="button"
+                    onClick={() => handleMaterialSelect(option)}
+                    className={`min-h-[68px] rounded-sm border px-3 py-3 text-center transition-all duration-200 active:scale-[0.98] md:min-h-0 md:rounded-none md:px-6 md:py-6 md:text-left ${
+                      isSelected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900 text-[15px] leading-tight md:mb-1 md:text-base md:leading-normal">
+                      {shortMaterialLabel}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Step 2: Logo Upload */}
         {step === 2 && (
-          <div className="space-y-6">
+          <div className="h-full overflow-hidden md:overflow-y-auto space-y-4 md:space-y-6">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
                 Subir logo
               </h2>
-              <p className="text-gray-600">
-                Subí tu logo en formato PNG, JPG o SVG. Aceptamos fondos transparentes.
+              <p className="text-sm text-gray-600 md:text-base">
+                Subí PNG, JPG o SVG. Ideal con fondo transparente.
               </p>
             </div>
-            <div className="border border-dashed border-gray-300 p-12 text-center hover:border-gray-400 transition-colors">
+            <div className="border border-dashed border-gray-300 p-6 md:p-12 text-center hover:border-gray-400 transition-colors">
               <input
                 type="file"
                 id="logo-upload"
@@ -1267,45 +1879,147 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
               </label>
             </div>
 
-            {/* Estado de análisis */}
-            {data.isAnalyzing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
-                  <p className="text-sm text-blue-800">
-                    Analizando el logo con IA para determinar si está optimizado para el sello...
-                  </p>
+            {pendingLogoUpload && (
+              <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4">
+                <div
+                  className={`relative z-[121] mx-auto flex w-fit max-w-[95vw] max-h-[95dvh] flex-col overflow-hidden rounded-lg bg-white p-4 shadow-xl md:p-5 ${
+                    isTallNarrowPendingLogo
+                      ? 'md:max-w-[560px]'
+                      : 'md:max-w-[920px]'
+                  }`}
+                  style={{ width: `${cropLayout.modalWidthPx}px` }}
+                >
+                  <div className="mb-3">
+                    <h3 className="text-base font-semibold text-gray-900 md:text-lg">
+                      Recortar logo (opcional)
+                    </h3>
+                    <p className="text-xs text-gray-600 md:text-sm">
+                      Mové y deformá el recorte directo sobre la imagen. Si preferís, podés seguir sin recortar.
+                    </p>
+                  </div>
+
+                  <div
+                    className="flex min-h-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--alcohn-line)] bg-gray-50 p-2"
+                    style={{
+                      width: `${cropLayout.previewWidthPx}px`,
+                      height: `${cropLayout.previewHeightPx}px`,
+                    }}
+                  >
+                    <ReactCrop
+                      crop={logoCrop}
+                      onChange={(crop) => setLogoCrop(crop)}
+                      onComplete={(_, percentCrop) =>
+                        setLogoCroppedAreaPercent(
+                          percentCrop.width >= 1 && percentCrop.height >= 1 ? percentCrop : null
+                        )
+                      }
+                      minWidth={40}
+                      minHeight={40}
+                      className="!h-full !w-full"
+                      keepSelection
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={pendingLogoUpload.imageUrl}
+                        alt="Logo para recortar"
+                        className="mx-auto block h-full w-full object-contain"
+                      />
+                    </ReactCrop>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-2 md:flex-row md:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPendingLogoUpload(null);
+                        setPendingLogoAspectRatio(1);
+                      }}
+                      disabled={isApplyingLogoCrop}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUseLogoWithoutCrop}
+                      disabled={isApplyingLogoCrop}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Usar sin recortar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApplyLogoCrop}
+                      disabled={isApplyingLogoCrop}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isApplyingLogoCrop ? 'Aplicando recorte...' : 'Aplicar recorte'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Estado de optimización */}
-            {data.isOptimizing && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600" />
-                  <p className="text-sm text-purple-800">
-                    Optimizando el logo con IA para que sea ideal para el sello de bronce...
+            {/* Estado de análisis */}
+            {(data.isAnalyzing || data.isOptimizing) && (
+              <div
+                className={`rounded-lg border p-4 ${
+                  data.isOptimizing ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'
+                }`}
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p
+                    className={`text-sm font-medium ${
+                      data.isOptimizing ? 'text-purple-800' : 'text-blue-800'
+                    }`}
+                  >
+                    {data.isAnalyzing
+                      ? 'Analizando tu logo...'
+                      : 'Optimizando para el sello de bronce...'}
                   </p>
+                  <span
+                    className={`text-xs font-semibold tabular-nums ${
+                      data.isOptimizing ? 'text-purple-700' : 'text-blue-700'
+                    }`}
+                  >
+                    {analysisProgress}%
+                  </span>
                 </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/80">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      data.isOptimizing ? 'bg-purple-600' : 'bg-blue-600'
+                    }`}
+                    style={{ width: `${Math.max(8, analysisProgress)}%` }}
+                  />
+                </div>
+                <p
+                  className={`mt-2 text-xs ${
+                    data.isOptimizing ? 'text-purple-700' : 'text-blue-700'
+                  }`}
+                >
+                  {data.isAnalyzing
+                    ? 'Revisamos fondo, detalle y proporción para el grabado.'
+                    : 'Ajustamos el archivo para que la muestra y el sello queden legibles.'}
+                </p>
               </div>
             )}
 
             {/* Resultado del análisis */}
             {data.logoAnalysis && !data.isAnalyzing && !data.isOptimizing && (
               <div className={`border p-4 ${
-                data.logoAnalysis.isOptimal
+                data.logoAnalysis.isOptimal || hasCosmeticOptimization
                   ? 'bg-green-50 border-green-200'
-                  : data.logoAnalysis.needsOptimization && data.logoOptimized
+                  : data.logoAnalysis.needsOptimization && hasVisibleOptimization
                   ? 'bg-purple-50 border-purple-200'
                   : 'bg-yellow-50 border-yellow-200'
               }`}>
                 <div className="flex items-start space-x-3">
-                  {data.logoAnalysis.isOptimal ? (
+                  {data.logoAnalysis.isOptimal || hasCosmeticOptimization ? (
                     <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                  ) : data.logoOptimized ? (
+                  ) : hasVisibleOptimization ? (
                     <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -1316,32 +2030,39 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                   )}
                   <div className="flex-1">
                     <p className={`text-sm font-medium ${
-                      data.logoAnalysis.isOptimal
+                      data.logoAnalysis.isOptimal || hasCosmeticOptimization
                         ? 'text-green-800'
-                        : data.logoOptimized
+                        : hasVisibleOptimization
                         ? 'text-purple-800'
                         : 'text-yellow-800'
                     }`}>
                       {data.logoAnalysis.isOptimal
                         ? 'Logo óptimo para sello de bronce'
-                        : data.logoOptimized
+                        : hasCosmeticOptimization
+                        ? 'Logo listo para generar la muestra'
+                        : hasVisibleOptimization
                         ? 'Logo optimizado exitosamente'
                         : 'Logo requiere optimización manual'}
                     </p>
                     {data.logoAnalysis.reason && (
                       <p className={`text-xs mt-1 ${
-                        data.logoAnalysis.isOptimal
+                        data.logoAnalysis.isOptimal || hasCosmeticOptimization
                           ? 'text-green-700'
-                          : data.logoOptimized
+                          : hasVisibleOptimization
                           ? 'text-purple-700'
                           : 'text-yellow-700'
                       }`}>
                         {data.logoAnalysis.reason}
                       </p>
                     )}
-                    {data.logoOptimized && (
+                    {hasVisibleOptimization && (
                       <p className="text-xs text-purple-700 mt-1">
                         Se ha generado una versión optimizada de tu logo. Puedes continuar con el proceso.
+                      </p>
+                    )}
+                    {hasCosmeticOptimization && (
+                      <p className="text-xs text-green-700 mt-1">
+                        No mostramos comparación porque el diseño se mantuvo igual; solo ajustamos el archivo para la muestra.
                       </p>
                     )}
                   </div>
@@ -1368,7 +2089,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
             )}
 
             {/* Comparación logo original vs optimizado */}
-            {data.logoOriginal && data.logoOptimized && !data.isAnalyzing && !data.isOptimizing && (
+            {data.logoOriginal && hasVisibleOptimization && !data.isAnalyzing && !data.isOptimizing && (
               <div className="border border-gray-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-900 mb-3">Comparación:</p>
                 <div className="grid grid-cols-2 gap-4">
@@ -1387,7 +2108,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                     <p className="text-xs text-gray-600 mb-2">Optimizado</p>
                     <div className="relative w-full aspect-square bg-white rounded border-2 border-purple-300">
                       <Image
-                        src={data.logoOptimized}
+                        src={data.logoOptimized!}
                         alt="Logo optimizado"
                         fill
                         className="object-contain p-2"
@@ -1400,16 +2121,8 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
 
             {data.logoPreview && !data.isAnalyzing && !data.isOptimizing && (
               <button
-                onClick={() => {
-                  // Si ya hay medida seleccionada, saltar al paso 4 (vista previa)
-                  // Si no, ir al paso 3 (selección de medida)
-                  if (data.selectedSize) {
-                    setStep(4);
-                  } else {
-                    setStep(3);
-                  }
-                }}
-                className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                onClick={() => setStep(3)}
+                className="sticky bottom-0 z-20 inline-flex w-full min-h-[52px] items-center justify-center px-6 py-3 bg-primary text-white rounded-md text-sm font-semibold uppercase tracking-wider shadow-[0_-8px_24px_rgba(17,16,14,0.18)] hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 Continuar
               </button>
@@ -1417,21 +2130,22 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
           </div>
         )}
 
-        {/* Step 3: Size Selection */}
-        {step === 3 && (
-          <div className="space-y-6">
+        {/* Step 4: Size Selection */}
+        {step === 4 && (
+          <div className="flex min-h-0 flex-1 flex-col md:block">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto md:space-y-6 md:overflow-visible">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 md:mb-2 md:text-2xl">
                 Elegir medida
               </h2>
-              <p className="text-gray-600">
+              <p className="hidden text-sm text-gray-600 md:block md:text-base">
                 {data.selectedSize
                   ? `Medida seleccionada: ${getSizeDisplayText()}. Podés cambiarla si querés.`
                   : 'Seleccioná la medida que mejor se adapte a tu necesidad.'}
               </p>
             </div>
             {data.selectedSize && (
-              <div className="bg-primary/10 border border-primary rounded-lg p-4 mb-4">
+              <div className="hidden md:block bg-primary/10 border border-primary rounded-lg p-4 mb-4">
                 <p className="text-sm font-medium text-gray-900">
                   Medida pre-seleccionada: <span className="font-semibold">{getSizeDisplayText()}</span>
                   {data.selectedPrice && (
@@ -1441,15 +2155,16 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
               </div>
             )}
 
-            <div className="border border-gray-200 bg-gray-50 p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Cómo elegir medida
-              </h3>
+            <WizardCollapsible
+              title="Cómo elegir medida"
+              compact
+              className={`mb-2 md:mb-4 ${mobileSizeMode === 'custom' ? 'hidden md:block' : ''}`}
+            >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                 <div>
                   <p className="font-medium text-gray-900">Pequeño</p>
                   <p className="text-gray-600">
-                    Logos simples, etiquetas, packaging chico o piezas delicadas.
+                    Logos simples, detalle sutil o piezas delicadas.
                   </p>
                 </div>
                 <div>
@@ -1465,274 +2180,180 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                   </p>
                 </div>
               </div>
-            </div>
-            
-            {/* Opciones de tamaño: Basadas en aspect ratio del logo o estándar */}
-            {data.sizeOptions && data.sizeOptions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {data.sizeOptions.map((sizeOption, index) => {
-                  const isSelected = data.selectedSize === sizeOption.size && !data.customSize;
-                  const sizeLabels = ['Pequeño', 'Mediano', 'Grande'];
-                  
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setData({
-                          ...data,
-                          selectedSize: sizeOption.size,
-                          selectedPrice: sizeOption.price,
-                          approximateSizeKey: undefined, // Limpiar si había uno
-                          customSize: undefined, // Limpiar medida personalizada
-                        });
-                      }}
-                      className={`p-6 border text-left transition-all duration-200 relative ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {sizeOption.recommended && (
-                        <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-primary text-white rounded">
-                          Recomendado
-                        </span>
-                      )}
-                      <div className="font-semibold text-gray-900 mb-2">
-                        {sizeLabels[index] || `Opción ${index + 1}`}
-                      </div>
-                      <div className="text-sm text-gray-600 mb-2">
-                        {sizeOption.size}
-                        <span className="text-xs text-gray-500 block mt-1">
-                          Proporción de esta medida: {sizeOption.ratio.toFixed(2)}:1
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-2xl font-bold text-gray-900">
-                          ${sizeOption.price.toLocaleString('es-AR')}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          3 cuotas sin interés: ${Math.round(sizeOption.price / 3).toLocaleString('es-AR')}
-                        </div>
-                        <div className="text-xs text-green-600 font-medium">
-                          Transferencia: ${Math.round(sizeOption.price * (1 - TRANSFER_DISCOUNT)).toLocaleString('es-AR')}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              // Fallback: mostrar opciones estándar si no hay sizeOptions calculadas
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {(['pequeño', 'medio', 'grande'] as const).map((sizeKey) => {
-                  const sizeData = sizeMap[sizeKey];
-                  const isSelected = data.approximateSizeKey === sizeKey || 
-                    (data.selectedSize === sizeData.size && !data.customSize);
-                  const sizeLabels: Record<'pequeño' | 'medio' | 'grande', string> = {
-                    pequeño: 'Pequeño',
-                    medio: 'Mediano',
-                    grande: 'Grande',
-                  };
-                  
-                  return (
-                    <button
-                      key={sizeKey}
-                      onClick={() => {
-                        setData({
-                          ...data,
-                          selectedSize: sizeData.size,
-                          selectedPrice: sizeData.price,
-                          approximateSizeKey: sizeKey,
-                          customSize: undefined, // Limpiar medida personalizada
-                        });
-                      }}
-                      className={`p-6 border text-left transition-all duration-200 relative ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {sizeKey === 'medio' && (
-                        <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-primary text-white rounded">
-                          Recomendado
-                        </span>
-                      )}
-                      <div className="font-semibold text-gray-900 mb-2">
-                        {sizeLabels[sizeKey]}
-                      </div>
-                      <div className="text-sm text-gray-600 mb-2">
-                        {sizeData.size}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-2xl font-bold text-gray-900">
-                          ${sizeData.price.toLocaleString('es-AR')}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          3 cuotas sin interés: ${Math.round(sizeData.price / 3).toLocaleString('es-AR')}
-                        </div>
-                        <div className="text-xs text-green-600 font-medium">
-                          Transferencia: ${Math.round(sizeData.price * (1 - TRANSFER_DISCOUNT)).toLocaleString('es-AR')}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            </WizardCollapsible>
 
-            {/* Opción para medida personalizada */}
-            <div className="border border-dashed border-gray-300 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Medida personalizada
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Si necesitás una medida específica, ingresá ancho y alto en milímetros. El sistema calculará automáticamente la proporción, categoría y precio.
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-2">
-                    Ancho (mm)
-                  </label>
-                  <input
-                    type="text"
-                    value={data.customSize?.width || ''}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      
-                      // Permitir escribir cualquier número, validar después
-                      if (value === '') {
-                        setData({
-                          ...data,
-                          customSize: data.customSize 
-                            ? { ...data.customSize, width: 0, height: data.customSize.height || 0 }
-                            : undefined,
-                          selectedSize: undefined,
-                          selectedPrice: undefined,
-                        });
-                        return;
-                      }
-                      
-                      const num = parseInt(value, 10);
-                      if (isNaN(num)) return;
-                      
-                      // Si hay aspect ratio del logo y hay un alto previo, calcular alto proporcionalmente
-                      let newHeight = data.customSize?.height || num;
-                      if (data.logoAnalysis?.aspectRatio && data.customSize?.height && data.customSize.height > 0) {
-                        // Mantener proporción del logo
-                        newHeight = Math.round(num / data.logoAnalysis.aspectRatio);
-                        newHeight = Math.max(10, Math.min(100, newHeight));
-                      } else if (!data.customSize?.height || data.customSize.height === 0) {
-                        // Si no hay alto, usar el mismo valor
-                        newHeight = num;
-                      }
-                      
-                      // Validar que ambos valores estén en rango válido antes de calcular precio
-                      if (num >= 10 && num <= 100 && newHeight >= 10 && newHeight <= 100) {
-                        const category = getSizeCategory(num, newHeight);
-                        const price = calculatePrice(category, num, newHeight);
-                        
-                        setData({
-                          ...data,
-                          customSize: { 
-                            width: num, 
-                            height: newHeight
-                          },
-                          selectedSize: `${num}x${newHeight}mm`,
-                          selectedPrice: price,
-                          approximateSizeKey: undefined,
-                        });
-                      } else {
-                        // Permitir escribir pero no calcular precio hasta que ambos estén válidos
-                        setData({
-                          ...data,
-                          customSize: { 
-                            width: num, 
-                            height: newHeight
-                          },
-                          selectedSize: undefined,
-                          selectedPrice: undefined,
-                        });
-                      }
-                    }}
-                    placeholder="30"
-                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-2">
-                    Alto (mm)
-                  </label>
-                  <input
-                    type="text"
-                    value={data.customSize?.height || ''}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      
-                      // Permitir escribir cualquier número, validar después
-                      if (value === '') {
-                        setData({
-                          ...data,
-                          customSize: data.customSize 
-                            ? { ...data.customSize, width: data.customSize.width || 0, height: 0 }
-                            : undefined,
-                          selectedSize: undefined,
-                          selectedPrice: undefined,
-                        });
-                        return;
-                      }
-                      
-                      const num = parseInt(value, 10);
-                      if (isNaN(num)) return;
-                      
-                      // Si hay aspect ratio del logo y hay un ancho previo, calcular ancho proporcionalmente
-                      let newWidth = data.customSize?.width || num;
-                      if (data.logoAnalysis?.aspectRatio && data.customSize?.width && data.customSize.width > 0) {
-                        // Mantener proporción del logo
-                        newWidth = Math.round(num * data.logoAnalysis.aspectRatio);
-                        newWidth = Math.max(10, Math.min(100, newWidth));
-                      } else if (!data.customSize?.width || data.customSize.width === 0) {
-                        // Si no hay ancho, usar el mismo valor
-                        newWidth = num;
-                      }
-                      
-                      // Validar que ambos valores estén en rango válido antes de calcular precio
-                      if (newWidth >= 10 && newWidth <= 100 && num >= 10 && num <= 100) {
-                        const category = getSizeCategory(newWidth, num);
-                        const price = calculatePrice(category, newWidth, num);
-                        
-                        setData({
-                          ...data,
-                          customSize: { 
-                            width: newWidth, 
-                            height: num 
-                          },
-                          selectedSize: `${newWidth}x${num}mm`,
-                          selectedPrice: price,
-                          approximateSizeKey: undefined,
-                        });
-                      } else {
-                        // Permitir escribir pero no calcular precio hasta que ambos estén válidos
-                        setData({
-                          ...data,
-                          customSize: { 
-                            width: newWidth, 
-                            height: num 
-                          },
-                          selectedSize: undefined,
-                          selectedPrice: undefined,
-                        });
-                      }
-                    }}
-                    placeholder="45"
-                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-1"
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mb-4">
-                Rango: 10–100mm. Rectangulares incluidos. {data.logoAnalysis?.aspectRatio && 'La proporción se ajusta automáticamente según tu logo.'}
-              </p>
-              {data.customSize && data.customSize.width >= 10 && data.customSize.height >= 10 && (
-                <div className="bg-gray-50 border border-gray-200 p-4 space-y-2">
+            {(() => {
+              const tierOptions = buildWizardSizeTierOptions(data.sizeOptions);
+              const logoForScale =
+                data.logoOptimized || data.logoPreview || data.thumbnailUrl || null;
+
+              const selectTierOption = (option: WizardSizeTierOption) => {
+                const tier = data.sizeOptions?.find((o) => o.size === option.size)?.tier;
+                const approx =
+                  tierToApproximateKey(tier) ??
+                  (option.key === 'medio'
+                    ? 'medio'
+                    : option.key === 'pequeño' || option.key === 'grande'
+                      ? option.key
+                      : undefined);
+
+                setData({
+                  ...data,
+                  selectedSize: option.size,
+                  selectedPrice: option.price,
+                  selectedTransferPrice: option.transferPrice,
+                  approximateSizeKey: approx,
+                  customSize: undefined,
+                });
+
+                if (!data.sizeOptions?.length) {
+                  const dim = parseSizeMm(option.size);
+                  if (dim) {
+                    void cotizarMm(dim.width, dim.height).then((q) => {
+                      if (!q) return;
+                      setData((prev) => ({
+                        ...prev,
+                        selectedTransferPrice: q.precio_transferencia_ars,
+                        selectedPrice: q.precio_link_ars,
+                      }));
+                    });
+                  }
+                }
+              };
+
+              return (
+                <>
+                  <div className="space-y-2 md:hidden">
+                    {mobileSizeMode === 'standard' ? (
+                      <>
+                        <WizardSizePickerRow
+                          options={tierOptions}
+                          selectedSize={data.selectedSize}
+                          customSize={data.customSize}
+                          onSelect={(option) => {
+                            setMobileSizeMode('standard');
+                            selectTierOption(option);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileSizeMode('custom');
+                            setData((prev) => ({
+                              ...prev,
+                              approximateSizeKey: undefined,
+                              customSize: prev.customSize ?? { width: 0, height: 0 },
+                            }));
+                          }}
+                          className="flex min-h-[44px] w-full items-center justify-center rounded-lg border border-dashed border-[var(--alcohn-line)] bg-white px-3 text-sm font-medium text-neutral-800 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+                        >
+                          Medida personalizada
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="rounded-lg border border-[var(--alcohn-ink)] bg-white p-3 shadow-[inset_0_0_0_1px_var(--alcohn-ink)]">
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-700">
+                            Medida personalizada
+                          </p>
+                          <WizardCustomSizeFields
+                            customSize={data.customSize}
+                            aspectRatio={data.logoAnalysis?.aspectRatio}
+                            onPatch={(patch) =>
+                              setData((prev) => ({ ...prev, ...patch }))
+                            }
+                            onCotizar={(w, h) => void applyCotizacionMm(w, h)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileSizeMode('standard');
+                            const pick =
+                              tierOptions.find((o) => o.recommended) ??
+                              tierOptions[1] ??
+                              tierOptions[0];
+                            if (pick) selectTierOption(pick);
+                          }}
+                          className="flex min-h-[40px] w-full items-center justify-center text-sm font-medium text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline"
+                        >
+                          ← Volver a Pequeño / Mediano / Grande
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mb-3 hidden md:grid md:grid-cols-3 md:gap-4 md:mb-4">
+                    {tierOptions.map((option, index) => {
+                      const isSelected =
+                        !data.customSize && data.selectedSize === option.size;
+                      const transfer =
+                        option.transferPrice ??
+                        data.sizeOptions?.[index]?.transferPrice ??
+                        0;
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => selectTierOption(option)}
+                          className={`relative flex min-h-[300px] flex-col border p-6 text-left transition-all duration-200 ${
+                            isSelected
+                              ? 'border-primary bg-primary/5'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {option.recommended && (
+                            <span className="absolute top-3 right-3 rounded bg-primary px-2 py-1 text-xs font-medium text-white">
+                              Recomendado
+                            </span>
+                          )}
+                          <div className="mb-1 font-medium text-gray-900">
+                            {option.label}
+                          </div>
+                          <div className="mb-2 text-lg font-semibold text-gray-900">
+                            {option.size}
+                          </div>
+                          <div className="flex-1 space-y-0.5">
+                            <div className="text-2xl font-bold text-gray-900">
+                              ${option.price.toLocaleString('es-AR')}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              3 cuotas sin interés:{' '}
+                              ${Math.round(option.price / 3).toLocaleString('es-AR')}
+                            </div>
+                            <div className="text-xs font-medium text-green-600">
+                              Transferencia: ${transfer.toLocaleString('es-AR')}
+                            </div>
+                          </div>
+                          <StampSizeScalePreview
+                            sizeLabel={option.size}
+                            logoUrl={logoForScale}
+                            className="mt-auto w-full"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+
+            <WizardCollapsible
+              title="Medida personalizada"
+              compact
+              className="hidden border-dashed border-gray-200/70 md:block"
+            >
+              <WizardCustomSizeFields
+                customSize={data.customSize}
+                aspectRatio={data.logoAnalysis?.aspectRatio}
+                onPatch={(patch) => setData((prev) => ({ ...prev, ...patch }))}
+                onCotizar={(w, h) => void applyCotizacionMm(w, h)}
+                className="mb-4"
+              />
+
+              {data.customSize && isValidStampSizeMm(data.customSize.width, data.customSize.height) && (
+                <div className="hidden grid-cols-1 gap-4 border-t border-gray-200/80 pt-4 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div className="space-y-2 min-w-0">
                   <p className="text-sm text-gray-700">
                     <strong>Medida personalizada:</strong> {data.customSize.width}×{data.customSize.height}mm
                   </p>
@@ -1758,30 +2379,69 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                         3 cuotas sin interés: ${Math.round(data.selectedPrice / 3).toLocaleString('es-AR')}
                       </p>
                       <p className="text-xs text-green-600 font-medium">
-                        Transferencia: ${Math.round(data.selectedPrice * (1 - TRANSFER_DISCOUNT)).toLocaleString('es-AR')}
+                        Transferencia: ${(data.selectedTransferPrice ?? 0).toLocaleString('es-AR')}
                       </p>
                     </div>
                   )}
+                  </div>
+                  <StampSizeScalePreview
+                    sizeLabel={`${data.customSize.width}×${data.customSize.height}mm`}
+                    logoUrl={data.logoOptimized || data.logoPreview || data.thumbnailUrl}
+                    compact
+                    className="w-full sm:w-[min(200px,100%)] sm:shrink-0"
+                  />
                 </div>
               )}
-            </div>
+            </WizardCollapsible>
+          </div>
 
-            {/* Botón para continuar cuando hay una medida seleccionada */}
-            {data.selectedSize && data.selectedPrice && (
-              <button
-                onClick={() => {
-                  handleSizeSelect(data.selectedSize!, data.selectedPrice!);
-                }}
-                className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              >
-                Continuar
-              </button>
-            )}
+          {(() => {
+            const tierOptions = buildWizardSizeTierOptions(data.sizeOptions);
+            const logoForScale =
+              data.logoOptimized || data.logoPreview || data.thumbnailUrl || null;
+
+            return (
+              <div className="shrink-0 overflow-hidden rounded-t-xl border border-b-0 border-[var(--alcohn-line)] bg-white shadow-[0_-8px_24px_rgba(17,16,14,0.08)] md:hidden">
+                <WizardSizeSummaryPanel
+                  options={tierOptions}
+                  selectedSize={data.selectedSize}
+                  selectedPrice={data.selectedPrice}
+                  selectedTransferPrice={data.selectedTransferPrice}
+                  customSize={data.customSize}
+                  logoUrl={logoForScale}
+                />
+                <div className="flex items-center justify-between gap-3 border-t border-[var(--alcohn-line)]/80 px-3 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setStep(step - 1)}
+                    className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-[var(--alcohn-line)] bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-neutral-400"
+                  >
+                    ← Atrás
+                  </button>
+                  {data.selectedSize && data.selectedPrice && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSizeSelect(
+                          data.selectedSize!,
+                          data.selectedPrice!,
+                          data.selectedTransferPrice
+                        )
+                      }
+                      className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-[var(--alcohn-ink)] px-4 py-2 text-sm font-semibold uppercase tracking-wider text-white hover:bg-[var(--alcohn-ink-soft)]"
+                    >
+                      Continuar
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
           </div>
         )}
 
-        {/* Step 4: Request Manual Preview (for complex logos) or Auto Preview (for simple logos) */}
-        {step === 4 && (
+        {/* Step 3: Request Manual Preview (for complex logos) or Auto Preview (for simple logos) */}
+        {step === 3 && (
           <>
             {data.needsManualPreview ? (
               // Logo complejo: Solicitar muestra manual
@@ -1789,7 +2449,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                 {!manualPreviewRequested ? (
                   <>
                     <div>
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                      <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">
                         Solicitar muestra personalizada
                       </h2>
                       <p className="text-gray-600 mb-4">
@@ -1815,7 +2475,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                     </div>
                     <button
                       onClick={handleRequestManualPreview}
-                      className="w-full bg-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="inline-flex w-full min-h-[52px] items-center justify-center bg-primary text-white px-6 py-3 rounded-md text-sm font-semibold uppercase tracking-wider hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     >
                       Solicitar muestra
                     </button>
@@ -1848,12 +2508,12 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
               </div>
             ) : (
               // Logo óptimo u optimizado: Vista previa automática
-              <div className="space-y-6">
+              <div className="h-full overflow-y-auto space-y-4 md:space-y-6">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                  <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">
                     Vista previa digital
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-sm md:text-base text-gray-600">
                     {data.mockupUrl 
                       ? 'Vista previa generada automáticamente de cómo se verá tu sello aplicado.'
                       : 'Logo analizado y listo. Estamos generando la muestra sobre la textura del material elegido.'}
@@ -1861,22 +2521,24 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                 </div>
 
 
-                <div className="material-frame rounded-lg p-6 md:p-12 min-h-[360px] md:min-h-[400px] flex items-center justify-center">
+                <div className="material-frame rounded-lg p-4 md:p-12 min-h-[220px] md:min-h-[400px] flex items-center justify-center">
                   {data.isGeneratingMockup ? (
-                    <div className="text-center text-gray-400">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                      <p>Generando muestra automática...</p>
-                      <p className="text-xs mt-2 text-gray-500">
-                        Esto puede tomar unos segundos
+                    <div className="w-full max-w-md text-center text-gray-600">
+                      <p className="mb-3 text-sm font-medium">Generando muestra automática...</p>
+                      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                        <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
+                      </div>
+                      <p className="mt-3 text-xs text-gray-500">
+                        Aplicamos tu logo sobre la textura del material. Esto puede tomar unos segundos.
                       </p>
                     </div>
                   ) : data.previewGenerated && data.mockupUrl ? (
                     // Mockup generado - mostrar mockup y opción de ver logos
-                    <div className="space-y-6 text-center w-full">
+                    <div className="space-y-4 text-center w-full md:space-y-6">
                       {/* Mockup */}
                       <div className="relative w-full max-w-2xl mx-auto bg-white border border-[var(--alcohn-line)] rounded-lg overflow-hidden shadow-sm">
                         <Image
-                          src={data.thumbnailUrl || data.mockupUrl}
+                          src={(data.mockupUrl || data.thumbnailUrl)!}
                           alt="Vista previa del sello"
                           width={800}
                           height={600}
@@ -1885,16 +2547,16 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                         />
                       </div>
                       
-                      {/* Mostrar logos si hay versión optimizada */}
-                      {data.logoOptimized && data.logoOriginal && (
-                        <div className="mt-6 border-t border-[var(--alcohn-line)] pt-6">
-                          <p className="text-sm font-medium text-gray-700 mb-4">
+                      {/* Mostrar logos solo cuando hubo cambios de diseño reales */}
+                      {data.logoOriginal && hasVisibleOptimization && (
+                        <div className="mt-4 border-t border-[var(--alcohn-line)] pt-4">
+                          <p className="mb-2 text-xs font-medium text-gray-700 md:mb-4 md:text-sm">
                             Comparar logos:
                           </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                            <div className="bg-white border border-[var(--alcohn-line)] rounded-lg p-4">
+                          <div className="mx-auto grid max-w-sm grid-cols-2 gap-2 md:max-w-2xl md:gap-4">
+                            <div className="bg-white border border-[var(--alcohn-line)] rounded-lg p-2 md:p-4">
                               <p className="text-xs text-gray-600 mb-2">Original</p>
-                              <div className="relative w-full aspect-square bg-gray-50 rounded border border-[var(--alcohn-line)]">
+                              <div className="relative h-24 w-full bg-gray-50 rounded border border-[var(--alcohn-line)] md:h-auto md:aspect-square">
                                 <Image
                                   src={data.logoOriginal}
                                   alt="Logo original"
@@ -1904,11 +2566,11 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                                 />
                               </div>
                             </div>
-                            <div className="bg-white border-2 border-[var(--alcohn-bronze)] rounded-lg p-4">
+                            <div className="bg-white border-2 border-[var(--alcohn-bronze)] rounded-lg p-2 md:p-4">
                               <p className="text-xs text-[var(--alcohn-bronze-dark)] mb-2 font-semibold">Optimizado</p>
-                              <div className="relative w-full aspect-square bg-white rounded border-2 border-[var(--alcohn-bronze)]">
+                              <div className="relative h-24 w-full bg-white rounded border-2 border-[var(--alcohn-bronze)] md:h-auto md:aspect-square">
                                 <Image
-                                  src={data.logoOptimized}
+                                  src={data.logoOptimized!}
                                   alt="Logo optimizado"
                                   fill
                                   className="object-contain p-2"
@@ -1920,17 +2582,39 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                         </div>
                       )}
                       
+                      {data.mockupUsesFallbackTexture && data.mockupTextureMaterial && (
+                        <div className="mx-auto max-w-xl rounded-lg border border-amber-200 bg-amber-50 p-4 text-left">
+                          <p className="text-sm font-medium text-amber-900">Muestra de referencia</p>
+                          <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                            Todavía no tenemos generador de muestra para{' '}
+                            {wizardUsoDisplayLabel(data)}. Usamos la textura de{' '}
+                            <strong>{WIZARD_MATERIAL_LABELS[data.mockupTextureMaterial]}</strong> para que veas cómo
+                            podría verse la marca. Tu sello funciona igual en el material que elegiste.
+                          </p>
+                        </div>
+                      )}
                       <div className="text-sm text-gray-600">
                         <p className="font-medium mb-1">Muestra generada automáticamente</p>
                         <p className="text-xs">
-                          Material: {data.material} | Medida: {getSizeDisplayText()}
+                          Uso: {wizardUsoDisplayLabel(data)}
+                          {data.selectedSize ? ` | Medida: ${getSizeDisplayText()}` : ' | Medida de referencia para la vista'}
                         </p>
-                        {data.logoOptimized && (
+                        {hasVisibleOptimization && (
                           <p className="text-xs text-purple-600 mt-1">
                             ✓ Logo optimizado automáticamente
                           </p>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleRequestPreviewCorrection}
+                        disabled={isRequestingCorrection}
+                        className="mx-auto inline-flex min-h-[44px] items-center justify-center rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isRequestingCorrection
+                          ? 'Preparando WhatsApp...'
+                          : 'La muestra está mal, pedir corrección por WhatsApp'}
+                      </button>
                     </div>
                   ) : data.previewGenerated && data.logoPreview ? (
                     // Vista previa temporal: mostrar logo analizado (mockup se generará después)
@@ -1962,7 +2646,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                             )}
                           </div>
                         )}
-                        {data.logoOptimized && (
+                        {hasVisibleOptimization && (
                           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-3">
                             <p className="text-xs text-purple-800">
                               ✓ Versión optimizada disponible (ver comparación abajo)
@@ -1983,21 +2667,11 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                     </div>
                   )}
                 </div>
-                {data.previewGenerated && (
-                  <div className="space-y-4">
-                    {!data.mockupUrl && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p className="text-sm text-yellow-800">
-                          ⚠️ El servicio de mockups no está disponible. Puedes continuar con el proceso.
-                        </p>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setStep(5)}
-                      className="w-full px-6 py-3 bg-primary text-white rounded-md font-semibold hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    >
-                      Continuar al pago
-                    </button>
+                {(data.previewGenerated || data.logoPreview) && !data.isGeneratingMockup && !data.mockupUrl && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800">
+                      El servicio de mockups no está disponible. Podés continuar y elegir la medida.
+                    </p>
                   </div>
                 )}
               </div>
@@ -2007,9 +2681,13 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
 
         {/* Step 5: Payment (solo para logos simples con vista previa automática) */}
         {step === 5 && !data.needsManualPreview && (() => {
-          const transferPrice = data.selectedPrice ? Math.round(data.selectedPrice * (1 - TRANSFER_DISCOUNT)) : 0;
+          const transferPrice = data.selectedTransferPrice ?? 0;
           const cardPrice = data.selectedPrice || 0;
-          const cuotaPrice = Math.round(cardPrice / 3);
+          const cardTotal = cardPrice + shippingCost;
+          const transferTotal = transferPrice + shippingCost;
+          const cuotaPrice = Math.round(cardTotal / 3);
+          const materialDisplay = wizardUsoDisplayLabel(data);
+          const clientLogo = data.logoOptimized || data.logoPreview;
           
           const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
@@ -2044,18 +2722,71 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
           };
           
           return (
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 overflow-y-auto space-y-4 pb-6 md:space-y-6 md:pb-0">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
                   Método de pago
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm md:text-base text-gray-600">
                   Elegí cómo querés pagar tu sello personalizado.
                 </p>
               </div>
 
-              {/* Order Summary */}
-              <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr] gap-4">
+              {/* Order Summary (mobile colapsable) */}
+              <details className="lg:hidden border border-[var(--alcohn-line)] bg-white open:bg-white">
+                <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-3 px-3 py-3">
+                  <div className="flex min-w-0 flex-col">
+                    <span className="craft-label text-[10px]">Resumen del pedido</span>
+                    <span className="text-base font-semibold text-neutral-950">
+                      Total ${cardTotal.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                    Detalle
+                    <svg className="h-3 w-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="border-t border-[var(--alcohn-line)] px-3 py-3 space-y-2 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-neutral-500">Material / Uso</span>
+                    <span className="font-medium text-neutral-900 text-right">{materialDisplay}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-neutral-500">Medida</span>
+                    <span className="font-medium text-neutral-900">{getSizeDisplayText()}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-neutral-500">Envío</span>
+                    <select
+                      value={shippingMethod}
+                      onChange={(e) => setShippingMethod(e.target.value as ShippingMetodoUi)}
+                      className="border border-[var(--alcohn-line)] bg-white px-2 py-2 text-[13px] font-medium text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                    >
+                      <option value="domicilio">Domicilio</option>
+                      <option value="sucursal">Sucursal</option>
+                      <option value="retiro">{SHIPPING_METODO_LABELS.retiro}</option>
+                    </select>
+                  </div>
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between text-xs text-neutral-600">
+                      <span>Costo envío</span>
+                      <span>${shippingCost.toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-semibold text-neutral-950">
+                    <span>Total tarjeta</span>
+                    <span>${cardTotal.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-emerald-700">
+                    <span>Total transferencia</span>
+                    <span>${transferTotal.toLocaleString('es-AR')}</span>
+                  </div>
+                </div>
+              </details>
+
+              <div className="hidden lg:grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr] gap-4">
                 <div className="technical-sheet p-5 md:p-6 space-y-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -2069,20 +2800,37 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                   <dl className="divide-y divide-[var(--alcohn-line)] text-sm">
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
                       <dt className="text-neutral-500">Material</dt>
-                      <dd className="font-medium capitalize text-neutral-950">{data.material}</dd>
+                      <dd className="font-medium text-neutral-950">{materialDisplay}</dd>
                     </div>
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
                       <dt className="text-neutral-500">Medida</dt>
                       <dd className="font-medium text-neutral-950">{getSizeDisplayText()}</dd>
                     </div>
-                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
-                      <dt className="text-neutral-500">Muestra</dt>
-                      <dd className="font-medium text-neutral-950">Vista previa generada</dd>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3 items-center gap-2">
+                      <dt className="text-neutral-500">Envío</dt>
+                      <dd>
+                        <select
+                          value={shippingMethod}
+                          onChange={(e) =>
+                            setShippingMethod(e.target.value as ShippingMetodoUi)
+                          }
+                          className="w-full border border-[var(--alcohn-line)] bg-white px-2 py-1.5 text-sm font-medium text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-900"
+                        >
+                          <option value="domicilio">Domicilio</option>
+                          <option value="sucursal">Sucursal</option>
+                          <option value="retiro">{SHIPPING_METODO_LABELS.retiro}</option>
+                        </select>
+                        {shippingCost > 0 && (
+                          <p className="mt-1 text-xs text-neutral-500">
+                            + ${shippingCost.toLocaleString('es-AR')} envío
+                          </p>
+                        )}
+                      </dd>
                     </div>
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
                       <dt className="font-semibold text-neutral-950">Total</dt>
                       <dd className="text-xl font-bold text-neutral-950">
-                        ${data.selectedPrice?.toLocaleString('es-AR')}
+                        ${cardTotal.toLocaleString('es-AR')}
                       </dd>
                     </div>
                   </dl>
@@ -2091,16 +2839,17 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                 <PurchaseInclusions
                   compact
                   title="Incluido con tu sello"
+                  logoUrl={clientLogo}
                 />
               </div>
 
               {/* Payment Methods */}
               {!paymentMethod ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                   {/* Tarjeta con Open Pay */}
                   <button
                     onClick={() => setPaymentMethod('card')}
-                    className="technical-sheet p-5 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                    className="technical-sheet p-4 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">Pagar con tarjeta</h3>
@@ -2110,7 +2859,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                     </div>
                     <div className="space-y-1">
                       <div className="text-2xl font-bold text-gray-900">
-                        ${cardPrice.toLocaleString('es-AR')}
+                        ${cardTotal.toLocaleString('es-AR')}
                       </div>
                       <div className="text-sm text-green-600 font-medium">
                         3 cuotas sin interés: ${cuotaPrice.toLocaleString('es-AR')}
@@ -2124,7 +2873,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                   {/* Transferencia */}
                   <button
                     onClick={() => setPaymentMethod('transfer')}
-                    className="technical-sheet p-5 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                    className="technical-sheet p-4 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">Transferencia bancaria</h3>
@@ -2134,13 +2883,13 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                     </div>
                     <div className="space-y-1">
                       <div className="text-2xl font-bold text-gray-900 line-through text-gray-400">
-                        ${cardPrice.toLocaleString('es-AR')}
+                        ${cardTotal.toLocaleString('es-AR')}
                       </div>
                       <div className="text-2xl font-bold text-green-600">
-                        ${transferPrice.toLocaleString('es-AR')}
+                        ${transferTotal.toLocaleString('es-AR')}
                       </div>
                       <div className="text-sm text-green-600 font-medium">
-                        Ahorrá ${(cardPrice - transferPrice).toLocaleString('es-AR')} (10% desc.)
+                        Ahorrá ${Math.max(0, cardTotal - transferTotal).toLocaleString('es-AR')} pagando por transferencia
                       </div>
                     </div>
                   </button>
@@ -2165,15 +2914,24 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                       type="button"
                       onClick={handleAddWizardToCheckout}
                       disabled={checkoutNavigateBusy || !data.selectedPrice}
-                      className="block w-full text-center px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                      className="block w-full text-center px-4 py-3 text-sm leading-snug bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors disabled:opacity-50 disabled:pointer-events-none md:px-6 md:text-base"
                     >
-                      {checkoutNavigateBusy ? 'Preparando pedido…' : 'Continuar al checkout y pagar con Openpay'}
+                      {checkoutNavigateBusy ? (
+                        'Preparando pedido…'
+                      ) : (
+                        <>
+                          <span className="md:hidden">Continuar al checkout (Openpay)</span>
+                          <span className="hidden md:inline">
+                            Continuar al checkout y pagar con Openpay
+                          </span>
+                        </>
+                      )}
                     </button>
                   </div>
                   
                   <button
                     onClick={() => setPaymentMethod(null)}
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                    className="inline-flex min-h-[44px] items-center text-sm text-gray-600 hover:text-gray-900"
                   >
                     ← Volver a métodos de pago
                   </button>
@@ -2204,10 +2962,10 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                       <div className="pt-3 border-t border-gray-200">
                         <span className="text-gray-600 block mb-1">Monto a transferir:</span>
                         <span className="text-gray-900 font-bold text-lg">
-                          ${transferPrice.toLocaleString('es-AR')}
+                          ${transferTotal.toLocaleString('es-AR')}
                         </span>
                         <span className="text-xs text-gray-500 block mt-1">
-                          Precio original: ${cardPrice.toLocaleString('es-AR')} - Descuento aplicado: ${(cardPrice - transferPrice).toLocaleString('es-AR')}
+                          Tarjeta / link: ${cardTotal.toLocaleString('es-AR')} — Transferencia: ${transferTotal.toLocaleString('es-AR')}
                         </span>
                       </div>
                     </div>
@@ -2257,8 +3015,11 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={handlePaymentComplete}
-                          className="block w-full px-6 py-3 bg-green-600 text-white font-semibold uppercase tracking-wider hover:bg-green-700 transition-colors text-center"
+                          className="inline-flex w-full min-h-[52px] items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white text-sm font-semibold uppercase tracking-wider hover:bg-green-700 transition-colors text-center"
                         >
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                          </svg>
                           Enviar por WhatsApp
                         </a>
                       </div>
@@ -2306,7 +3067,7 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
 
                   <button
                     onClick={() => setPaymentMethod(null)}
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                    className="inline-flex min-h-[44px] items-center text-sm text-gray-600 hover:text-gray-900"
                   >
                     ← Volver a métodos de pago
                   </button>
@@ -2317,14 +3078,43 @@ export default function BuyWizard({ initialProduct, initialMaterial, onComplete 
         })()}
 
         {/* Navigation */}
-        {step > 1 && step < 5 && (
-          <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between">
+        {step > 1 && step < 5 && !pendingLogoUpload && (
+          <div
+            className={`z-20 mt-3 shrink-0 border-t border-gray-200 bg-[var(--alcohn-surface)] pt-3 flex items-center justify-between gap-3 md:mt-4 ${
+              step === 4 ? 'hidden md:flex' : ''
+            }`}
+          >
             <button
               onClick={() => setStep(step - 1)}
-              className="px-6 py-2 text-gray-700 bg-white border border-[var(--alcohn-line)] rounded-md hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-[var(--alcohn-line)] rounded-md hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
-              Atrás
+              ← Atrás
             </button>
+            {step === 3 &&
+              !data.needsManualPreview &&
+              (data.previewGenerated || data.logoPreview) &&
+              !data.isGeneratingMockup && (
+                <button
+                  onClick={() => setStep(4)}
+                  className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white bg-primary border border-primary rounded-md hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                >
+                  Continuar
+                </button>
+              )}
+            {step === 4 && data.selectedSize && data.selectedPrice && (
+              <button
+                onClick={() =>
+                  handleSizeSelect(
+                    data.selectedSize!,
+                    data.selectedPrice!,
+                    data.selectedTransferPrice
+                  )
+                }
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white bg-primary border border-primary rounded-md hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
+                Continuar
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -21,17 +21,20 @@ export default function SalesCtaBand({
   proof = [],
   dark = false,
 }: SalesCtaBandProps) {
+  const mobileCopy = copy.split('. ')[0]?.trim();
+
   if (dark) {
     return (
-      <section className="dark-system-panel p-6 md:p-10 text-white">
+      <section className="dark-system-panel p-5 md:p-10 text-white">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 lg:items-end">
           <div>
             <p className="text-[10px] font-semibold uppercase text-white/56 mb-4">Compra online</p>
-            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight max-w-3xl">
+            <h2 className="text-[1.95rem] md:text-5xl font-semibold tracking-tight leading-tight max-w-3xl">
               {title}
             </h2>
-            <p className="mt-5 text-sm md:text-base leading-relaxed text-white/62 max-w-2xl">
-              {copy}
+            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-white/62 md:text-base">
+              <span className="md:hidden">{mobileCopy?.endsWith('.') ? mobileCopy : `${mobileCopy}.`}</span>
+              <span className="hidden md:inline">{copy}</span>
             </p>
           </div>
 
@@ -61,15 +64,16 @@ export default function SalesCtaBand({
   }
 
   return (
-    <section className="technical-sheet p-6 md:p-10">
+    <section className="technical-sheet p-5 md:p-10">
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 lg:items-end">
         <div>
           <p className="craft-label mb-4">Siguiente paso</p>
-          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950 max-w-3xl">
+          <h2 className="text-[1.95rem] md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950 max-w-3xl">
             {title}
           </h2>
-          <p className="mt-5 text-sm md:text-base leading-relaxed text-neutral-700 max-w-2xl">
-            {copy}
+          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700 md:text-base">
+            <span className="md:hidden">{mobileCopy?.endsWith('.') ? mobileCopy : `${mobileCopy}.`}</span>
+            <span className="hidden md:inline">{copy}</span>
           </p>
         </div>
 

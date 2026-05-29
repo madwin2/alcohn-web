@@ -1,15 +1,41 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import SectionHeader from '@/components/SectionHeader';
 import ActionButton from '@/components/ActionButton';
 import SpecStrip from '@/components/SpecStrip';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
+import MobileCarousel from '@/components/MobileCarousel';
 import { abecedarios } from '@/lib/catalog';
+import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Abecedarios - Alcohn',
   description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
+  alternates: {
+    canonical: '/abecedarios',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: '/abecedarios',
+    siteName: SITE_NAME,
+    title: 'Abecedarios - Alcohn',
+    description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Abecedarios - Alcohn',
+    description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: 'Inicio', path: '/' },
+  { name: 'Abecedarios', path: '/abecedarios' },
+]);
 
 export default function AbecedariosPage() {
   const mainAbecedario = abecedarios[0];
@@ -20,6 +46,10 @@ export default function AbecedariosPage() {
 
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Letras y números"
@@ -31,7 +61,7 @@ export default function AbecedariosPage() {
           }}
           secondaryCta={{
             label: 'Ver sellos personalizados',
-            href: '/sellos/personalizados',
+            href: '/productos',
             variant: 'secondary',
           }}
           highlights={[
@@ -43,10 +73,10 @@ export default function AbecedariosPage() {
 
         <SpecStrip />
 
-        <section className="mb-20">
+        <section className="mb-10 md:mb-20">
           <div className="material-frame relative aspect-[16/7] overflow-hidden">
             <Image
-              src="/images/abecedario/abecedario.png"
+              src="/images/abecedario/abecedario.webp"
               alt="Abecedario de bronce con letras y números"
               fill
               className="object-cover"
@@ -56,7 +86,7 @@ export default function AbecedariosPage() {
           </div>
         </section>
 
-        <section className="mb-20 technical-sheet">
+        <section className="mb-10 md:mb-20 technical-sheet">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
             <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-8">
               <p className="craft-label mb-4">Qué es</p>
@@ -75,10 +105,10 @@ export default function AbecedariosPage() {
           </div>
         </section>
 
-        <section className="mb-20 border-t border-[var(--alcohn-line)] pt-16">
+        <section className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-8 md:pt-16">
           <SectionHeader title="Qué incluye" align="left" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <MobileCarousel rowClassName="md:grid md:grid-cols-2 md:gap-8" hint="Deslizá opciones">
             {abecedarios.slice(0, 2).map((abecedario, index) => {
               const price =
                 typeof abecedario.price === 'number'
@@ -86,7 +116,7 @@ export default function AbecedariosPage() {
                   : `$${abecedario.price.desde.toLocaleString('es-AR')}`;
 
               return (
-                <article key={abecedario.slug} className="material-card p-6 md:p-8">
+                <article key={abecedario.slug} className="mobile-snap-card material-card p-6 md:min-w-0 md:p-8">
                   <p className="craft-label mb-4">{String(index + 1).padStart(2, '0')}</p>
                   <h3 className="text-2xl font-semibold text-neutral-900 mb-4 tracking-tight">
                     {abecedario.title}
@@ -123,10 +153,10 @@ export default function AbecedariosPage() {
                 </article>
               );
             })}
-          </div>
+          </MobileCarousel>
         </section>
 
-        <section className="mb-20 border-t border-[var(--alcohn-line)] pt-16">
+        <section className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-8 md:pt-16">
           <SectionHeader title="Especificaciones" align="left" />
           <div className="technical-sheet">
             <dl className="relative z-10 divide-y divide-[var(--alcohn-line)]">

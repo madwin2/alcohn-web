@@ -5,6 +5,31 @@ export interface FAQ {
 
 export const faqs: FAQ[] = [
   {
+    question: '¿Hacen sellos chicos, de menos de 1cm?',
+    answer:
+      'Sí, podemos hacer sellos de hasta medio centímetro. Lo importante es que sea un diseño sencillo para que pueda marcarse con definición.',
+  },
+  {
+    question: '¿Solo hacen sellos?',
+    answer:
+      'Fabricamos sellos de bronce personalizados y abecedarios. También vendemos accesorios para el marcado, como calentador eléctrico, mango de golpe y base para remachadora.',
+  },
+  {
+    question: '¿No tengo logo, ustedes me lo diseñan?',
+    answer:
+      'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso podes contactarnos por whatsapp y te asesoramos.',
+  },
+  {
+    question: '¿Puedo marcar metales?',
+    answer:
+      'Los sellos no funcionan para metales, ya que el bronce no soporta ese esfuerzo. Para madera, cuero y cuerina funcionan perfectamente.',
+  },
+  {
+    question: '¿Funcionan con tinta?',
+    answer:
+      'Nuestros sellos no están pensados para usar con tinta. Funcionan con calor o presión, según el material.',
+  },
+  {
     question: '¿Sirve mi logo si lo tengo como una foto o imagen?',
     answer:
       'Sí. Podés subir foto, captura, dibujo, PDF, PNG, JPG o vector. El diseñador online analiza el archivo y, si hace falta, usamos esa base para armar una muestra antes de fabricar.',

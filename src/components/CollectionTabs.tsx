@@ -35,7 +35,7 @@ export default function CollectionTabs({
           <button
             key={collection}
             onClick={() => onCollectionChange(collection)}
-            className={`min-h-[40px] px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-colors whitespace-nowrap border ${
+            className={`min-h-[44px] md:min-h-[40px] px-4 py-2 text-xs uppercase tracking-wider font-semibold transition-colors whitespace-nowrap border ${
               selectedCollection === collection
                 ? 'bg-[var(--alcohn-ink)] text-white border-[var(--alcohn-ink)]'
                 : 'bg-[var(--alcohn-surface)] text-neutral-700 border-[var(--alcohn-line)] hover:border-[var(--alcohn-bronze)] hover:bg-white'

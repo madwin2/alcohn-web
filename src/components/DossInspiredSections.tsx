@@ -43,48 +43,53 @@ const stages = [
 
 export default function DossInspiredSections() {
   const [activeStage, setActiveStage] = useState(stages[1]);
+  const shortBody =
+    activeStage.body.length > 110
+      ? `${activeStage.body.slice(0, 107).trim()}...`
+      : activeStage.body;
 
   return (
-    <section className="bg-[var(--alcohn-ink)] py-16 text-white md:snap-start md:snap-always md:min-h-[calc(100vh-4rem)] md:py-24 flex items-center">
+    <section className="bg-[var(--alcohn-ink)] py-8 text-white md:snap-start md:snap-always md:min-h-[calc(100vh-4rem)] md:py-24 flex items-center">
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <div className="dark-system-panel motion-reveal-delay">
-          <div className="relative z-10 grid min-h-[620px] grid-cols-1 lg:grid-cols-[0.32fr_0.68fr]">
-            <div className="border-b border-white/10 p-6 md:p-8 lg:border-b-0 lg:border-r lg:p-10">
+          <div className="relative z-10 grid grid-cols-1 lg:min-h-[620px] lg:grid-cols-[0.32fr_0.68fr]">
+            <div className="border-b border-white/10 p-4 md:p-8 lg:border-b-0 lg:border-r lg:p-10">
               <p className="text-[10px] font-semibold uppercase text-white/52">PASO A PASA PARA COMPRAR</p>
-              <div className="mt-8 grid gap-2">
+              <div className="mt-4 grid grid-cols-2 gap-2 lg:mt-8 lg:grid-cols-1">
                 {stages.map((stage) => (
                   <button
                     key={stage.id}
                     type="button"
                     onClick={() => setActiveStage(stage)}
-                    className={`flex min-h-[56px] items-center justify-between border px-4 text-left text-sm font-semibold transition-all ${
+                    className={`flex min-h-[46px] items-center justify-between border px-3 text-left text-xs font-semibold transition-all md:min-h-[56px] md:px-4 md:text-sm ${
                       activeStage.id === stage.id
                         ? 'border-[var(--alcohn-bronze)] bg-white/10 text-white'
-                        : 'border-white/10 bg-white/[0.03] text-white/46 hover:border-white/28 hover:text-white'
+                        : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/28 hover:text-white'
                     }`}
                   >
                     <span>{stage.label}</span>
-                    <span className="text-[10px] text-white/42">{stage.stat}</span>
+                    <span className="text-[10px] text-white/55">{stage.stat}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="relative flex min-h-[520px] flex-col justify-between p-6 md:p-10 lg:p-14">
+            <div className="relative flex flex-col justify-between p-4 md:min-h-[520px] md:p-10 lg:p-14">
               <div>
-                <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase text-white/60">
+                <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase text-white/72">
                   <span className="signal-dot h-2 w-2 rounded-full bg-[var(--alcohn-bronze)]" />
                   SIMPLE RAPIDO PRECISO
                 </p>
-                <h2 className="mt-8 max-w-xl text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
+                <h2 className="mt-4 max-w-xl text-[1.45rem] font-semibold leading-tight tracking-tight md:mt-8 md:text-5xl">
                   {activeStage.title}
                 </h2>
-                <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/58 md:text-base">
-                  {activeStage.body}
+                <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/80 md:text-base md:text-white/72">
+                  <span className="md:hidden">{shortBody}</span>
+                  <span className="hidden md:inline">{activeStage.body}</span>
                 </p>
               </div>
 
-              <div className="relative mt-10 min-h-[260px] md:min-h-[320px]">
+              <div className="relative hidden md:block md:mt-10 md:min-h-[320px]">
                 <svg className="absolute inset-0 h-full w-full text-white/12" viewBox="0 0 700 340" fill="none" aria-hidden="true">
                   <path d="M70 250L350 90L630 250" stroke="currentColor" />
                   <path d="M150 250L350 135L550 250" stroke="currentColor" />
@@ -93,7 +98,7 @@ export default function DossInspiredSections() {
                   <path d="M350 90V278" stroke="currentColor" strokeDasharray="6 8" />
                 </svg>
 
-                <div className="system-cube absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 md:h-36 md:w-36">
+                <div className="system-cube absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 md:h-36 md:w-36">
                   <div className="absolute inset-0 rotate-45 border border-[var(--alcohn-bronze)] bg-[var(--alcohn-bronze)]/18" />
                   <div className="absolute inset-4 rotate-45 border border-white/34 bg-white/8" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -101,7 +106,7 @@ export default function DossInspiredSections() {
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 grid grid-cols-2 gap-2 md:grid-cols-5">
+                <div className="absolute bottom-0 left-0 right-0 hidden grid-cols-2 gap-2 md:grid md:grid-cols-5">
                   {stages.map((stage) => (
                     <div key={stage.id} className={`border p-3 ${activeStage.id === stage.id ? 'border-[var(--alcohn-bronze)] bg-white/8' : 'border-white/10 bg-black/10'}`}>
                       <p className="text-[10px] uppercase text-white/44">{stage.stat}</p>
@@ -111,7 +116,19 @@ export default function DossInspiredSections() {
                 </div>
               </div>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              {/* Mobile: indicador compacto sin decoración */}
+              <div className="md:hidden mt-5 flex items-center gap-3 border border-white/14 bg-white/[0.04] px-4 py-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[var(--alcohn-bronze)] bg-[var(--alcohn-bronze)]/18 text-base font-semibold text-white">
+                  {activeStage.stat}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-wider text-white/55">Paso seleccionado</p>
+                  <p className="text-sm font-semibold text-white truncate">{activeStage.label}</p>
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-white/50">{stages.findIndex(s => s.id === activeStage.id) + 1}/{stages.length}</p>
+              </div>
+
+              <div className="mt-6 md:mt-10 flex flex-col gap-3 sm:flex-row">
                 <ActionButton href="/buy?mode=custom" variant="secondary" className="border-white bg-white text-neutral-900 hover:bg-[var(--alcohn-paper)]">
                   Probar el flujo online
                 </ActionButton>

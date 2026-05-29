@@ -5,6 +5,7 @@ import { Product, MaterialType, ProductCategory, filterProducts } from '@/data/p
 import ProductCard from './ProductCard';
 import ProductFilters from './ProductFilters';
 import SpecStrip from './SpecStrip';
+import MobileCarousel from './MobileCarousel';
 
 interface ProductsGridProps {
   products: Product[];
@@ -60,16 +61,17 @@ export default function ProductsGrid({ products: initialProducts }: ProductsGrid
       />
 
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 lg:gap-20">
+        <MobileCarousel rowClassName="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-16 lg:gap-20" hint="Deslizá productos">
           {filteredProducts.map((product, index) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              materialFilter={materialFilterForCards}
-              index={index}
-            />
+            <div key={product.id} className="mobile-snap-card md:min-w-0">
+              <ProductCard
+                product={product}
+                materialFilter={materialFilterForCards}
+                index={index}
+              />
+            </div>
           ))}
-        </div>
+        </MobileCarousel>
       ) : (
         <div className="text-center py-24 border-t border-neutral-300 pt-24">
           <p className="text-sm uppercase tracking-wider text-neutral-500">

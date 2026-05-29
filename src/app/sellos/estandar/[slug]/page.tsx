@@ -85,7 +85,7 @@ export default function StandardDesignPage({ params }: PageProps) {
   };
 
   return (
-    <div className="atelier-page min-h-screen py-16">
+    <div className="atelier-page min-h-screen py-8 md:py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label={collectionLabels[design.collection] || design.collection}
@@ -108,7 +108,7 @@ export default function StandardDesignPage({ params }: PageProps) {
         />
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-16 lg:gap-24 mb-12 md:mb-20">
           {/* Image */}
           <div className="material-frame aspect-square relative overflow-hidden">
             {design.image ? (
@@ -130,7 +130,7 @@ export default function StandardDesignPage({ params }: PageProps) {
           </div>
 
           {/* Details */}
-          <div className="space-y-8">
+          <div className="space-y-5 md:space-y-8">
             {/* Spec Chips */}
             <SpecChips
               specs={[

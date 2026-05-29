@@ -20,7 +20,7 @@ export default function SizeRecommendationsSection() {
     <section className="mb-20 border-t border-neutral-300 pt-16">
       <div className="mb-6 text-center">
         <div className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
-          Medidas disponibles: 10×10mm a 100×100mm (y rectangulares).
+          Medidas disponibles: desde 10×10 mm hasta 150×60 mm (15×6 cm, rectangulares incluidos).
         </div>
         <div className="text-xs text-neutral-600">
           Si tu logo necesita otra proporción, lo hacemos a medida.

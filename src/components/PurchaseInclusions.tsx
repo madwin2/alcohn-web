@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import PurchaseInclusionsKitExplorer from '@/components/PurchaseInclusionsKitExplorer';
+import MobileCarousel from '@/components/MobileCarousel';
 
 type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
 
@@ -18,6 +20,8 @@ interface PurchaseInclusionsProps {
   copy?: string;
   /** Ilustración del kit (sello + mango). Activa en páginas de material. */
   showKitIllustration?: boolean;
+  /** Logo del cliente (esquina de la tarjeta compacta). */
+  logoUrl?: string | null;
 }
 
 const defaultItems: Record<InclusionVariant, InclusionItem[]> = {
@@ -131,6 +135,7 @@ export default function PurchaseInclusions({
   title = 'Qué incluye tu compra',
   copy,
   showKitIllustration = true,
+  logoUrl,
 }: PurchaseInclusionsProps) {
   const normalizedItems = normalizeItems(variant, items);
   const introCopy =
@@ -139,9 +144,21 @@ export default function PurchaseInclusions({
       ? 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.'
       : 'El pedido deja claro qué recibís antes de avanzar al pago.');
 
-  if (compact) {
+  if (!compact && showKitIllustration && variant === 'personalizado') {
     return (
-      <div className={`technical-sheet blueprint-sheet p-4 ${className}`}>
+      <PurchaseInclusionsKitExplorer
+        items={normalizedItems}
+        className={className}
+      />
+    );
+  }
+
+  if (compact) {
+    const logoSrc = logoUrl || null;
+    return (
+      <div
+        className={`technical-sheet blueprint-sheet p-4 relative flex flex-col min-h-[220px] ${className}`}
+      >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--alcohn-line)] pb-3">
           <div>
             <p className="craft-label mb-1">Incluido</p>
@@ -149,20 +166,43 @@ export default function PurchaseInclusions({
               {title}
             </h3>
           </div>
-          <span className="hidden sm:block text-[10px] font-semibold uppercase text-neutral-400">
+          <span className="hidden sm:block text-[10px] font-semibold uppercase text-neutral-400 shrink-0">
             ALC-KIT
           </span>
         </div>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 flex-1 space-y-2">
           {normalizedItems.slice(0, 6).map((item, index) => (
-            <li key={`${item.title}-${index}`} className="grid grid-cols-[22px_1fr] gap-2 text-xs leading-relaxed text-neutral-700">
+            <li
+              key={`${item.title}-${index}`}
+              className={`grid grid-cols-[22px_1fr] gap-2 text-xs leading-relaxed text-neutral-700 ${index >= 4 ? 'hidden md:grid' : ''}`}
+            >
               <span className="mt-0.5 flex h-4 w-4 items-center justify-center border border-[var(--alcohn-line-strong)] text-[9px] font-semibold text-neutral-700">
                 {index + 1}
               </span>
               <span>{item.title}</span>
             </li>
           ))}
+          {normalizedItems.length > 4 && (
+            <li className="text-[11px] uppercase tracking-wide text-neutral-500 md:hidden">
+              +{normalizedItems.length - 4} ítems más
+            </li>
+          )}
         </ul>
+        {logoSrc && (
+          <div
+            className="mt-3 flex justify-end"
+            title="Tu logo"
+          >
+            <div className="h-14 w-14 overflow-hidden border border-[var(--alcohn-line-strong)] bg-white/90 shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoSrc}
+                alt="Logo del cliente"
+                className="h-full w-full object-contain p-1"
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -172,7 +212,7 @@ export default function PurchaseInclusions({
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
         <div className="relative border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-8 lg:p-10">
           <p className="craft-label mb-5">Ficha de compra / Alcohn</p>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-950">
+          <h2 className="text-2xl md:text-4xl font-semibold tracking-tight text-neutral-950">
             {title}
           </h2>
           <p className="mt-5 text-sm leading-relaxed text-neutral-700">
@@ -210,11 +250,11 @@ export default function PurchaseInclusions({
           </svg>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2">
+        <MobileCarousel rowClassName="sm:grid sm:grid-cols-2" hint="Deslizá lo incluido">
           {normalizedItems.map((item, index) => (
             <article
               key={`${item.title}-${index}`}
-              className="purchase-inclusion-cell border-b sm:border-r even:sm:border-r-0 border-[var(--alcohn-line)] p-5 md:p-6"
+              className="mobile-snap-card purchase-inclusion-cell border border-[var(--alcohn-line)] p-5 md:p-6 sm:min-w-0 sm:border-b sm:border-r sm:even:border-r-0"
             >
               <div className="mb-8 flex items-start justify-between gap-4">
                 <span className="flex h-9 w-9 items-center justify-center border border-[var(--alcohn-line-strong)] bg-white/80 text-xs font-semibold text-neutral-900">
@@ -232,7 +272,7 @@ export default function PurchaseInclusions({
               </p>
             </article>
           ))}
-        </div>
+        </MobileCarousel>
       </div>
     </section>
   );

@@ -56,12 +56,59 @@ export function arsToMinorUnits(ars: number): number {
   return Math.round(ars * 100);
 }
 
-function getSiteBaseUrl(): string {
+/**
+ * Origen absoluto del sitio (sin barra final).
+ * Openpay exige URLs https en producción; con `http://localhost` la pasarela
+ * suele armar mal el redirect (`https://http/localhost:3000/...`).
+ * Para pruebas locales: `OPENPAY_REDIRECT_BASE_URL` con un túnel HTTPS (ngrok, etc.).
+ */
+export function getSiteBaseUrl(): string {
+  const openpayOverride = process.env.OPENPAY_REDIRECT_BASE_URL?.trim();
+  if (openpayOverride) return normalizeSiteOrigin(openpayOverride);
+
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, '');
+  if (explicit) return normalizeSiteOrigin(explicit);
+
   const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/^https?:\/\//, '')}`;
-  return 'http://localhost:3000';
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `https://${host}`;
+  }
+
+  return 'http://127.0.0.1:3000';
+}
+
+function normalizeSiteOrigin(raw: string): string {
+  let value = raw.trim().replace(/\/$/, '');
+  if (!value) return 'http://127.0.0.1:3000';
+
+  if (!/^https?:\/\//i.test(value)) {
+    const isLocal =
+      value.startsWith('localhost') ||
+      value.startsWith('127.0.0.1') ||
+      value.includes(':3000');
+    value = isLocal ? `http://${value}` : `https://${value}`;
+  }
+
+  try {
+    const url = new URL(value.includes('://') ? value : `http://${value}`);
+    return url.origin;
+  } catch {
+    return 'http://127.0.0.1:3000';
+  }
+}
+
+/** URLs de retorno post-pago (Openpay redirect_urls). */
+export function buildOpenpayRedirectUrls(ordenId?: string): {
+  success: string;
+  failed: string;
+} {
+  const base = getSiteBaseUrl();
+  const q = ordenId ? `?orden_id=${encodeURIComponent(ordenId)}` : '';
+  return {
+    success: `${base}/checkout/openpay/success${q}`,
+    failed: `${base}/checkout/openpay/failed${q}`,
+  };
 }
 
 async function fetchAccessToken(env: OpenpayEnv): Promise<string> {
@@ -171,7 +218,17 @@ export async function createOpenpayCheckoutOrder(
   const env = getOpenpayEnv();
   const token = await fetchAccessToken(env);
   const { checkoutApiBase } = getEndpoints(env);
-  const base = getSiteBaseUrl();
+  const redirectUrls = buildOpenpayRedirectUrls(input.ordenId);
+  if (
+    process.env.NODE_ENV === 'development' &&
+    redirectUrls.success.startsWith('http://')
+  ) {
+    console.warn(
+      '[openpay] redirect_urls usan HTTP. Si Openpay te manda a https://http/localhost…, ' +
+        'definí OPENPAY_REDIRECT_BASE_URL con un túnel HTTPS (ngrok) o NEXT_PUBLIC_SITE_URL=https://tu-dominio'
+    );
+    console.warn('[openpay] success URL enviada:', redirectUrls.success);
+  }
 
   const items = input.lines.map((line, index) => ({
     id: index + 1,
@@ -183,17 +240,10 @@ export async function createOpenpayCheckoutOrder(
     quantity: Math.max(1, Math.floor(line.qty)),
   }));
 
-  const redirectQuery = input.ordenId
-    ? `?orden_id=${encodeURIComponent(input.ordenId)}`
-    : '';
-
   const attributes: Record<string, unknown> = {
     currency: CURRENCY_ARS,
     items,
-    redirect_urls: {
-      success: `${base}/checkout/openpay/success${redirectQuery}`,
-      failed: `${base}/checkout/openpay/failed${redirectQuery}`,
-    },
+    redirect_urls: redirectUrls,
   };
 
   const res = await fetch(`${checkoutApiBase}/api/v2/orders`, {
@@ -249,6 +299,16 @@ export function getOpenpayTestAmountArs(): number | null {
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0 || n > 1_000_000) return null;
   return Math.round(n);
+}
+
+/**
+ * Salta la pasarela Openpay y redirige directo a /checkout/openpay/success.
+ * Solo en desarrollo: `OPENPAY_SIMULATE_SUCCESS=true` + NODE_ENV !== 'production'.
+ */
+export function isOpenpaySimulateSuccessEnabled(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  const v = process.env.OPENPAY_SIMULATE_SUCCESS?.trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
 }
 
 export function linesForOpenpayCharge(lines: OpenpayCartLine[]): OpenpayCartLine[] {

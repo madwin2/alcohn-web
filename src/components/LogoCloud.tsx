@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { brands } from '@/data/brands';
 import ActionButton from './ActionButton';
@@ -17,15 +18,21 @@ const trustWords = [
 ];
 
 const trustStats = [
-  { value: '+7', label: 'años de experiencia' },
-  { value: '+6000', label: 'sellos fabricados' },
-  { value: '72hs', label: 'hábiles de fabricación' },
-  { value: 'Envíos', label: 'a todo el país' },
+  { value: '+7', label: 'años de experiencia', mobileLabel: 'años de exp.' },
+  { value: '+6000', label: 'sellos fabricados', mobileLabel: 'sellos fabricados' },
+  { value: '72hs', label: 'hábiles de fabricación', mobileLabel: 'fabricación' },
+  { value: 'Envíos', label: 'a todo el país', mobileLabel: 'todo el país' },
 ];
 
 const LOGOS_PER_ROW = 7;
 const row1Brands = brands.slice(0, LOGOS_PER_ROW);
 const row2Brands = brands.slice(LOGOS_PER_ROW);
+const mobileBrands = brands.slice(0, 12);
+
+const longestTrustWord = trustWords.reduce(
+  (longest, word) => (word.length > longest.length ? word : longest),
+  trustWords[0]
+);
 
 export default function LogoCloud({ compact = false }: LogoCloudProps) {
   const [wordIndex, setWordIndex] = useState(0);
@@ -71,12 +78,12 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
     <div key={brand.name} className={`${brickCellClass} ${extraClass}`.trim()}>
       {brand.logo ? (
         <div className="flex h-11 w-full items-center justify-center px-1 sm:h-12 lg:h-[3.75rem]">
-          <img
+          <Image
             src={brand.logo}
             alt={brand.name}
-            className="max-h-full max-w-full object-contain object-center opacity-50 contrast-[1.05] grayscale transition duration-200 hover:opacity-90 hover:grayscale-0"
-            loading="lazy"
-            decoding="async"
+            width={180}
+            height={60}
+            className="logo-cloud-brand max-h-full max-w-full object-contain object-center"
           />
         </div>
       ) : (
@@ -87,31 +94,60 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
 
   return (
     <section
-      className={`${compact ? 'py-16' : 'py-16 md:py-24'} atelier-page border-y border-[var(--alcohn-line)] md:snap-start`}
+      className={`${compact ? 'py-10 md:py-16' : 'py-10 md:py-24'} atelier-page border-y border-[var(--alcohn-line)] md:snap-start`}
     >
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <div className="technical-sheet">
-          <div className="border-b border-[var(--alcohn-line)] p-6 text-center md:p-10 lg:p-12">
+          <div className="border-b border-[var(--alcohn-line)] p-6 pb-5 text-center sm:pb-6 md:p-10 lg:p-12">
             <p className="craft-label mb-5">Trabajos Reales</p>
-            <h2 className="mx-auto max-w-3xl text-4xl font-semibold leading-[0.98] tracking-tight text-neutral-950 md:text-6xl">
+            <h2 className="mx-auto max-w-3xl text-[2rem] font-semibold leading-[1.04] tracking-tight text-neutral-950 md:text-6xl md:leading-[0.98]">
               <span className="block">En nosotros</span>
               <span className="block">confían</span>
-              <span className="block min-h-[1em] text-neutral-950/72">
-                {typedWord}<span className="type-caret">|</span>
+              <span className="logo-cloud-typed-line block">
+                <span aria-hidden="true" className="logo-cloud-typed-line__reserve">
+                  {longestTrustWord}
+                </span>
+                <span className="logo-cloud-typed-line__value text-neutral-950/72">
+                  {typedWord}
+                  <span className="type-caret">|</span>
+                </span>
               </span>
             </h2>
-            <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mx-auto mt-8 hidden max-w-4xl grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
               {trustStats.map((stat) => (
                 <div key={stat.label} className="technical-dash bg-white/50 p-4 text-center">
-                  <p className="text-2xl font-semibold text-neutral-950">{stat.value}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">{stat.label}</p>
+                  <p className="text-[1.5rem] font-semibold leading-tight text-neutral-950 md:text-2xl">{stat.value}</p>
+                  <p className="mt-1 text-sm text-neutral-600 md:text-xs">
+                    <span className="md:hidden">{stat.mobileLabel}</span>
+                    <span className="hidden md:inline">{stat.label}</span>
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="border-b border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]">
-            <div className="overflow-x-auto lg:overflow-visible">
+            <div className="brand-marquee brand-marquee--mobile sm:hidden">
+              <div className="brand-marquee-track">
+                {[...mobileBrands, ...mobileBrands].map((brand, index) => (
+                  <div key={`${brand.name}-mobile-${index}`} className="brand-marquee-item">
+                    {brand.logo ? (
+                      <Image
+                        src={brand.logo}
+                        alt={brand.name}
+                        width={160}
+                        height={50}
+                        className="logo-cloud-brand"
+                      />
+                    ) : (
+                      <span className="craft-label">Logo</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block lg:overflow-visible">
               <div
                 className="grid min-w-[42rem] grid-cols-[repeat(14,minmax(0,1fr))] lg:min-w-0"
               >
@@ -133,45 +169,53 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[0.48fr_0.52fr]">
-            <div className="min-h-[340px] border-b border-[var(--alcohn-line)] lg:border-b-0 lg:border-r">
-              <img
-                src="/images/inicio/ultima.png"
+            <div className="min-h-[250px] border-b border-[var(--alcohn-line)] md:min-h-[340px] lg:border-b-0 lg:border-r">
+              <Image
+                src="/images/inicio/ultima.webp"
                 alt="Billetera de cuero con marca aplicada en taller artesanal"
-                className="h-full min-h-[340px] w-full object-cover"
-                loading="lazy"
-                decoding="async"
+                width={1200}
+                height={720}
+                className="h-full min-h-[250px] w-full object-cover md:min-h-[340px]"
               />
             </div>
             <div className="flex flex-col justify-between p-6 md:p-10 lg:p-12">
-              <div>
-                <p className="craft-label mb-5">Caso aplicado</p>
-                <p className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight text-neutral-950 md:text-4xl">
-                  Una marca visible convierte una pieza artesanal en un producto más fácil de recordar, fotografiar y volver a comprar.
-                </p>
+              <div className="flex flex-col items-center text-center md:hidden">
+                <blockquote className="max-w-md text-[1.35rem] font-semibold italic leading-snug tracking-tight text-neutral-950">
+                  &ldquo;Desde que compre alcohn bla bla bla&rdquo;
+                </blockquote>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="technical-dash bg-white/50 p-4">
-                  <p className="text-2xl font-semibold text-neutral-950">Un Sello</p>
-                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">múltiples materiales</p>
+              <div className="hidden md:flex md:h-full md:w-full md:flex-col md:justify-between">
+                <div>
+                  <p className="craft-label mb-5">Caso aplicado</p>
+                  <p className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-neutral-950">
+                    Una marca visible convierte una pieza artesanal en un producto más fácil de recordar, fotografiar y volver a comprar.
+                  </p>
                 </div>
-                <div className="technical-dash bg-white/50 p-4">
-                  <p className="text-2xl font-semibold text-neutral-950">+5</p>
-                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">materiales posibles</p>
-                </div>
-                <div className="technical-dash bg-white/50 p-4">
-                  <p className="text-2xl font-semibold text-neutral-950">Durabilidad</p>
-                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">varios años de uso</p>
-                </div>
-              </div>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-                <ActionButton href="/buy?mode=custom" variant="primary">
-                  Diseñar el mío
-                </ActionButton>
-                <ActionButton href="/casos-reales" variant="ghost">
-                  Ver casos reales
-                </ActionButton>
+                <div className="mt-10 grid grid-cols-3 gap-3">
+                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                    <p className="text-2xl font-semibold text-neutral-950">Un sello</p>
+                    <p className="mt-1 text-xs leading-snug text-neutral-600">múltiples materiales</p>
+                  </div>
+                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                    <p className="text-2xl font-semibold text-neutral-950">+5</p>
+                    <p className="mt-1 text-xs leading-snug text-neutral-600">materiales posibles</p>
+                  </div>
+                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                    <p className="text-2xl font-semibold text-neutral-950">Años</p>
+                    <p className="mt-1 text-xs leading-snug text-neutral-600">de uso real</p>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex flex-row gap-3">
+                  <ActionButton href="/buy?mode=custom" variant="primary">
+                    Diseñar el mío
+                  </ActionButton>
+                  <ActionButton href="/casos-reales" variant="ghost">
+                    Ver casos reales
+                  </ActionButton>
+                </div>
               </div>
             </div>
           </div>

@@ -1,21 +1,68 @@
+import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import FaqList from '@/components/FaqList';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { faqs } from '@/data/faq';
+import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Preguntas frecuentes - Alcohn',
   description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
+  alternates: {
+    canonical: '/faq',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    url: '/faq',
+    siteName: SITE_NAME,
+    title: 'Preguntas frecuentes - Alcohn',
+    description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Preguntas frecuentes - Alcohn',
+    description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
+    images: [DEFAULT_OG_IMAGE],
+  },
 };
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: 'Inicio', path: '/' },
+  { name: 'Preguntas frecuentes', path: '/faq' },
+]);
 
 export default function FaqPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="FAQ de compra"
           title="Respuestas a preguntas comunes"
           description="Reunimos las dudas que suelen repetirse comunmente. Para que tengas toda la informacion de la manera mas rapida y simple posible."
+          mobileDescription="Respuestas rápidas sobre materiales, medidas, tiempos y compra."
           primaryCta={{
             label: 'Diseñar mi sello',
             href: '/buy?mode=custom',
@@ -25,11 +72,6 @@ export default function FaqPage() {
             href: '/sellos/estandar',
             variant: 'secondary',
           }}
-          highlights={[
-            'Materiales compatibles explicados',
-            'Medidas y muestra antes de fabricar',
-            'Pago y tiempos sin vueltas',
-          ]}
         />
 
         <section className="mb-20">

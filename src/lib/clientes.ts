@@ -79,9 +79,9 @@ export function getClientes(): Cliente[] {
     const nombreArchivo = nombre;
     
     const imagenes = [
-      `/images/clientes/${nombreArchivo}.png`,
-      `/images/clientes/${nombreArchivo}1.png`,
-      `/images/clientes/${nombreArchivo}2.png`,
+      `/images/clientes/${nombreArchivo}.webp`,
+      `/images/clientes/${nombreArchivo}1.webp`,
+      `/images/clientes/${nombreArchivo}2.webp`,
     ];
     
     return {

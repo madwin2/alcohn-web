@@ -102,7 +102,7 @@ export default function TestimonialsCarousel({ testimonials }: TestimonialsCarou
       <div className="flex items-center justify-center gap-4 mt-8">
         <button
           onClick={prevSlide}
-          className="p-2 rounded-full bg-secondary hover:bg-secondary-dark transition-colors"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-secondary hover:bg-secondary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
           aria-label="Testimonio anterior"
         >
           <svg
@@ -138,7 +138,7 @@ export default function TestimonialsCarousel({ testimonials }: TestimonialsCarou
 
         <button
           onClick={nextSlide}
-          className="p-2 rounded-full bg-secondary hover:bg-secondary-dark transition-colors"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-secondary hover:bg-secondary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
           aria-label="Siguiente testimonio"
         >
           <svg

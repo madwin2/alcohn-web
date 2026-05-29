@@ -2,29 +2,37 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  STAMP_SIZE_RANGE_LABEL,
+  isValidStampSizeMm,
+  STAMP_MM_MAX_LONG,
+  STAMP_MM_MIN_LONG,
+} from '@/lib/cotizador/stampSizeLimits';
 
 export default function CustomSizeInput() {
   const router = useRouter();
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
-  const [errors, setErrors] = useState<{ width?: string; height?: string }>({});
+  const [errors, setErrors] = useState<{ width?: string; height?: string; pair?: string }>({});
 
-  const validate = (value: string): number | null => {
+  const parseMm = (value: string): number | null => {
     const num = parseInt(value.replace(/\D/g, ''), 10);
     if (!value || isNaN(num)) return null;
-    if (num < 10) return null;
-    if (num > 100) return null;
+    if (num < STAMP_MM_MIN_LONG || num > STAMP_MM_MAX_LONG) return null;
     return num;
   };
 
   const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setWidth(value);
-    const num = validate(value);
+    const num = parseMm(value);
     if (value && num === null) {
-      setErrors(prev => ({ ...prev, width: 'Mínimo 10mm, máximo 100mm' }));
+      setErrors((prev) => ({
+        ...prev,
+        width: `Entre ${STAMP_MM_MIN_LONG} y ${STAMP_MM_MAX_LONG} mm por campo`,
+      }));
     } else {
-      setErrors(prev => {
+      setErrors((prev) => {
         const { width: _, ...rest } = prev;
         return rest;
       });
@@ -34,11 +42,14 @@ export default function CustomSizeInput() {
   const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setHeight(value);
-    const num = validate(value);
+    const num = parseMm(value);
     if (value && num === null) {
-      setErrors(prev => ({ ...prev, height: 'Mínimo 10mm, máximo 100mm' }));
+      setErrors((prev) => ({
+        ...prev,
+        height: `Entre ${STAMP_MM_MIN_LONG} y ${STAMP_MM_MAX_LONG} mm por campo`,
+      }));
     } else {
-      setErrors(prev => {
+      setErrors((prev) => {
         const { height: _, ...rest } = prev;
         return rest;
       });
@@ -46,8 +57,8 @@ export default function CustomSizeInput() {
   };
 
   const handleContinue = () => {
-    const w = validate(width);
-    const h = validate(height);
+    const w = parseMm(width);
+    const h = parseMm(height);
 
     if (!w || !h) {
       setErrors({
@@ -57,7 +68,13 @@ export default function CustomSizeInput() {
       return;
     }
 
-    // Redirigir al flujo de compra con medida personalizada
+    if (!isValidStampSizeMm(w, h)) {
+      setErrors({
+        pair: 'Combinación inválida: lado largo hasta 150 mm y lado corto hasta 60 mm (15×6 cm).',
+      });
+      return;
+    }
+
     router.push(`/buy?mode=custom&w=${w}&h=${h}`);
   };
 
@@ -66,7 +83,7 @@ export default function CustomSizeInput() {
       <h3 className="text-xl font-semibold text-neutral-900 mb-4 tracking-tight">
         ¿Ya sabés tu medida?
       </h3>
-      
+
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
@@ -77,15 +94,15 @@ export default function CustomSizeInput() {
             value={width}
             onChange={handleWidthChange}
             placeholder="30"
-            className={`w-full border border-neutral-300 px-3 py-2 text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-900 transition-colors ${
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className={`w-full border border-neutral-300 px-3 py-3 md:py-2 text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-900 transition-colors ${
               errors.width ? 'border-red-500' : ''
             }`}
           />
-          {errors.width && (
-            <p className="text-xs text-red-500 mt-1">{errors.width}</p>
-          )}
+          {errors.width && <p className="text-xs text-red-500 mt-1">{errors.width}</p>}
         </div>
-        
+
         <div>
           <label className="block text-xs uppercase tracking-wider text-neutral-500 font-medium mb-2">
             Alto (mm)
@@ -95,32 +112,28 @@ export default function CustomSizeInput() {
             value={height}
             onChange={handleHeightChange}
             placeholder="45"
-            className={`w-full border border-neutral-300 px-3 py-2 text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-900 transition-colors ${
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className={`w-full border border-neutral-300 px-3 py-3 md:py-2 text-base md:text-sm text-neutral-900 bg-white focus:outline-none focus:border-neutral-900 transition-colors ${
               errors.height ? 'border-red-500' : ''
             }`}
           />
-          {errors.height && (
-            <p className="text-xs text-red-500 mt-1">{errors.height}</p>
-          )}
+          {errors.height && <p className="text-xs text-red-500 mt-1">{errors.height}</p>}
         </div>
       </div>
 
       <div className="mb-4 space-y-1">
-        <p className="text-xs text-neutral-500">
-          Ingresá ancho y alto en mm. Ej: 30×45.
-        </p>
-        <p className="text-xs text-neutral-500">
-          Rango: 10–100mm. Rectangulares incluidos.
-        </p>
+        <p className="text-xs text-neutral-500">Ingresá ancho y alto en mm. Ej: 110×54.</p>
+        <p className="text-xs text-neutral-500">{STAMP_SIZE_RANGE_LABEL}</p>
+        {errors.pair && <p className="text-xs text-red-500">{errors.pair}</p>}
       </div>
 
       <button
         onClick={handleContinue}
-        className="w-full border border-neutral-900 bg-white px-6 py-3 text-sm font-medium text-neutral-900 uppercase tracking-wider hover:bg-neutral-900 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+        className="inline-flex w-full min-h-[48px] items-center justify-center border border-neutral-900 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 uppercase tracking-wider hover:bg-neutral-900 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
       >
         Continuar →
       </button>
     </div>
   );
 }
-
