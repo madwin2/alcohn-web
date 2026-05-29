@@ -1,6 +1,6 @@
 'use client';
 
-import { Children, useEffect, useMemo, useRef, useState, type Ref } from 'react';
+import { Children, useEffect, useMemo, useRef, useState, type MutableRefObject, type Ref } from 'react';
 
 interface MobileCarouselProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ function mergeRefs<T>(...refs: Array<Ref<T> | undefined>) {
       if (typeof ref === 'function') {
         ref(node);
       } else {
-        ref.current = node;
+        (ref as MutableRefObject<T | null>).current = node;
       }
     });
   };

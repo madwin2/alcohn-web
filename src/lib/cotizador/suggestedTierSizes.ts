@@ -66,9 +66,10 @@ function scoreRefs(
   options?: { maxLongCm?: number }
 ): CatalogMeasureCm[] {
   const ar = Math.max(0.05, Math.min(30, logoAspectRatio));
+  const maxLongCm = options?.maxLongCm;
   const eligible =
-    options?.maxLongCm != null
-      ? rows.filter((r) => r.ancho <= options.maxLongCm + 0.001)
+    maxLongCm != null
+      ? rows.filter((r) => r.ancho <= maxLongCm + 0.001)
       : rows;
   const list = eligible.length > 0 ? eligible : rows;
 

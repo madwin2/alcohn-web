@@ -12,11 +12,10 @@
 
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { AlcohnDatabase } from './types';
 
-let cachedClient: SupabaseClient<AlcohnDatabase> | null = null;
+let cachedClient: SupabaseClient | null = null;
 
-export function getSupabaseAdmin(): SupabaseClient<AlcohnDatabase> {
+export function getSupabaseAdmin(): SupabaseClient {
   if (cachedClient) return cachedClient;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,7 +27,7 @@ export function getSupabaseAdmin(): SupabaseClient<AlcohnDatabase> {
     );
   }
 
-  cachedClient = createClient<AlcohnDatabase>(url, serviceKey, {
+  cachedClient = createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

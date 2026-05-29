@@ -5,7 +5,7 @@ import { WEB_BUCKETS } from './storage';
 /** Bucket que usa la app interna de gestión para el archivo base del sello. */
 export const GESTION_BUCKET_BASE = 'base';
 
-type AdminClient = SupabaseClient<unknown>;
+type AdminClient = SupabaseClient<any>;
 
 function resolveStorageLocation(
   path: string | null | undefined,

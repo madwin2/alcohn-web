@@ -83,8 +83,8 @@ export function buildSellosInsertsFromCart(
       valor: lineTotal,
       item_type: resolveItemType(item),
       tipo: resolveTipo(item),
-      estado_fabricacion: 'Sin Hacer',
-      estado_venta: 'Señado',
+      estado_fabricacion: 'Sin Hacer' as const,
+      estado_venta: 'Señado' as const,
       diseno: item.title,
       nota: [item.material, item.variantSize, item.process]
         .filter(Boolean)
@@ -114,8 +114,8 @@ export function buildSellosInsertsFromCart(
     const envioNote = `Envío $${envioCosto.toLocaleString('es-AR')}`;
     rows[0].nota = rows[0].nota ? `${rows[0].nota} · ${envioNote}` : envioNote;
     const cfg = rows[0].item_config as Record<string, unknown>;
-    rows[0].item_config = { ...cfg, envio_costo: envioCosto };
+    (rows[0] as SelloInsert).item_config = { ...cfg, envio_costo: envioCosto };
   }
 
-  return rows;
+  return rows as SelloInsert[];
 }

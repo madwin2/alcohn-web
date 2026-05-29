@@ -292,31 +292,34 @@ export interface AlcohnDatabase {
         Row: ClienteRow;
         Insert: ClienteInsert;
         Update: ClienteUpdate;
+        Relationships: [];
       };
       mockup_solicitudes: {
         Row: MockupSolicitudRow;
         Insert: MockupSolicitudInsert;
         Update: MockupSolicitudUpdate;
+        Relationships: [];
       };
       ordenes: {
         Row: OrdenRow;
         Insert: OrdenInsert;
         Update: OrdenUpdate;
+        Relationships: [];
       };
       sellos: {
         Row: SelloInsert & { id: string };
         Insert: SelloInsert;
         Update: Partial<SelloInsert>;
+        Relationships: [];
       };
       web_analytics_events: {
         Row: WebAnalyticsEventRow;
         Insert: WebAnalyticsEventInsert;
         Update: Partial<WebAnalyticsEventInsert>;
+        Relationships: [];
       };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+    Views: {};
+    Functions: {};
   };
 }
