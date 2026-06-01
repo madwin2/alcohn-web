@@ -104,9 +104,9 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
 
           <div className="border-b border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]">
             <div className="brand-marquee brand-marquee--mobile sm:hidden">
-              <div className="brand-marquee-track">
+              <div className="brand-marquee-track flex w-max flex-nowrap">
                 {[...mobileBrands, ...mobileBrands].map((brand, index) => (
-                  <div key={`${brand.name}-mobile-${index}`} className="brand-marquee-item">
+                  <div key={`${brand.name}-mobile-${index}`} className="brand-marquee-item shrink-0">
                     {brand.logo ? (
                       <Image
                         src={brand.logo}
@@ -127,11 +127,11 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
               className="brand-marquee brand-marquee--desktop hidden sm:block"
               aria-label="Marcas que confían en Alcohn"
             >
-              <div className="brand-marquee-track brand-marquee-track--desktop">
+              <div className="brand-marquee-track brand-marquee-track--desktop flex w-max flex-nowrap">
                 {[...brands, ...brands].map((brand, index) => (
                   <div
                     key={`${brand.name}-desktop-${index}`}
-                    className="brand-marquee-item brand-marquee-item--desktop"
+                    className="brand-marquee-item brand-marquee-item--desktop shrink-0"
                   >
                     {brand.logo ? (
                       <Image

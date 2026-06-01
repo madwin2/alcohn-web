@@ -629,99 +629,102 @@ body {
     line-height: 1.42rem;
   }
 
-  .brand-marquee {
-    overflow: hidden;
-    background: var(--alcohn-surface);
-  }
-
-  .brand-marquee-track {
-    display: flex;
-    width: max-content;
-    animation: brand-marquee-scroll 28s linear infinite;
-  }
-
   .logo-cloud-typed-line {
     min-height: 2.15em;
   }
+}
 
-  .brand-marquee--mobile {
-    min-height: 6.5rem;
-  }
+.brand-marquee {
+  overflow: hidden;
+  background: var(--alcohn-surface);
+}
 
-  .brand-marquee-item {
-    display: flex;
-    min-width: 118px;
-    height: 72px;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid var(--alcohn-line);
-    padding: 0 0.75rem;
-  }
+.brand-marquee-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: max-content;
+  animation: brand-marquee-scroll 28s linear infinite;
+}
 
-  .brand-marquee--mobile .brand-marquee-item {
-    min-width: 148px;
-    height: 104px;
-    padding: 0 1rem;
-  }
+.brand-marquee--mobile {
+  min-height: 6.5rem;
+}
 
-  .brand-marquee-item img {
-    max-height: 38px;
-    max-width: 100px;
-    object-fit: contain;
-  }
+.brand-marquee-item {
+  display: flex;
+  flex-shrink: 0;
+  min-width: 118px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--alcohn-line);
+  padding: 0 0.75rem;
+}
 
-  .brand-marquee--mobile .brand-marquee-item .logo-cloud-brand {
-    max-height: 54px;
-    max-width: 124px;
-    opacity: 0.94;
-    filter: grayscale(1) contrast(1.28) brightness(0.68);
-  }
+.brand-marquee--mobile .brand-marquee-item {
+  min-width: 148px;
+  height: 104px;
+  padding: 0 1rem;
+}
 
+.brand-marquee-item img {
+  max-height: 38px;
+  max-width: 100px;
+  object-fit: contain;
+}
+
+.brand-marquee--mobile .brand-marquee-item .logo-cloud-brand {
+  max-height: 54px;
+  max-width: 124px;
+  opacity: 0.94;
+  filter: grayscale(1) contrast(1.28) brightness(0.68);
+}
+
+.brand-marquee--desktop {
+  min-height: 10rem;
+  border-left: 1px solid var(--alcohn-line);
+}
+
+.brand-marquee-track--desktop {
+  animation-duration: 42s;
+}
+
+.brand-marquee-item--desktop {
+  min-width: 10.5rem;
+  height: 10rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--alcohn-line);
+}
+
+.brand-marquee--desktop .brand-marquee-item .logo-cloud-brand {
+  max-height: 5.5rem;
+  max-width: 9.5rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (min-width: 1024px) {
   .brand-marquee--desktop {
-    min-height: 10rem;
-    border-left: 1px solid var(--alcohn-line);
-  }
-
-  .brand-marquee-track--desktop {
-    animation-duration: 42s;
+    min-height: 10.5rem;
   }
 
   .brand-marquee-item--desktop {
-    min-width: 10.5rem;
-    height: 10rem;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--alcohn-line);
+    min-width: 11.5rem;
+    height: 10.5rem;
+    padding: 1.25rem 1.5rem;
   }
 
   .brand-marquee--desktop .brand-marquee-item .logo-cloud-brand {
-    max-height: 5.5rem;
-    max-width: 9.5rem;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+    max-height: 6rem;
+    max-width: 10.5rem;
   }
+}
 
-  @media (min-width: 1024px) {
-    .brand-marquee--desktop {
-      min-height: 10.5rem;
-    }
-
-    .brand-marquee-item--desktop {
-      min-width: 11.5rem;
-      height: 10.5rem;
-      padding: 1.25rem 1.5rem;
-    }
-
-    .brand-marquee--desktop .brand-marquee-item .logo-cloud-brand {
-      max-height: 6rem;
-      max-width: 10.5rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .brand-marquee-track {
-      animation: none;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .brand-marquee-track {
+    animation: none;
   }
 }
 
