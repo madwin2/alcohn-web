@@ -676,6 +676,53 @@ body {
     opacity: 0.94;
     filter: grayscale(1) contrast(1.28) brightness(0.68);
   }
+
+  .brand-marquee--desktop {
+    min-height: 10rem;
+    border-left: 1px solid var(--alcohn-line);
+  }
+
+  .brand-marquee-track--desktop {
+    animation-duration: 42s;
+  }
+
+  .brand-marquee-item--desktop {
+    min-width: 10.5rem;
+    height: 10rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--alcohn-line);
+  }
+
+  .brand-marquee--desktop .brand-marquee-item .logo-cloud-brand {
+    max-height: 5.5rem;
+    max-width: 9.5rem;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  @media (min-width: 1024px) {
+    .brand-marquee--desktop {
+      min-height: 10.5rem;
+    }
+
+    .brand-marquee-item--desktop {
+      min-width: 11.5rem;
+      height: 10.5rem;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .brand-marquee--desktop .brand-marquee-item .logo-cloud-brand {
+      max-height: 6rem;
+      max-width: 10.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-marquee-track {
+      animation: none;
+    }
+  }
 }
 
 @keyframes brand-marquee-scroll {

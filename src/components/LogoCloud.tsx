@@ -24,9 +24,6 @@ const trustStats = [
   { value: 'Envíos', label: 'a todo el país', mobileLabel: 'todo el país' },
 ];
 
-const LOGOS_PER_ROW = 7;
-const row1Brands = brands.slice(0, LOGOS_PER_ROW);
-const row2Brands = brands.slice(LOGOS_PER_ROW);
 const mobileBrands = brands.slice(0, 12);
 
 const longestTrustWord = trustWords.reduce(
@@ -69,27 +66,6 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
   const typedWord = useMemo(
     () => currentWord.slice(0, visibleLetters),
     [currentWord, visibleLetters]
-  );
-
-  const brickCellClass =
-    'col-span-2 flex min-h-[4.5rem] items-center justify-center border-b border-r border-[var(--alcohn-line)] p-3 sm:min-h-20 sm:p-4 lg:min-h-[5.25rem] lg:p-4';
-
-  const renderLogoCell = (brand: (typeof brands)[number], extraClass = '') => (
-    <div key={brand.name} className={`${brickCellClass} ${extraClass}`.trim()}>
-      {brand.logo ? (
-        <div className="flex h-11 w-full items-center justify-center px-1 sm:h-12 lg:h-[3.75rem]">
-          <Image
-            src={brand.logo}
-            alt={brand.name}
-            width={180}
-            height={60}
-            className="logo-cloud-brand max-h-full max-w-full object-contain object-center"
-          />
-        </div>
-      ) : (
-        <span className="craft-label">Logo</span>
-      )}
-    </div>
   );
 
   return (
@@ -147,23 +123,29 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
               </div>
             </div>
 
-            <div className="hidden overflow-x-auto sm:block lg:overflow-visible">
-              <div
-                className="grid min-w-[42rem] grid-cols-[repeat(14,minmax(0,1fr))] lg:min-w-0"
-              >
-                {row1Brands.map((brand, index) =>
-                  renderLogoCell(brand, index === 0 ? 'border-l' : '')
-                )}
-
-                <div
-                  className="col-span-1 min-h-[4.5rem] border-b border-l border-r border-[var(--alcohn-line)] sm:min-h-20 lg:min-h-[5.25rem]"
-                  aria-hidden="true"
-                />
-                {row2Brands.map((brand) => renderLogoCell(brand))}
-                <div
-                  className="col-span-1 min-h-[4.5rem] border-b border-r border-[var(--alcohn-line)] sm:min-h-20 lg:min-h-[5.25rem]"
-                  aria-hidden="true"
-                />
+            <div
+              className="brand-marquee brand-marquee--desktop hidden sm:block"
+              aria-label="Marcas que confían en Alcohn"
+            >
+              <div className="brand-marquee-track brand-marquee-track--desktop">
+                {[...brands, ...brands].map((brand, index) => (
+                  <div
+                    key={`${brand.name}-desktop-${index}`}
+                    className="brand-marquee-item brand-marquee-item--desktop"
+                  >
+                    {brand.logo ? (
+                      <Image
+                        src={brand.logo}
+                        alt={brand.name}
+                        width={180}
+                        height={72}
+                        className="logo-cloud-brand"
+                      />
+                    ) : (
+                      <span className="craft-label">Logo</span>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
