@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Hero from '@/components/Hero';
 import ActionButton from '@/components/ActionButton';
 import LogoCloud from '@/components/LogoCloud';
-import HoverImage from '@/components/HoverImage';
+import BeforeAfterStrip from '@/components/BeforeAfterStrip';
 import SmoothScroll from '@/components/SmoothScroll';
 import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
@@ -108,30 +108,22 @@ const craftStoryImages = [
   },
 ];
 
-const transformations = [
+const beforeAfterImages = [
   {
-    material: 'Cuero',
-    title: 'Billetera sin marca vs. pieza firmada',
-    defaultImage: { alt: 'Billetera de cuero sin marca', src: '/images/hover/billetera.webp' },
-    hoverImage: { alt: 'Billetera de cuero marcada', src: '/images/hover/billetera_edit.webp' },
+    src: '/images/producto/1.webp',
+    alt: 'Sello de bronce personalizado sostenido en la mano',
   },
   {
-    material: 'Mate',
-    title: 'Accesorio común vs. producto de marca',
-    defaultImage: { alt: 'Mate sin marca', src: '/images/hover/mate.webp' },
-    hoverImage: { alt: 'Mate marcado con sello', src: '/images/hover/mate_edit.webp' },
+    src: '/images/cuero/DSCF7781.webp',
+    alt: 'Artesano marcando cuero en el taller',
   },
   {
-    material: 'Madera',
-    title: 'Tabla artesanal vs. pieza reconocible',
-    defaultImage: { alt: 'Tabla de madera sin marca', src: '/images/hover/tabla.webp' },
-    hoverImage: { alt: 'Tabla de madera marcada', src: '/images/hover/tabla_edit.webp' },
+    src: '/images/cuero/DSCF2235.webp',
+    alt: 'Costura artesanal en pieza de cuero',
   },
   {
-    material: 'Muebles',
-    title: 'Taburete sin marca vs. pieza firmada',
-    defaultImage: { alt: 'Taburete de madera sin marca', src: '/images/hover/taburete.webp' },
-    hoverImage: { alt: 'Taburete de madera marcado con sello', src: '/images/hover/taburete_edit.webp' },
+    src: '/images/hover/billetera_edit.webp',
+    alt: 'Billetera de cuero con marca aplicada',
   },
 ];
 
@@ -259,25 +251,8 @@ export default function Home() {
               </div>
               </div>
 
-              <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)]">
-              <MobileCarousel rowClassName="md:grid md:grid-cols-2 lg:grid-cols-4" hint="Deslizá comparaciones" mobileLayout="scroll">
-                {transformations.map((item) => (
-                  <article
-                    key={item.material}
-                    className="mobile-snap-card group bg-white/45 p-3 transition-colors hover:bg-white/58 md:min-w-0 md:border-b md:border-r md:bg-white/28 md:p-4"
-                  >
-                    <div className="material-frame aspect-[16/10] overflow-hidden md:aspect-square">
-                      <HoverImage defaultImage={item.defaultImage} hoverImage={item.hoverImage} />
-                    </div>
-                    <div className="min-h-[90px] px-1 pb-1 pt-3 md:min-h-[112px] md:px-2 md:pb-2 md:pt-5">
-                      <p className="craft-label mb-2 md:mb-3">{item.material}</p>
-                      <h3 className="text-[1.03rem] font-semibold leading-snug tracking-tight text-neutral-950 md:text-lg">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </article>
-                ))}
-              </MobileCarousel>
+              <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] md:border-t md:border-[var(--alcohn-line)]">
+                <BeforeAfterStrip images={beforeAfterImages} />
               </div>
             </div>
           </div>

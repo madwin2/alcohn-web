@@ -21,10 +21,12 @@ export default function Hero({ title, subtitle, primaryCta, secondaryCta }: Hero
       <div className="absolute inset-0 z-0">
         <AutoImageCarousel
           images={[
-            { id: 1, src: '/images/background/motquero1.webp', alt: 'Motoquero 1' },
-            { id: 2, src: '/images/background/motoquero2.webp', alt: 'Motoquero 2' },
+            {
+              id: 1,
+              src: '/images/hero/imagen-hero.jpeg',
+              alt: 'Taller artesanal con sello de bronce personalizado Alcohn',
+            },
           ]}
-          interval={4000}
           priority
         />
       </div>
