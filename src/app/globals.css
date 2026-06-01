@@ -694,8 +694,8 @@ body {
 .before-after-strip__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.125rem;
-  padding: 0 0.125rem 0.125rem;
+  gap: 0.1rem;
+  padding: 0 0.1rem 0.1rem;
   background: var(--alcohn-paper);
 }
 
@@ -721,8 +721,9 @@ body {
 }
 
 .before-after-strip__row {
-  --before-after-slant: 0.675rem;
-  --before-after-gap: 0.175rem;
+  /* ~+10° vs slant 0.675rem sobre ~16.75rem de alto; gap −20% */
+  --before-after-slant: 3.65rem;
+  --before-after-gap: 0.14rem;
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
   gap: var(--before-after-gap);
@@ -782,8 +783,8 @@ body {
   }
 
   .before-after-strip__row {
-    --before-after-slant: 0.825rem;
-    --before-after-gap: 0.2125rem;
+    --before-after-slant: 4.1rem;
+    --before-after-gap: 0.17rem;
     height: clamp(15rem, 22vw, 21.5rem);
     padding: 0 var(--before-after-gap) var(--before-after-gap);
   }
