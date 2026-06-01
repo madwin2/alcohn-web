@@ -694,8 +694,8 @@ body {
 .before-after-strip__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding: 0 0.5rem 0.5rem;
+  gap: 0.25rem;
+  padding: 0 0.25rem 0.25rem;
   background: var(--alcohn-paper);
 }
 
@@ -722,7 +722,7 @@ body {
 
 .before-after-strip__row {
   --before-after-slant: 1.35rem;
-  --before-after-gap: 0.7rem;
+  --before-after-gap: 0.35rem;
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
   gap: var(--before-after-gap);
@@ -783,7 +783,7 @@ body {
 
   .before-after-strip__row {
     --before-after-slant: 1.65rem;
-    --before-after-gap: 0.85rem;
+    --before-after-gap: 0.425rem;
     height: clamp(15rem, 22vw, 21.5rem);
     padding: 0 var(--before-after-gap) var(--before-after-gap);
   }
