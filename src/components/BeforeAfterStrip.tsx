@@ -30,7 +30,6 @@ export default function BeforeAfterStrip({ images }: BeforeAfterStripProps) {
           <div
             key={image.src}
             className={`before-after-strip__panel ${panelClipClass(index, images.length)}`}
-            style={{ zIndex: index + 1 }}
           >
             <img src={image.src} alt={image.alt} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" />
           </div>

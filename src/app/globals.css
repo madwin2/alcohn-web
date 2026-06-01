@@ -685,20 +685,32 @@ body {
 
 .before-after-strip {
   width: 100%;
-  background: #fff;
+  overflow: hidden;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  background: var(--alcohn-paper);
 }
 
 .before-after-strip__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  background: #fff;
+  gap: 0.5rem;
+  padding: 0 0.5rem 0.5rem;
+  background: var(--alcohn-paper);
 }
 
 .before-after-strip__grid-cell {
   aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--alcohn-paper-deep);
+}
+
+.before-after-strip__grid-cell:nth-child(3) {
+  border-bottom-left-radius: 1rem;
+}
+
+.before-after-strip__grid-cell:nth-child(4) {
+  border-bottom-right-radius: 1rem;
 }
 
 .before-after-strip__grid-cell img {
@@ -709,11 +721,13 @@ body {
 }
 
 .before-after-strip__row {
-  --before-after-slant: 1.65rem;
+  --before-after-slant: 1.35rem;
+  --before-after-gap: 0.7rem;
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
-  overflow: hidden;
-  background: #fff;
+  gap: var(--before-after-gap);
+  padding: 0 var(--before-after-gap) var(--before-after-gap);
+  background: var(--alcohn-paper);
 }
 
 .before-after-strip__panel {
@@ -721,16 +735,13 @@ body {
   flex: 1 1 0;
   min-width: 0;
   height: 100%;
-}
-
-.before-after-strip__panel:not(:first-child) {
-  margin-left: calc(var(--before-after-slant) * -1);
+  overflow: hidden;
 }
 
 .before-after-strip__panel img {
   display: block;
   height: 100%;
-  width: calc(100% + var(--before-after-slant));
+  width: 100%;
   max-width: none;
   object-fit: cover;
 }
@@ -753,7 +764,6 @@ body {
 }
 
 .before-after-strip__panel--last img {
-  width: 100%;
   object-position: center;
 }
 
@@ -766,9 +776,16 @@ body {
 }
 
 @media (min-width: 1024px) {
+  .before-after-strip {
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
+  }
+
   .before-after-strip__row {
-    --before-after-slant: 2rem;
+    --before-after-slant: 1.65rem;
+    --before-after-gap: 0.85rem;
     height: clamp(15rem, 22vw, 21.5rem);
+    padding: 0 var(--before-after-gap) var(--before-after-gap);
   }
 }
 
