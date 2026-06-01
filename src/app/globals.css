@@ -721,12 +721,12 @@ body {
 }
 
 .before-after-strip__row {
-  /* ~+10° vs slant 0.675rem sobre ~16.75rem de alto; gap −20% */
-  --before-after-slant: 3.65rem;
-  --before-after-gap: 0.14rem;
+  /* slant = inclinación del corte; gap = grosor visible de la línea (con solape) */
+  --before-after-slant: 1.05rem;
+  --before-after-gap: 0.11rem;
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
-  gap: var(--before-after-gap);
+  gap: 0;
   padding: 0 var(--before-after-gap) var(--before-after-gap);
   background: var(--alcohn-paper);
 }
@@ -739,10 +739,14 @@ body {
   overflow: hidden;
 }
 
+.before-after-strip__panel:not(:first-child) {
+  margin-left: calc(var(--before-after-gap) - var(--before-after-slant));
+}
+
 .before-after-strip__panel img {
   display: block;
   height: 100%;
-  width: 100%;
+  width: calc(100% + var(--before-after-slant) - var(--before-after-gap));
   max-width: none;
   object-fit: cover;
 }
@@ -765,6 +769,7 @@ body {
 }
 
 .before-after-strip__panel--last img {
+  width: 100%;
   object-position: center;
 }
 
@@ -783,8 +788,8 @@ body {
   }
 
   .before-after-strip__row {
-    --before-after-slant: 4.1rem;
-    --before-after-gap: 0.17rem;
+    --before-after-slant: 1.2rem;
+    --before-after-gap: 0.13rem;
     height: clamp(15rem, 22vw, 21.5rem);
     padding: 0 var(--before-after-gap) var(--before-after-gap);
   }
