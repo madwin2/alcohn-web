@@ -150,7 +150,7 @@ export default function Home() {
         secondaryCta={{ text: 'Comprar diseño estándar', href: '/sellos/estandar' }}
       />
 
-      <section id="oficio-identidad" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24 md:min-h-0">
+      <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24 md:min-h-0">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet">
             <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[0.46fr_0.54fr] lg:gap-0">

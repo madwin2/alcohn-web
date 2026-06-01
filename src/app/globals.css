@@ -17,6 +17,9 @@
   --alcohn-leather: #5b3728;
   --alcohn-line: rgba(17, 16, 14, 0.14);
   --alcohn-line-strong: rgba(17, 16, 14, 0.28);
+  --alcohn-grid-size: 48px;
+  --alcohn-grid-line-x: rgba(17, 16, 14, 0.025);
+  --alcohn-grid-line-y: rgba(17, 16, 14, 0.018);
 }
 
 html {
@@ -29,10 +32,11 @@ html {
 body {
   color: rgb(var(--foreground-rgb));
   background:
-    linear-gradient(90deg, rgba(17, 16, 14, 0.025) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(17, 16, 14, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, var(--alcohn-grid-line-x) 1px, transparent 1px),
+    linear-gradient(180deg, var(--alcohn-grid-line-y) 1px, transparent 1px),
     var(--alcohn-paper);
-  background-size: 48px 48px, 48px 48px, auto;
+  background-size: var(--alcohn-grid-size) var(--alcohn-grid-size),
+    var(--alcohn-grid-size) var(--alcohn-grid-size), auto;
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
@@ -42,10 +46,11 @@ body {
 @layer components {
   .atelier-page {
     background:
-      linear-gradient(90deg, rgba(17, 16, 14, 0.025) 1px, transparent 1px),
-      linear-gradient(180deg, rgba(17, 16, 14, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, var(--alcohn-grid-line-x) 1px, transparent 1px),
+      linear-gradient(180deg, var(--alcohn-grid-line-y) 1px, transparent 1px),
       var(--alcohn-paper);
-    background-size: 48px 48px, 48px 48px, auto;
+    background-size: var(--alcohn-grid-size) var(--alcohn-grid-size),
+      var(--alcohn-grid-size) var(--alcohn-grid-size), auto;
   }
 
   .atelier-header {
@@ -632,6 +637,50 @@ body {
   .logo-cloud-typed-line {
     min-height: 2.15em;
   }
+}
+
+.hero-bottom-bridge {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 11;
+  height: clamp(7rem, 24vh, 14rem);
+  pointer-events: none;
+}
+
+.hero-bottom-bridge__paper {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--alcohn-paper) 0%,
+    color-mix(in srgb, var(--alcohn-paper) 72%, transparent) 38%,
+    transparent 100%
+  );
+}
+
+.hero-bottom-bridge__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, var(--alcohn-grid-line-x) 1px, transparent 1px),
+    linear-gradient(180deg, var(--alcohn-grid-line-y) 1px, transparent 1px);
+  background-size: var(--alcohn-grid-size) var(--alcohn-grid-size);
+  background-position: 0 100%, 0 100%;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.62) 42%,
+    rgba(0, 0, 0, 0.2) 72%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.62) 42%,
+    rgba(0, 0, 0, 0.2) 72%,
+    transparent 100%
+  );
 }
 
 .before-after-strip {

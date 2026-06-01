@@ -33,7 +33,10 @@ export default function Hero({ title, subtitle, primaryCta, secondaryCta }: Hero
       
       {/* Overlay oscuro para legibilidad del texto */}
       <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(17,16,14,0.78)_0%,rgba(17,16,14,0.66)_55%,rgba(17,16,14,0.5)_100%)] md:bg-[linear-gradient(90deg,rgba(17,16,14,0.82)_0%,rgba(17,16,14,0.58)_45%,rgba(17,16,14,0.34)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-24 md:h-40 bg-gradient-to-t from-[var(--alcohn-paper)] via-transparent to-transparent z-10" />
+      <div className="hero-bottom-bridge" aria-hidden="true">
+        <div className="hero-bottom-bridge__paper" />
+        <div className="hero-bottom-bridge__grid" />
+      </div>
       
       {/* Contenido */}
       <div className="container mx-auto px-4 md:px-8 w-full relative z-20">
