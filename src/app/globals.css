@@ -722,8 +722,8 @@ body {
 
 .before-after-strip__row {
   /* slant = inclinación del corte; gap = grosor visible de la línea (con solape) */
-  --before-after-slant: 1.05rem;
-  --before-after-gap: 0.11rem;
+  --before-after-slant: 1.5rem;
+  --before-after-gap: 0.28rem;
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
   gap: 0;
