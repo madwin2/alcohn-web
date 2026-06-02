@@ -7,9 +7,16 @@ interface AutoImageCarouselProps {
   interval?: number;
   priority?: boolean;
   showCaption?: boolean;
+  imageClassName?: string;
 }
 
-export default function AutoImageCarousel({ images, interval = 4000, priority = false, showCaption = false }: AutoImageCarouselProps) {
+export default function AutoImageCarousel({
+  images,
+  interval = 4000,
+  priority = false,
+  showCaption = false,
+  imageClassName = '',
+}: AutoImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(priority);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +60,7 @@ export default function AutoImageCarousel({ images, interval = 4000, priority = 
       key={currentImage.id}
       src={currentImage.src}
       alt={currentImage.alt}
-      className="h-full w-full object-cover transition-transform duration-[1800ms] ease-out"
+      className={`h-full w-full object-cover transition-transform duration-[1800ms] ease-out ${imageClassName}`}
       loading={priority && currentIndex === 0 ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority && currentIndex === 0 ? 'high' : 'auto'}

@@ -28,6 +28,7 @@ export default function Hero({ title, subtitle, primaryCta, secondaryCta }: Hero
             },
           ]}
           priority
+          imageClassName="hero-bg-image"
         />
       </div>
       

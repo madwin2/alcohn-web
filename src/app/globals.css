@@ -649,6 +649,17 @@ body {
   }
 }
 
+.hero-bg-image {
+  object-position: center center;
+}
+
+@media (max-width: 767px) {
+  /* La acción (manos, sello, martillo) está en el tercio derecho de la foto */
+  .hero-bg-image {
+    object-position: 84% center;
+  }
+}
+
 .hero-bottom-bridge {
   position: absolute;
   inset-inline: 0;
