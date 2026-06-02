@@ -152,9 +152,8 @@ export default function Home() {
 
       <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24 md:min-h-0">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
-            <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.46fr_0.54fr] lg:gap-0">
-              <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
+          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.46fr_0.54fr] lg:gap-0">
+            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
                 <div className="p-4 md:p-10 lg:border-b-0 lg:border-r lg:border-[var(--alcohn-line)] lg:p-12">
                   <p className="craft-label mb-4">Oficio premium + marca propia</p>
                   <h2 className="max-w-xl text-[1.6rem] font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
@@ -217,11 +216,15 @@ export default function Home() {
                     ))}
                   </MobileCarousel>
                 </div>
-              </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0">
-              <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)]">
+      <section id="lo-transforma" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
+        <div className="container mx-auto max-w-7xl px-4 md:px-8">
+          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0">
+            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)]">
               <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr]">
                 <div className="p-4 md:p-10 lg:p-12">
                   <p className="craft-label mb-4 md:mb-5">Antes y después</p>
@@ -251,9 +254,8 @@ export default function Home() {
               </div>
               </div>
 
-              <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] md:border-t md:border-[var(--alcohn-line)]">
-                <BeforeAfterStrip images={beforeAfterImages} />
-              </div>
+            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] md:border-t md:border-[var(--alcohn-line)]">
+              <BeforeAfterStrip images={beforeAfterImages} />
             </div>
           </div>
         </div>
