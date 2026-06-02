@@ -749,6 +749,29 @@ body {
   object-fit: cover;
 }
 
+@media (max-width: 767px) {
+  .before-after-strip {
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .before-after-strip__grid {
+    gap: 2px;
+    padding: 0;
+    background: transparent;
+  }
+
+  .before-after-strip__grid-cell {
+    border-radius: 0;
+    aspect-ratio: 1 / 1;
+  }
+
+  .before-after-strip__grid-cell:nth-child(3),
+  .before-after-strip__grid-cell:nth-child(4) {
+    border-radius: 0;
+  }
+}
+
 .before-after-strip__row {
   /* slant = inclinación del corte; gap = grosor visible de la línea (con solape) */
   --before-after-slant: 2.15rem;

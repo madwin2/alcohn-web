@@ -223,8 +223,8 @@ export default function Home() {
 
       <section id="lo-transforma" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0">
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)]">
+          <div className="flex flex-col max-md:gap-0 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0">
+            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] max-md:overflow-hidden md:contents">
               <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr]">
                 <div className="p-4 md:p-10 lg:p-12">
                   <p className="craft-label mb-4 md:mb-5">Antes y después</p>
@@ -252,10 +252,10 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              </div>
 
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] md:border-t md:border-[var(--alcohn-line)]">
-              <BeforeAfterStrip images={beforeAfterImages} />
+              <div className="md:border-t md:border-[var(--alcohn-line)]">
+                <BeforeAfterStrip images={beforeAfterImages} />
+              </div>
             </div>
           </div>
         </div>
@@ -353,9 +353,9 @@ export default function Home() {
 
       <section className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="technical-sheet mobile-clean-sheet">
-            <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr]">
-              <div className="flex flex-col justify-start border-b border-[var(--alcohn-line)] p-4 md:p-10 lg:border-b-0 lg:border-r lg:p-12 lg:pt-10 xl:pt-12">
+          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.42fr_0.58fr] lg:gap-0">
+            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
+              <div className="flex flex-col justify-start p-4 md:border-b md:border-[var(--alcohn-line)] md:p-10 lg:border-b-0 lg:border-r lg:p-12 lg:pt-10 xl:pt-12">
                 <p className="craft-label mb-4 md:mb-5">Más que fabricación</p>
                 <h2 className="text-[1.5rem] font-semibold leading-[1.08] tracking-tight text-neutral-950 sm:text-4xl md:text-[2.65rem] lg:text-[2.85rem] xl:text-5xl xl:leading-[1.06]">
                   <span className="md:hidden">
@@ -374,28 +374,41 @@ export default function Home() {
                 </h2>
               </div>
 
-              <MobileCarousel rowClassName="md:grid md:grid-cols-2" hint="Deslizá materiales">
-                {materialProofs.map((item, index) => (
-                  <article
-                    key={item.label}
-                    className={`mobile-snap-card group bg-[var(--alcohn-surface)] p-3 md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
-                  >
-                    <div className="material-frame relative aspect-[16/10] overflow-hidden md:aspect-[4/3]">
-                      <img
-                        src={item.image}
-                        alt={item.alt}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="pt-3 md:pt-4">
-                      <p className="craft-label mb-2">{item.label}</p>
-                      <h3 className="text-[0.97rem] font-semibold leading-snug text-neutral-950 md:text-base">{item.title}</h3>
-                    </div>
-                  </article>
-                ))}
-              </MobileCarousel>
+              <div className="md:hidden">
+                <MobileOverlayCarousel
+                  items={materialProofs.map((item) => ({
+                    key: item.label,
+                    image: item.image,
+                    alt: item.alt,
+                    caption: { label: item.label, title: item.title },
+                  }))}
+                />
+              </div>
+
+              <div className="hidden md:block">
+                <MobileCarousel rowClassName="md:grid md:grid-cols-2" hint="Deslizá materiales">
+                  {materialProofs.map((item, index) => (
+                    <article
+                      key={item.label}
+                      className={`mobile-snap-card group md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
+                    >
+                      <div className="material-frame relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.alt}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                      <div className="pt-4">
+                        <p className="craft-label mb-2">{item.label}</p>
+                        <h3 className="text-base font-semibold leading-snug text-neutral-950">{item.title}</h3>
+                      </div>
+                    </article>
+                  ))}
+                </MobileCarousel>
+              </div>
             </div>
           </div>
         </div>
