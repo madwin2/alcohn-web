@@ -140,13 +140,23 @@ body {
     z-index: 1;
   }
 
+  .blueprint-sheet {
+    --blueprint-inset: 10px;
+  }
+
   .blueprint-sheet::after {
     content: '';
     position: absolute;
-    inset: 10px;
+    inset: var(--blueprint-inset);
     pointer-events: none;
     border: 1px dashed rgba(17, 16, 14, 0.1);
     opacity: 0.9;
+  }
+
+  .blueprint-sheet .before-after-strip__row {
+    padding-left: var(--blueprint-inset);
+    padding-right: var(--blueprint-inset);
+    padding-bottom: var(--blueprint-inset);
   }
 
   .blueprint-annotation {
@@ -644,42 +654,50 @@ body {
   inset-inline: 0;
   bottom: 0;
   z-index: 11;
-  height: clamp(7rem, 24vh, 14rem);
+  height: clamp(9rem, 30vh, 18rem);
   pointer-events: none;
 }
 
+/* Solo en el borde inferior: funde con la sección papel sin lavar la foto */
 .hero-bottom-bridge__paper {
   position: absolute;
-  inset: 0;
+  inset-inline: 0;
+  bottom: 0;
+  height: 26%;
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--alcohn-paper) 92%, transparent) 0%,
-    color-mix(in srgb, var(--alcohn-paper) 48%, transparent) 24%,
-    transparent 62%
+    var(--alcohn-paper) 0%,
+    color-mix(in srgb, var(--alcohn-paper) 78%, transparent) 22%,
+    color-mix(in srgb, var(--alcohn-paper) 42%, transparent) 48%,
+    color-mix(in srgb, var(--alcohn-paper) 16%, transparent) 72%,
+    transparent 100%
   );
 }
 
+/* Solo líneas de cuadrícula sobre el hero (sin relleno blanco) */
 .hero-bottom-bridge__grid {
+  --hero-grid-line: rgba(255, 255, 255, 0.17);
   position: absolute;
   inset: 0;
+  background-color: transparent;
   background-image:
-    linear-gradient(90deg, var(--alcohn-grid-line-x) 1px, transparent 1px),
-    linear-gradient(180deg, var(--alcohn-grid-line-y) 1px, transparent 1px);
+    linear-gradient(90deg, var(--hero-grid-line) 1px, transparent 1px),
+    linear-gradient(180deg, var(--hero-grid-line) 1px, transparent 1px);
   background-size: var(--alcohn-grid-size) var(--alcohn-grid-size);
   background-position: 0 100%, 0 100%;
   -webkit-mask-image: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.98) 0%,
-    rgba(0, 0, 0, 0.62) 42%,
-    rgba(0, 0, 0, 0.2) 72%,
-    transparent 100%
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.28) 72%,
+    transparent 92%
   );
   mask-image: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.98) 0%,
-    rgba(0, 0, 0, 0.62) 42%,
-    rgba(0, 0, 0, 0.2) 72%,
-    transparent 100%
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.28) 72%,
+    transparent 92%
   );
 }
 
@@ -695,7 +713,7 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.1rem;
-  padding: 0 0.1rem 0.1rem;
+  padding: 0 1rem 1rem;
   background: var(--alcohn-paper);
 }
 
@@ -727,7 +745,7 @@ body {
   height: clamp(13.5rem, 24vw, 20rem);
   width: 100%;
   gap: 0;
-  padding: 0 var(--before-after-gap) var(--before-after-gap);
+  padding-bottom: var(--before-after-gap);
   background: var(--alcohn-paper);
 }
 
@@ -791,7 +809,7 @@ body {
     --before-after-slant: 2.5rem;
     --before-after-gap: 0.34rem;
     height: clamp(15rem, 22vw, 21.5rem);
-    padding: 0 var(--before-after-gap) var(--before-after-gap);
+    padding-bottom: var(--before-after-gap);
   }
 }
 

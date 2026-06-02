@@ -220,9 +220,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 max-md:mt-0 max-md:border-t-0 max-md:pt-0 md:mt-16 md:border-t md:border-[var(--alcohn-line)] md:pt-0 lg:mt-20">
+            <div className="flex flex-col gap-4 max-md:mt-0 max-md:border-t-0 max-md:pt-0 md:mt-16 md:gap-0 md:border-t md:border-[var(--alcohn-line)] md:pt-0 lg:mt-20">
               <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)]">
-              <div className="grid grid-cols-1 md:border-b md:border-[var(--alcohn-line)] lg:grid-cols-[0.58fr_0.42fr]">
+              <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr]">
                 <div className="p-4 md:p-10 lg:p-12">
                   <p className="craft-label mb-4 md:mb-5">Antes y después</p>
                   <h2 className="max-w-4xl text-[1.55rem] font-semibold leading-[1.06] tracking-tight text-neutral-950 sm:text-4xl md:text-[2.65rem] lg:text-[2.85rem] xl:text-5xl xl:leading-[1.06]">
