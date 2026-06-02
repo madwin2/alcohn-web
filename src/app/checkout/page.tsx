@@ -331,8 +331,8 @@ export default function CheckoutPage() {
     try {
       await uploadComprobante(orderId, file);
       clearWizardSupabaseSession();
-      alert(
-        `Comprobante recibido. Número de pedido: ${orderId.slice(0, 8)}… Te contactaremos por WhatsApp para confirmar el pago.`
+      router.push(
+        `/checkout/transferencia/confirmacion?orden_id=${encodeURIComponent(orderId)}`
       );
     } catch (err) {
       alert(
@@ -340,6 +340,8 @@ export default function CheckoutPage() {
           ? err.message
           : 'No se pudo subir el comprobante. Intentá de nuevo o envialo por WhatsApp.'
       );
+    } finally {
+      e.target.value = '';
     }
   };
 

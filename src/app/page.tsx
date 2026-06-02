@@ -146,8 +146,8 @@ export default function Home() {
         <Hero
         title="Más que una herramienta, una forma de contar tu historia."
         subtitle="Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí cómo lo vas a usar y recibí muestra, medida y precio antes de fabricar."
-        primaryCta={{ text: 'Subir logo y ver precio', href: '/buy?mode=custom' }}
-        secondaryCta={{ text: 'Comprar diseño estándar', href: '/sellos/estandar' }}
+        primaryCta={{ text: 'Subir logo y ver precio', mobileText: 'Subir logo', href: '/buy?mode=custom' }}
+        secondaryCta={{ text: 'Comprar diseño estándar', mobileText: 'Diseño estándar', href: '/sellos/estandar' }}
       />
 
       <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24 md:min-h-0">

@@ -6,10 +6,12 @@ interface HeroProps {
   subtitle: string;
   primaryCta?: {
     text: string;
+    mobileText?: string;
     href: string;
   };
   secondaryCta?: {
     text: string;
+    mobileText?: string;
     href: string;
   };
 }
@@ -52,21 +54,23 @@ export default function Hero({ title, subtitle, primaryCta, secondaryCta }: Hero
             <span className="hidden md:inline">{subtitle}</span>
           </p>
           {primaryCta && (
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="hero-cta-row flex flex-row flex-nowrap gap-2 sm:gap-3">
               <ActionButton
                 href={primaryCta.href}
                 variant="secondary"
-                className="w-full sm:w-auto min-h-[52px] md:min-h-[44px] px-6 md:px-8 py-3 text-[13px] md:text-sm border-white bg-white text-neutral-900 hover:bg-[var(--alcohn-paper)] hover:border-[var(--alcohn-bronze)]"
+                className="hero-cta hero-cta--solid min-w-0 flex-1 sm:w-auto sm:flex-none border-white bg-white text-neutral-900 hover:bg-[var(--alcohn-paper)] hover:border-[var(--alcohn-bronze)]"
               >
-                {primaryCta.text}
+                <span className="md:hidden">{primaryCta.mobileText ?? primaryCta.text}</span>
+                <span className="hidden md:inline">{primaryCta.text}</span>
               </ActionButton>
               {secondaryCta && (
                 <ActionButton
                   href={secondaryCta.href}
                   variant="primary"
-                  className="w-full sm:w-auto min-h-[48px] md:min-h-[44px] px-6 md:px-8 py-3 text-[13px] md:text-sm"
+                  className="hero-cta hero-cta--frosted min-w-0 flex-1 sm:w-auto sm:flex-none md:bg-[var(--alcohn-ink)] md:border-[var(--alcohn-ink)]"
                 >
-                  {secondaryCta.text}
+                  <span className="md:hidden">{secondaryCta.mobileText ?? secondaryCta.text}</span>
+                  <span className="hidden md:inline">{secondaryCta.text}</span>
                 </ActionButton>
               )}
             </div>

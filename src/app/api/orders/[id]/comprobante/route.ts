@@ -16,8 +16,27 @@ const ALLOWED = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
+  'image/heic',
+  'image/heif',
   'application/pdf',
 ]);
+
+function inferMimeFromFilename(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.heic')) return 'image/heic';
+  if (lower.endsWith('.heif')) return 'image/heif';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  return null;
+}
+
+function resolveFileMime(file: File): string {
+  const raw = (file.type || '').toLowerCase().trim();
+  if (raw && raw !== 'application/octet-stream') return raw;
+  return inferMimeFromFilename(file.name) ?? 'application/octet-stream';
+}
 
 function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -35,6 +54,10 @@ function extFromMime(mime: string): string {
       return 'png';
     case 'image/webp':
       return 'webp';
+    case 'image/heic':
+      return 'heic';
+    case 'image/heif':
+      return 'heif';
     case 'application/pdf':
       return 'pdf';
     default:
@@ -76,7 +99,7 @@ export async function POST(req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: 'Archivo requerido' }, { status: 400 });
   }
 
-  const mime = (file.type || 'application/octet-stream').toLowerCase();
+  const mime = resolveFileMime(file);
   if (!ALLOWED.has(mime)) {
     return NextResponse.json(
       { error: 'Tipo no permitido', permitidos: [...ALLOWED] },
