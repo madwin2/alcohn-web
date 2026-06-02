@@ -110,20 +110,20 @@ const craftStoryImages = [
 
 const beforeAfterImages = [
   {
-    src: '/images/producto/1.webp',
-    alt: 'Sello de bronce personalizado sostenido en la mano',
+    src: '/images/transforma/1.jpeg',
+    alt: 'Sello de bronce personalizado con diseño en relieve',
   },
   {
-    src: '/images/cuero/DSCF7781.webp',
-    alt: 'Artesano marcando cuero en el taller',
+    src: '/images/transforma/2.jpeg',
+    alt: 'Marca aplicada en cuero con sello de bronce',
   },
   {
-    src: '/images/cuero/DSCF2235.webp',
-    alt: 'Costura artesanal en pieza de cuero',
+    src: '/images/transforma/3.jpeg',
+    alt: 'Estampado en cuero con sello personalizado',
   },
   {
-    src: '/images/hover/billetera_edit.webp',
-    alt: 'Billetera de cuero con marca aplicada',
+    src: '/images/transforma/4.jpeg',
+    alt: 'Producto terminado con marca en cuero en el taller',
   },
 ];
 
@@ -158,7 +158,7 @@ export default function Home() {
                 <div className="p-4 md:p-10 lg:border-b-0 lg:border-r lg:border-[var(--alcohn-line)] lg:p-12">
                   <p className="craft-label mb-4">Oficio premium + marca propia</p>
                   <h2 className="max-w-xl text-[1.6rem] font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
-                    Del trabajo bien hecho a la marca que se reconoce.
+                    Lo que hacemos en Alcohn.
                   </h2>
                   <blockquote className="mt-4 max-w-xl border-l border-[var(--alcohn-bronze)] pl-4 text-base leading-relaxed text-neutral-800 md:mt-7 md:pl-5 md:text-2xl">
                     <span className="md:hidden">
@@ -169,7 +169,7 @@ export default function Home() {
                     </span>
                   </blockquote>
                   <p className="mt-4 hidden max-w-xl text-sm leading-relaxed text-neutral-700 md:block md:text-base">
-                    El sello transforma una pieza bien hecha en un producto reconocible: firma, repetición y presencia de marca sin perder el carácter artesanal del taller.
+                    Los sellos de bronce transforman una pieza bien hecha en un producto reconocible: firma, repetición y presencia de marca sin perder el carácter artesanal del taller.
                   </p>
 
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row md:mt-8 md:gap-3">
