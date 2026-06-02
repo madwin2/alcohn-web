@@ -173,8 +173,8 @@ export default function Home() {
                   </p>
 
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row md:mt-8 md:gap-3">
-                    <ActionButton href="/buy?mode=custom" variant="primary" className="hidden md:inline-flex">
-                      Subir logo
+                    <ActionButton href="/sobre-alcohn" variant="primary" className="hidden md:inline-flex">
+                      Más sobre Alcohn
                     </ActionButton>
                     <ActionButton href="/casos-reales" variant="ghost">
                       Ver trabajos reales
