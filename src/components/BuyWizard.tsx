@@ -827,7 +827,8 @@ const optimizeLogoWithAI = async (imageUrl: string): Promise<{ optimizedLogo: st
     // Enviar como FormData
     const formData = new FormData();
     formData.append('logo', file);
-    
+    formData.append('forceAi', 'true');
+
     const response = await fetchWithTimeout(
       '/api/logo/optimize',
       {
