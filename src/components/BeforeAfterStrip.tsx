@@ -19,7 +19,7 @@ export default function BeforeAfterStrip({ images }: BeforeAfterStripProps) {
     <div className="before-after-strip" aria-label="Proceso del sello en cuero">
       <div className="before-after-strip__grid md:hidden">
         {images.map((image) => (
-          <div key={image.src} className="before-after-strip__grid-cell">
+          <div key={image.src} data-scroll-card className="before-after-strip__grid-cell">
             <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
           </div>
         ))}
@@ -29,6 +29,7 @@ export default function BeforeAfterStrip({ images }: BeforeAfterStripProps) {
         {images.map((image, index) => (
           <div
             key={image.src}
+            data-scroll-card
             className={`before-after-strip__panel ${panelClipClass(index, images.length)}`}
           >
             <img src={image.src} alt={image.alt} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" />

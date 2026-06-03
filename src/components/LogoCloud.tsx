@@ -70,10 +70,10 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
 
   return (
     <section
-      className={`${compact ? 'py-10 md:py-16' : 'py-10 md:py-24'} atelier-page border-y border-[var(--alcohn-line)] md:snap-start`}
+      className={`${compact ? 'py-10 md:py-16' : 'py-10 md:py-24'} atelier-page border-y border-[var(--alcohn-line)]`}
     >
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
-        <div className="technical-sheet">
+        <div data-scroll-panel className="technical-sheet">
           <div className="border-b border-[var(--alcohn-line)] p-6 pb-5 text-center sm:pb-6 md:p-10 lg:p-12">
             <p className="craft-label mb-5">Trabajos Reales</p>
             <h2 className="mx-auto max-w-3xl text-[2rem] font-semibold leading-[1.04] tracking-tight text-neutral-950 md:text-6xl md:leading-[0.98]">
@@ -91,7 +91,7 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
             </h2>
             <div className="mx-auto mt-8 hidden max-w-4xl grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
               {trustStats.map((stat) => (
-                <div key={stat.label} className="technical-dash bg-white/50 p-4 text-center">
+                <div key={stat.label} data-scroll-card className="technical-dash bg-white/50 p-4 text-center">
                   <p className="text-[1.5rem] font-semibold leading-tight text-neutral-950 md:text-2xl">{stat.value}</p>
                   <p className="mt-1 text-sm text-neutral-600 md:text-xs">
                     <span className="md:hidden">{stat.mobileLabel}</span>
@@ -151,7 +151,10 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[0.48fr_0.52fr]">
-            <div className="min-h-[250px] border-b border-[var(--alcohn-line)] md:min-h-[340px] lg:border-b-0 lg:border-r">
+            <div
+              data-scroll-card
+              className="min-h-[250px] border-b border-[var(--alcohn-line)] md:min-h-[340px] lg:border-b-0 lg:border-r"
+            >
               <Image
                 src="/images/inicio/ultima.webp"
                 alt="Billetera de cuero con marca aplicada en taller artesanal"
@@ -176,15 +179,15 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
                 </div>
 
                 <div className="mt-10 grid grid-cols-3 gap-3">
-                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                  <div data-scroll-card className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
                     <p className="text-2xl font-semibold text-neutral-950">Un sello</p>
                     <p className="mt-1 text-xs leading-snug text-neutral-600">múltiples materiales</p>
                   </div>
-                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                  <div data-scroll-card className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
                     <p className="text-2xl font-semibold text-neutral-950">+5</p>
                     <p className="mt-1 text-xs leading-snug text-neutral-600">materiales posibles</p>
                   </div>
-                  <div className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
+                  <div data-scroll-card className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
                     <p className="text-2xl font-semibold text-neutral-950">Años</p>
                     <p className="mt-1 text-xs leading-snug text-neutral-600">de uso real</p>
                   </div>

@@ -4,7 +4,7 @@ import Hero from '@/components/Hero';
 import ActionButton from '@/components/ActionButton';
 import LogoCloud from '@/components/LogoCloud';
 import BeforeAfterStrip from '@/components/BeforeAfterStrip';
-import SmoothScroll from '@/components/SmoothScroll';
+import HomeScrollShell from '@/components/animations/HomeScrollShell';
 import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
@@ -142,7 +142,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-      <SmoothScroll>
+      <HomeScrollShell>
         <Hero
         title="Más que una herramienta, una forma de contar tu historia."
         subtitle="Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí cómo lo vas a usar y recibí muestra, medida y precio antes de fabricar."
@@ -150,10 +150,16 @@ export default function Home() {
         secondaryCta={{ text: 'Comprar diseño estándar', mobileText: 'Diseño estándar', href: '/sellos/estandar' }}
       />
 
-      <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24 md:min-h-0">
+      <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:py-24 md:min-h-0">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.46fr_0.54fr] lg:gap-0">
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
+          <div
+            data-scroll-panel
+            className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.46fr_0.54fr] lg:gap-0"
+          >
+            <div
+              data-scroll-panel-mobile
+              className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents"
+            >
                 <div className="p-4 md:p-10 lg:border-b-0 lg:border-r lg:border-[var(--alcohn-line)] lg:p-12">
                   <p className="craft-label mb-4">Oficio premium + marca propia</p>
                   <h2 className="max-w-xl text-[1.6rem] font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
@@ -197,6 +203,7 @@ export default function Home() {
                     {craftStoryImages.map((item, index) => (
                       <article
                         key={item.label}
+                        data-scroll-card
                         className={`mobile-snap-card group md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
                       >
                         <div className="material-frame relative aspect-[4/3] overflow-hidden">
@@ -221,17 +228,26 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="lo-transforma" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
+      <section id="lo-transforma" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex flex-col max-md:gap-0 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0">
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] max-md:overflow-hidden md:contents">
+          <div
+            data-scroll-panel
+            className="flex flex-col max-md:gap-0 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet md:gap-0"
+          >
+            <div
+              data-scroll-panel-mobile
+              className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] max-md:overflow-hidden md:contents"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-[0.58fr_0.42fr]">
                 <div className="p-4 md:p-10 lg:p-12">
                   <p className="craft-label mb-4 md:mb-5">Antes y después</p>
                   <h2 className="max-w-4xl text-[1.55rem] font-semibold leading-[1.06] tracking-tight text-neutral-950 sm:text-4xl md:text-[2.65rem] lg:text-[2.85rem] xl:text-5xl xl:leading-[1.06]">
                     <span className="block">Un sello no decora tu producto.</span>
                     <span className="block">
-                      <span className="title-keyword">Lo transforma.</span>
+                      <span data-title-keyword className="title-keyword">
+                        <span className="title-keyword__fill" aria-hidden="true" />
+                        Lo transforma.
+                      </span>
                     </span>
                   </h2>
                 </div>
@@ -265,10 +281,16 @@ export default function Home() {
         <DossInspiredSections />
       </div>
 
-      <section className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
+      <section className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="technical-sheet motion-reveal mobile-clean-sheet max-md:border-0 max-md:bg-transparent max-md:shadow-none">
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
+          <div
+            data-scroll-panel
+            className="technical-sheet mobile-clean-sheet max-md:border-0 max-md:bg-transparent max-md:shadow-none"
+          >
+            <div
+              data-scroll-panel-mobile
+              className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents"
+            >
               <div className="relative z-10 p-4 md:border-b md:border-[var(--alcohn-line)] md:p-10 lg:p-12">
                 <div className="max-w-3xl">
                   <p className="craft-label mb-4">Usos, materiales y oficios</p>
@@ -318,6 +340,7 @@ export default function Home() {
                   <Link
                     key={`${block.oficio}-${block.material}`}
                     href={block.href}
+                    data-scroll-card
                     className="mobile-snap-card group relative min-h-[220px] overflow-hidden border border-[var(--alcohn-line)] p-6 text-white md:min-w-0 md:border-b md:border-r"
                   >
                     <img
@@ -351,10 +374,16 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:snap-start md:py-24">
+      <section className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.42fr_0.58fr] lg:gap-0">
-            <div className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents">
+          <div
+            data-scroll-panel
+            className="flex flex-col gap-4 md:technical-sheet md:blueprint-sheet md:mobile-clean-sheet lg:grid lg:grid-cols-[0.42fr_0.58fr] lg:gap-0"
+          >
+            <div
+              data-scroll-panel-mobile
+              className="max-md:border max-md:border-[var(--alcohn-line)] max-md:bg-[var(--alcohn-surface)] lg:contents"
+            >
               <div className="flex flex-col justify-start p-4 md:border-b md:border-[var(--alcohn-line)] md:p-10 lg:border-b-0 lg:border-r lg:p-12 lg:pt-10 xl:pt-12">
                 <p className="craft-label mb-4 md:mb-5">Más que fabricación</p>
                 <h2 className="text-[1.5rem] font-semibold leading-[1.08] tracking-tight text-neutral-950 sm:text-4xl md:text-[2.65rem] lg:text-[2.85rem] xl:text-5xl xl:leading-[1.06]">
@@ -365,10 +394,20 @@ export default function Home() {
                     <span className="block">No solo fabricamos sellos</span>
                     <span className="block">de bronce personalizados:</span>
                     <span className="block">
-                      ayudamos a <span className="title-keyword">transformar</span> un trabajo
+                      ayudamos a{' '}
+                      <span data-title-keyword className="title-keyword">
+                        <span className="title-keyword__fill" aria-hidden="true" />
+                        transformar
+                      </span>{' '}
+                      un trabajo
                     </span>
                     <span className="block">
-                      en una marca con <span className="title-keyword">identidad propia</span>.
+                      en una marca con{' '}
+                      <span data-title-keyword className="title-keyword">
+                        <span className="title-keyword__fill" aria-hidden="true" />
+                        identidad propia
+                      </span>
+                      .
                     </span>
                   </span>
                 </h2>
@@ -390,6 +429,7 @@ export default function Home() {
                   {materialProofs.map((item, index) => (
                     <article
                       key={item.label}
+                      data-scroll-card
                       className={`mobile-snap-card group md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
                     >
                       <div className="material-frame relative aspect-[4/3] overflow-hidden">
@@ -406,9 +446,9 @@ export default function Home() {
                         <h3 className="text-base font-semibold leading-snug text-neutral-950">{item.title}</h3>
                       </div>
                     </article>
-                  ))}
-                </MobileCarousel>
-              </div>
+                    ))}
+                  </MobileCarousel>
+                </div>
             </div>
           </div>
         </div>
@@ -416,7 +456,7 @@ export default function Home() {
 
       <LogoCloud />
 
-      <section className="border-t border-[var(--alcohn-bronze)] bg-[var(--alcohn-ink)] py-10 md:py-12 text-white md:snap-start">
+      <section data-final-cta className="border-t border-[var(--alcohn-bronze)] bg-[var(--alcohn-ink)] py-10 md:py-12 text-white">
         <div className="container mx-auto max-w-7xl px-4 text-center md:px-8">
           <h2 className="mb-3 md:mb-4 text-[1.85rem] font-semibold tracking-tight text-white md:text-4xl leading-[1.1]">
             ¿Listo para marcar tu próximo producto?
@@ -425,16 +465,18 @@ export default function Home() {
             <span className="md:hidden">Subí tu logo, revisá la muestra y avanzá al pago.</span>
             <span className="hidden md:inline">Subí tu logo, mirá una muestra, confirmá medida y avanzá al pago online.</span>
           </p>
-          <ActionButton
-            href="/buy?mode=custom"
-            variant="secondary"
-            className="border-white bg-white text-neutral-900 hover:bg-neutral-100 w-full sm:w-auto min-h-[52px] md:min-h-[44px] px-6"
-          >
-            Diseñar y comprar online
-          </ActionButton>
+          <div className="inline-flex w-full justify-center sm:w-auto">
+            <ActionButton
+              href="/buy?mode=custom"
+              variant="secondary"
+              className="border-white bg-white text-neutral-900 hover:bg-neutral-100 w-full sm:w-auto min-h-[52px] md:min-h-[44px] px-6"
+            >
+              Diseñar y comprar online
+            </ActionButton>
+          </div>
         </div>
       </section>
-      </SmoothScroll>
+      </HomeScrollShell>
     </>
   );
 }

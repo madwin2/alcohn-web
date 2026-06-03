@@ -52,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className="overflow-x-hidden">
-      <body className={`${inter.className} overflow-x-hidden`}>
+    <html lang="es">
+      <body className={inter.className}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
@@ -63,7 +63,7 @@ export default function RootLayout({
             <AnalyticsProvider />
           </Suspense>
           <Header />
-          <main className="overflow-x-hidden w-full max-w-full">{children}</main>
+          <main className="w-full max-w-full">{children}</main>
           <ConditionalFooter />
           <ConditionalWhatsapp />
           <CookieConsentBanner />

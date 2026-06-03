@@ -24,9 +24,8 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
-  max-width: 100vw;
 }
 
 body {
@@ -37,10 +36,18 @@ body {
     var(--alcohn-paper);
   background-size: var(--alcohn-grid-size) var(--alcohn-grid-size),
     var(--alcohn-grid-size) var(--alcohn-grid-size), auto;
-  overflow-x: hidden;
+  min-height: 100%;
+  overflow-x: clip;
   width: 100%;
-  max-width: 100vw;
   position: relative;
+}
+
+/* El documento scrollea en html; ningún wrapper con scroll propio */
+main,
+[data-home-scroll] {
+  overflow: visible;
+  max-height: none;
+  height: auto;
 }
 
 @layer components {
@@ -76,6 +83,10 @@ body {
     border-color: rgba(184, 132, 79, 0.64);
     box-shadow: 0 24px 70px rgba(17, 16, 14, 0.11);
     transform: translateY(-2px);
+  }
+
+  .testimonial-card.material-card:hover {
+    transform: none;
   }
 
   .material-frame {
@@ -184,11 +195,23 @@ body {
   }
 
   .title-keyword {
+    position: relative;
+    display: inline-block;
+    vertical-align: baseline;
+    padding: 0.06em 0.14em;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
-    background: rgba(184, 132, 79, 0.34);
-    padding: 0.06em 0.14em;
+  }
+
+  .title-keyword__fill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     border-radius: 2px;
+    background: rgba(184, 132, 79, 0.34);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
   }
 
   .dark-system-panel {
@@ -314,6 +337,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .title-keyword__fill {
+    transform: scaleX(1);
+  }
+
   .system-cube,
   .signal-dot,
   .type-caret,
@@ -321,6 +352,29 @@ body {
   .motion-reveal-delay,
   .blueprint-annotation {
     animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-scroll-panel],
+  [data-scroll-panel-mobile],
+  [data-scroll-intro],
+  [data-scroll-card] {
+    opacity: 0;
+  }
+
+  [data-hero-reveal] {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-panel],
+  [data-scroll-panel-mobile],
+  [data-scroll-intro],
+  [data-scroll-card],
+  [data-hero-reveal] {
+    opacity: 1;
   }
 }
 

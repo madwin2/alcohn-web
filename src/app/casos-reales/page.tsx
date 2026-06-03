@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SectionHeader from '@/components/SectionHeader';
-import TestimonialsCarousel from '@/components/TestimonialsCarousel';
+import TestimonialsColumnsSection from '@/components/TestimonialsColumnsSection';
 import ClienteGallery from '@/components/ClienteGallery';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import { testimonials } from '@/data/testimonials';
 import { getClientes } from '@/lib/clientes';
 import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
 
@@ -75,16 +74,12 @@ export default function CasosRealesPage() {
         </section>
 
         <section className="mb-14 md:mb-20">
-          <div className="technical-sheet p-4 md:p-10">
-            <div className="relative z-10">
-              <SectionHeader
-                title="Lo que dicen nuestros clientes"
-                subtitle="Artesanos, emprendedores y profesionales que confiaron en Alcohn para darle distinción a su marca."
-                className="mb-6 md:mb-12"
-              />
-              <TestimonialsCarousel testimonials={testimonials} />
-            </div>
-          </div>
+          <SectionHeader
+            title="Lo que dicen nuestros clientes"
+            subtitle="Artesanos, emprendedores y profesionales que confiaron en Alcohn para darle distinción a su marca."
+            className="mb-6 md:mb-10"
+          />
+          <TestimonialsColumnsSection />
         </section>
 
         <div className="mt-14 md:mt-20">
