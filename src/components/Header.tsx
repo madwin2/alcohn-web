@@ -6,6 +6,9 @@ import { usePathname } from 'next/navigation';
 import ActionButton from './ActionButton';
 import CartButton from './cart/CartButton';
 
+const logoLinkClassName =
+  'font-semibold uppercase tracking-[0.14em] text-white hover:text-neutral-300 transition-colors';
+
 const navItems = [
   { href: '/productos', label: 'Productos' },
   { href: '/proceso', label: 'Proceso' },
@@ -67,7 +70,7 @@ export default function Header() {
           <Link
             href="/"
             onClick={closeMenu}
-            className="justify-self-center text-sm font-semibold uppercase tracking-[0.14em] text-white hover:text-neutral-300 transition-colors"
+            className={`${logoLinkClassName} justify-self-center text-sm`}
           >
             ALCOHN
           </Link>
@@ -82,9 +85,9 @@ export default function Header() {
           <Link
             href="/"
             onClick={closeMenu}
-            className="text-lg font-semibold tracking-tight hover:text-neutral-300 transition-colors flex-shrink-0"
+            className={`${logoLinkClassName} flex-shrink-0 text-sm`}
           >
-            Alcohn
+            ALCOHN
           </Link>
 
           <nav className="flex gap-6 xl:gap-8">

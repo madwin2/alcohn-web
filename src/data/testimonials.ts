@@ -129,10 +129,9 @@ export function toColumnItems(items: Testimonial[]) {
 }
 
 export function splitTestimonialsIntoColumns<T>(items: T[]): [T[], T[], T[]] {
-  const size = Math.ceil(items.length / 3);
-  return [
-    items.slice(0, size),
-    items.slice(size, size * 2),
-    items.slice(size * 2),
-  ];
+  const columns: T[][] = [[], [], []];
+  items.forEach((item, index) => {
+    columns[index % 3].push(item);
+  });
+  return [columns[0], columns[1], columns[2]];
 }
