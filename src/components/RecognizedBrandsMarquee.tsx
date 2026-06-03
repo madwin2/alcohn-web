@@ -32,6 +32,10 @@ function buildBrandSets(items: Brand[], size: number): Brand[][] {
   return sets;
 }
 
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
 export default function RecognizedBrandsMarquee() {
   const containerRef = useRef<HTMLDivElement>(null);
   const brandSets = useMemo(() => buildBrandSets(brands, VISIBLE_COUNT), []);
@@ -47,6 +51,7 @@ export default function RecognizedBrandsMarquee() {
       if (!slots.length) return;
 
       if (prefersReducedMotion()) {
+        gsap.set(slots, { opacity: 1, clearProps: 'transform,filter' });
         if (brandSets.length <= 1) return;
         const interval = window.setInterval(() => {
           setSetIndex((index) => (index + 1) % brandSets.length);
@@ -54,59 +59,90 @@ export default function RecognizedBrandsMarquee() {
         return () => window.clearInterval(interval);
       }
 
-      gsap.set(slots, { transformPerspective: 700, transformOrigin: '50% 100%' });
+      const animateIn = () => {
+        gsap.killTweensOf(slots);
 
-      gsap.fromTo(
-        slots,
-        {
-          opacity: 0,
-          y: 26,
-          scale: 0.72,
-          rotationX: -22,
-          filter: 'blur(5px)',
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          rotationX: 0,
-          filter: 'blur(0px)',
-          duration: 0.82,
-          ease: 'power3.out',
-          stagger: {
-            each: 0.09,
-            from: 'center',
-          },
+        if (isMobileViewport()) {
+          gsap.fromTo(
+            slots,
+            { opacity: 0, y: 18 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.65,
+              ease: 'power2.out',
+              stagger: { each: 0.07, from: 'center' },
+            }
+          );
+          return;
         }
-      );
 
-      if (brandSets.length <= 1) return;
+        gsap.set(slots, { transformPerspective: 700, transformOrigin: '50% 100%' });
+        gsap.fromTo(
+          slots,
+          {
+            opacity: 0,
+            y: 26,
+            scale: 0.72,
+            rotationX: -22,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            rotationX: 0,
+            duration: 0.82,
+            ease: 'power3.out',
+            stagger: { each: 0.09, from: 'center' },
+          }
+        );
+      };
 
-      const exitTimer = gsap.delayedCall(DWELL_SECONDS, () => {
+      const animateOut = (onComplete: () => void) => {
+        gsap.killTweensOf(slots);
+
+        if (isMobileViewport()) {
+          gsap.to(slots, {
+            opacity: 0,
+            y: 12,
+            duration: 0.45,
+            ease: 'power2.in',
+            stagger: { each: 0.05, from: 'random' },
+            onComplete,
+          });
+          return;
+        }
+
         gsap.to(slots, {
           opacity: 0,
           y: 18,
           scaleY: 0.35,
           scaleX: 0.9,
           rotationX: 16,
-          filter: 'blur(4px)',
           duration: 0.58,
           ease: 'power4.in',
-          stagger: {
-            each: 0.065,
-            from: 'random',
-          },
-          onComplete: () => {
-            setSetIndex((index) => (index + 1) % brandSets.length);
-          },
+          stagger: { each: 0.065, from: 'random' },
+          onComplete,
         });
-      });
+      };
+
+      animateIn();
+
+      let exitTimer: gsap.core.Tween | undefined;
+      if (brandSets.length > 1) {
+        exitTimer = gsap.delayedCall(DWELL_SECONDS, () => {
+          animateOut(() => {
+            setSetIndex((index) => (index + 1) % brandSets.length);
+          });
+        });
+      }
 
       return () => {
-        exitTimer.kill();
+        exitTimer?.kill();
+        gsap.killTweensOf(slots);
       };
     },
-    { dependencies: [setIndex], scope: containerRef, revertOnUpdate: true }
+    { dependencies: [setIndex], scope: containerRef, revertOnUpdate: false }
   );
 
   return (

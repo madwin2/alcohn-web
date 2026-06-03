@@ -85,6 +85,9 @@ export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
 
   const panelMedia = gsap.matchMedia();
   panelMedia.add('(min-width: 768px)', () => {
+    if (mobilePanels.length) {
+      gsap.set(mobilePanels, { opacity: 1, y: 0, scale: 1, clearProps: 'opacity,transform,filter' });
+    }
     if (!desktopPanels.length) return;
     gsap.set(desktopPanels, panelFrom);
     bindBidirectional(desktopPanels, { ...panelTo }, { ...panelHide }, panelZone, cleanups, {
@@ -93,6 +96,9 @@ export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
     });
   });
   panelMedia.add('(max-width: 767px)', () => {
+    if (desktopPanels.length) {
+      gsap.set(desktopPanels, { opacity: 1, y: 0, scale: 1, clearProps: 'opacity,transform,filter' });
+    }
     if (!mobilePanels.length) return;
     gsap.set(mobilePanels, panelFrom);
     bindBidirectional(mobilePanels, { ...panelTo }, { ...panelHide }, panelZone, cleanups, {
