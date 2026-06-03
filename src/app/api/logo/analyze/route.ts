@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
+import {
+  analyzeLogoStampHeuristics,
+  mergeVisionAnalysisWithHeuristics,
+} from '@/lib/logoStampHeuristics';
 
 // Inicializar cliente de OpenAI
 const openai = new OpenAI({
@@ -46,13 +50,23 @@ export async function POST(request: NextRequest) {
     let response;
     let modelUsed = 'gpt-5.2-chat-latest';
     
-    const prompt = `Analiza esta imagen de logo para un sello de bronce. Determina:
-1. ¿Tiene fondo liso (blanco/transparente) con logo en negro o escala de grises?
-2. ¿Es una imagen compleja (foto, muchos colores, degradados, etc.)?
-3. ¿Está optimizado para ser grabado en bronce (alto contraste, líneas claras)?
-4. Calcula el aspect ratio (ancho/alto) del DISEÑO DEL LOGO (no de la imagen completa). Si el logo es cuadrado, el aspect ratio es 1.0. Si es más ancho que alto, será mayor a 1.0. Si es más alto que ancho, será menor a 1.0. Solo analiza el área del diseño del logo, ignorando espacios vacíos o fondos.
+    const prompt = `Analiza esta imagen para un sello de bronce grabado.
 
-Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin markdown, sin texto adicional):
+IMPORTANTE — marcar isOptimal=false y needsOptimization=true si:
+- Es una FOTO (objeto real, cuero, producto, mano, escena, textura).
+- Hay fondo de color, ambiente, mesa, césped, madera de fondo, etc.
+- Hay muchos colores, sombras fuertes o degradados.
+- No es un archivo de logo/diseño vectorial o PNG limpio.
+
+Solo isOptimal=true si es un DISEÑO monocromático (negro/gris) con fondo blanco liso o transparente, listo para grabado.
+
+Determina:
+1. ¿Fondo liso blanco o transparente con diseño en negro/gris?
+2. ¿Es foto o imagen compleja (NO es un logo limpio)?
+3. ¿Apto para grabado en bronce?
+4. aspectRatio del DISEÑO (no del lienzo), ignorando márgenes vacíos.
+
+Responde ÚNICAMENTE JSON válido (sin markdown):
 {
   "isOptimal": boolean,
   "hasPlainBackground": boolean,
@@ -157,8 +171,20 @@ Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin mar
           : 'Logo requiere optimización';
       }
       if (typeof analysis.aspectRatio !== 'number' || analysis.aspectRatio <= 0) {
-        // Si no se puede determinar, calcular desde la imagen completa como fallback
-        analysis.aspectRatio = 1.0; // Valor por defecto
+        analysis.aspectRatio = 1.0;
+      }
+
+      if (imageUrl.startsWith('data:')) {
+        const logoBuffer = Buffer.from(
+          imageUrl.replace(/^data:image\/\w+;base64,/, ''),
+          'base64',
+        );
+        const heuristics = await analyzeLogoStampHeuristics(logoBuffer);
+        analysis = mergeVisionAnalysisWithHeuristics(analysis, heuristics);
+        console.log('[logo/analyze] Heurísticas:', heuristics.details, '→', {
+          isOptimal: analysis.isOptimal,
+          needsOptimization: analysis.needsOptimization,
+        });
       }
     } catch (e) {
       // Si falla el parseo, usar valores por defecto

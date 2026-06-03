@@ -609,13 +609,13 @@ const analyzeLogoWithAI = async (
   } catch (error: unknown) {
     console.error('Error analizando logo:', error);
     const msg = error instanceof Error ? error.message : 'Error al analizar el logo';
-    // Si la API cae, no pedimos optimización (evita otro fetch que también falle con HTML)
+    // Si la API cae, intentar optimización con IA igual (como antes)
     return {
       isOptimal: false,
       hasPlainBackground: false,
-      isComplex: false,
-      needsOptimization: false,
-      reason: `${msg} Usamos la proporción de tu archivo para sugerir medidas.`,
+      isComplex: true,
+      needsOptimization: true,
+      reason: `${msg} Intentaremos optimizar el logo con IA.`,
       aspectRatio: fallbackAspectRatio,
     };
   }
@@ -1372,7 +1372,13 @@ export default function BuyWizard({
         optimizedAspectRatio = logoContentAspectRatio;
       }
 
-      if (analysis.needsOptimization && !analysis.isOptimal) {
+      const shouldOptimizeWithAI =
+        analysis.needsOptimization ||
+        !analysis.isOptimal ||
+        analysis.isComplex ||
+        !analysis.hasPlainBackground;
+
+      if (shouldOptimizeWithAI) {
         setData((prev) => ({ ...prev, isOptimizing: true }));
 
         try {
@@ -1391,6 +1397,9 @@ export default function BuyWizard({
       if (finalLogoUrl !== imageUrl) {
         cosmeticOptimization = await isCosmeticLogoOptimization(imageUrl, finalLogoUrl);
       }
+
+      const optimizationFailed =
+        shouldOptimizeWithAI && finalLogoUrl === imageUrl;
 
       // Medición real del dibujo (recorte alpha / fondo): Python si está, si no Sharp trim
       const measured = await measureLogoOnServer(finalLogoUrl);
@@ -1418,9 +1427,7 @@ export default function BuyWizard({
         mockupUrl: undefined,
         thumbnailUrl: undefined,
         isGeneratingMockup: false,
-        // Siempre intentamos muestra automática (Python/Sharp + texturas).
-        // Si el resultado no convence, el cliente puede pedir revisión por WhatsApp.
-        needsManualPreview: false,
+        needsManualPreview: optimizationFailed && (analysis.isComplex || !analysis.hasPlainBackground),
         isAnalyzing: false,
         isOptimizing: false,
       };

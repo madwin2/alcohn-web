@@ -404,8 +404,12 @@ export async function POST(request: NextRequest) {
     const aiPrefersRegenerate = aiStrategy?.recommended === 'ai_regenerate';
     const aiSeesComplexBackground = aiStrategy?.background === 'complex';
 
-    // Solo usar conversión determinística cuando la heurística Y la IA coinciden.
-    if (foreground.likelySingleInk && (aiPrefersDeterministic || aiStrategy == null)) {
+    // Solo conversión determinística para logos simples (tinta única). Fotos/complejas → IA.
+    if (
+      foreground.likelySingleInk &&
+      !foreground.likelyComplexImage &&
+      (aiPrefersDeterministic || aiStrategy == null)
+    ) {
       const measured = await measureLogoAspectRatio(deterministicDataUrl);
       return NextResponse.json({
         success: true,
