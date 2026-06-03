@@ -1024,6 +1024,87 @@ main,
   }
 }
 
+.recognized-brands-showcase__stage {
+  perspective: 900px;
+}
+
+.recognized-brands-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: transparent;
+}
+
+.recognized-brands-grid__cell {
+  display: flex;
+  min-height: 6.75rem;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--alcohn-line);
+  border-bottom: 1px solid var(--alcohn-line);
+  padding: 1rem 0.85rem;
+  will-change: transform, opacity, filter;
+}
+
+.recognized-brands-grid__cell:nth-child(2n) {
+  border-right: none;
+}
+
+.recognized-brands-grid__cell:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+
+.recognized-brands-grid__cell .logo-cloud-brand {
+  max-height: 3.25rem;
+  max-width: 7.5rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .recognized-brands-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recognized-brands-grid__cell:nth-child(2n) {
+    border-right: 1px solid var(--alcohn-line);
+  }
+
+  .recognized-brands-grid__cell:nth-child(3n) {
+    border-right: none;
+  }
+
+  .recognized-brands-grid__cell:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--alcohn-line);
+  }
+
+  .recognized-brands-grid__cell:nth-last-child(-n + 3) {
+    border-bottom: none;
+  }
+
+  .recognized-brands-grid__cell {
+    min-height: 8.5rem;
+    padding: 1.15rem 1.25rem;
+  }
+
+  .recognized-brands-grid__cell .logo-cloud-brand {
+    max-height: 4.75rem;
+    max-width: 9rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .recognized-brands-grid__cell {
+    min-height: 9.5rem;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .recognized-brands-grid__cell .logo-cloud-brand {
+    max-height: 5.25rem;
+    max-width: 10rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .brand-marquee-track {
     animation: none;

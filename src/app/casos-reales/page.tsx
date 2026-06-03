@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SectionHeader from '@/components/SectionHeader';
 import TestimonialsColumnsSection from '@/components/TestimonialsColumnsSection';
+import RecognizedBrandsMarquee from '@/components/RecognizedBrandsMarquee';
 import ClienteGallery from '@/components/ClienteGallery';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { getClientes } from '@/lib/clientes';
@@ -67,11 +68,12 @@ export default function CasosRealesPage() {
           <SectionHeader
             title="Galería de sellos terminados"
             subtitle="Ejemplos para entender escala, lectura y resultado sobre productos reales."
-            align="left"
             className="mb-6 md:mb-12"
           />
           <ClienteGallery clientes={clientes} interval={4000} />
         </section>
+
+        <RecognizedBrandsMarquee />
 
         <section className="mb-14 md:mb-20">
           <SectionHeader
