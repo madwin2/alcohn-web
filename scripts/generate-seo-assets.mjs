@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const PUBLIC = path.join(ROOT, 'public');
 const APP = path.join(ROOT, 'src', 'app');
 const LOGO = path.join(PUBLIC, 'images', 'sello', 'sellologo.webp');
-const ICON_SVG = path.join(APP, 'icon.svg');
+const FAVICON_LOGO = path.join(PUBLIC, 'images', 'logo alcohn', 'logo alcohn.png');
 
 async function generateOgImage() {
   const width = 1200;
@@ -50,25 +50,25 @@ async function generateOgImage() {
 }
 
 async function generateFavicons() {
-  const svgBuffer = await fs.readFile(ICON_SVG);
+  const logo = sharp(FAVICON_LOGO).resize(512, 512, {
+    fit: 'contain',
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+  });
 
   const faviconPath = path.join(APP, 'favicon.ico');
-  await sharp(svgBuffer)
-    .resize(32, 32)
-    .png()
-    .toFile(path.join(PUBLIC, '_favicon-32.png'));
+  await logo.clone().resize(32, 32).png().toFile(faviconPath);
 
-  const png32 = await fs.readFile(path.join(PUBLIC, '_favicon-32.png'));
-  await sharp(png32).toFile(faviconPath);
-  await fs.unlink(path.join(PUBLIC, '_favicon-32.png'));
+  const iconPath = path.join(APP, 'icon.png');
+  await logo.clone().resize(32, 32).png().toFile(iconPath);
 
   const applePath = path.join(APP, 'apple-icon.png');
-  await sharp(svgBuffer).resize(180, 180).png().toFile(applePath);
+  await logo.clone().resize(180, 180).png().toFile(applePath);
 
   const publicApple = path.join(PUBLIC, 'apple-touch-icon.png');
-  await sharp(svgBuffer).resize(180, 180).png().toFile(publicApple);
+  await logo.clone().resize(180, 180).png().toFile(publicApple);
 
   console.log(`[ok] favicon -> ${path.relative(ROOT, faviconPath)}`);
+  console.log(`[ok] icon -> ${path.relative(ROOT, iconPath)}`);
   console.log(`[ok] apple-icon -> ${path.relative(ROOT, applePath)}`);
   console.log(`[ok] apple-touch-icon -> ${path.relative(ROOT, publicApple)}`);
 }

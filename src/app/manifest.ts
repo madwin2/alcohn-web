@@ -13,11 +13,6 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'es-AR',
     icons: [
       {
-        src: '/icon.svg',
-        type: 'image/svg+xml',
-        sizes: 'any',
-      },
-      {
         src: '/apple-touch-icon.png',
         type: 'image/png',
         sizes: '180x180',
