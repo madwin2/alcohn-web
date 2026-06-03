@@ -11,8 +11,8 @@ export const COIN_DIAMETER_MM = 23;
 /** Escala base mm→px (moneda y sello comparten la misma escala). */
 const PX_PER_MM = 2;
 
-/** SVG subido en public/images/moenda/moneda.svg (carpeta con typo; también hay copia en /moneda/). */
-const COIN_SVG_SRC = '/images/moenda/moneda.svg?v=2';
+/** SVG en public/images/moneda/ (next/image no sirve SVG locales sin config extra). */
+const COIN_SVG_SRC = '/images/moneda/moneda.svg';
 
 type StampSizeScalePreviewProps = {
   sizeLabel: string;
@@ -122,7 +122,8 @@ export default function StampSizeScalePreview({
         className="flex items-end justify-center overflow-visible"
         style={{ gap: gapPx, height: boxH, minWidth: 0 }}
       >
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={COIN_SVG_SRC}
           alt=""
           width={coinSize}
