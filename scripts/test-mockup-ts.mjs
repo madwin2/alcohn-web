@@ -12,7 +12,7 @@ if (!logoPath) {
 const raw = fs.readFileSync(logoPath);
 const t0 = Date.now();
 const prepared = await prepareLogoForStamp(raw);
-const out = await renderMockup(prepared, 'madera');
+const out = await renderMockup(prepared, process.argv[3] || 'madera');
 const outPath = process.env.TEMP + '/test_mockup_ts.jpg';
 fs.writeFileSync(outPath, out);
 console.log('OK', out.length, 'bytes', Date.now() - t0 + 'ms', outPath);

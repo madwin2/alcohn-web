@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateRealisticMockup } from '@/lib/mockupGenerator';
 import sharp from 'sharp';
 
-/** Vercel: mockup con Sharp (sin Python). */
+/** Vercel: mockup estilo mockup_generator.py (TypeScript, sin Python). */
 export const maxDuration = 60;
 
 /**
- * Genera mockup con Sharp en TypeScript (serverless en Vercel).
+ * Genera mockup con efectos tipo Python en TypeScript (serverless en Vercel).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       thumbnailUrl: thumbnailDataUrl,
       metadata: {
         generatedAt: new Date().toISOString(),
-        generator: 'sharp-mockup-ts',
+        generator: 'mockup-python-like-ts',
         material,
         size,
       },

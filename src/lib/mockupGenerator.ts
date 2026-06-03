@@ -26,11 +26,11 @@ function parseLogoToBuffer(logo: string): Buffer {
 
 export type GenerateMockupResult = {
   buffer: Buffer;
-  method: 'sharp';
+  method: 'python-like';
 };
 
 /**
- * Mockup serverless (Sharp + texturas). Sin Python.
+ * Mockup serverless (efectos tipo mockup_generator.py + texturas). Sin Python.
  * Normaliza el logo (saca fondo blanco) y aplica efecto quemado o bajorrelieve.
  */
 export async function generateRealisticMockup(logo: string, material: string): Promise<GenerateMockupResult> {
@@ -44,5 +44,5 @@ export async function generateRealisticMockup(logo: string, material: string): P
   }
 
   const buffer = await renderMockup(prepared, mat);
-  return { buffer, method: 'sharp' };
+  return { buffer, method: 'python-like' };
 }
