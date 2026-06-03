@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://alcohncnc.com';
+export const SITE_URL = 'https://alcohnsellos.com';
 export const SITE_NAME = 'Alcohn';
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
 
