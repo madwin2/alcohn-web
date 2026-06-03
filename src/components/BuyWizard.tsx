@@ -1189,7 +1189,7 @@ export default function BuyWizard({
   ]);
 
   // Generate preview when size is selected (solo para logos óptimos u optimizados)
-  // Usa el servicio Python para generar el mockup con texturas y efectos consistentes
+  // Mockup serverless (Sharp + texturas en public/mockup-textures)
   // Generar mockup solo cuando el usuario llegue al paso 4 (vista previa)
   useEffect(() => {
     if (
@@ -1284,11 +1284,18 @@ export default function BuyWizard({
               });
             }
           } else {
-            console.error('Error generando mockup con servicio Python:', result.error);
+            const errMsg =
+              typeof result.error === 'object' && result.error && 'message' in result.error
+                ? String((result.error as { message?: string }).message)
+                : 'No se pudo generar la muestra automática.';
+            console.error('Error generando mockup:', result.error);
+            setAnalysisError(errMsg);
             setData((prevData) => ({
               ...prevData,
               previewGenerated: true,
               isGeneratingMockup: false,
+              mockupUrl: undefined,
+              thumbnailUrl: undefined,
             }));
           }
         } catch (error) {

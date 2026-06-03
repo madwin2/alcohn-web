@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateRealisticMockup } from '@/lib/mockupGenerator';
 import sharp from 'sharp';
 
+/** Vercel: mockup con Sharp (sin Python). */
+export const maxDuration = 60;
+
 /**
- * Genera mockup con mockup_generator.py (Pillow) si hay Python;
- * si no, Sharp + texturas en public/mockup-textures (copiadas del ejemplo).
+ * Genera mockup con Sharp en TypeScript (serverless en Vercel).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,13 +36,15 @@ export async function POST(request: NextRequest) {
       .toBuffer();
     const thumbnailDataUrl = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
 
+    console.log(`[mockup] Generado (${method})`);
+
     return NextResponse.json({
       success: true,
       mockupUrl: mockupDataUrl,
       thumbnailUrl: thumbnailDataUrl,
       metadata: {
         generatedAt: new Date().toISOString(),
-        generator: method === 'python' ? 'mockup_generator.py (Pillow)' : 'sharp + textura',
+        generator: 'sharp-mockup-ts',
         material,
         size,
       },
