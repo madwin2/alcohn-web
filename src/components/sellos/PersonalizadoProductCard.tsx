@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import MaterialSelectionModal from '@/components/sellos/MaterialSelectionModal';
+import PriceFrom from '@/components/PriceFrom';
 
 interface PersonalizadoProductCardProps {
   title: string;
   description: string;
   image: string;
   imageAlt: string;
+  priceFrom: number;
   priority?: boolean;
 }
 
@@ -17,6 +19,7 @@ export default function PersonalizadoProductCard({
   description,
   image,
   imageAlt,
+  priceFrom,
   priority = false,
 }: PersonalizadoProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,6 +48,7 @@ export default function PersonalizadoProductCard({
               <span className="md:hidden">{mobileDescription?.endsWith('.') ? mobileDescription : `${mobileDescription}.`}</span>
               <span className="hidden md:inline">{description}</span>
             </p>
+            <PriceFrom amount={priceFrom} className="mt-4" size="sm" />
           </div>
 
           <div className="mt-auto border-t border-[var(--alcohn-line)] pt-6">

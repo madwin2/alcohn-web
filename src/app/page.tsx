@@ -8,7 +8,8 @@ import HomeScrollShell from '@/components/animations/HomeScrollShell';
 import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
-import { stampUseCases } from '@/data/stampUseCases';
+import { getStampPriceFrom, stampUseCases } from '@/data/stampUseCases';
+import { getCustomStampMinPrice } from '@/lib/pricing';
 import {
   SITE_DEFAULT_DESCRIPTION,
   SITE_DEFAULT_TITLE,
@@ -106,12 +107,15 @@ const beforeAfterImages = [
   },
 ];
 
+const customStampMinPrice = getCustomStampMinPrice();
+
 const oficioMaterialBlocks = stampUseCases.map((useCase) => ({
   oficio: useCase.oficio,
   material: useCase.material,
   image: useCase.heroImage,
   alt: useCase.heroAlt,
   href: `/sellos/${useCase.slug}`,
+  priceFrom: getStampPriceFrom(useCase.buyMaterial),
 }));
 
 export default function Home() {
@@ -127,6 +131,7 @@ export default function Home() {
         subtitle="Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí cómo lo vas a usar y recibí muestra, medida y precio antes de fabricar."
         primaryCta={{ text: 'Subir logo y ver precio', mobileText: 'Subir logo', href: '/buy?mode=custom' }}
         secondaryCta={{ text: 'Comprar diseño estándar', mobileText: 'Diseño estándar', href: '/sellos/estandar' }}
+        priceFrom={customStampMinPrice}
       />
 
       <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:py-24 md:min-h-0">
@@ -303,6 +308,9 @@ export default function Home() {
                         <div>
                           <h3 className="text-2xl font-semibold leading-tight tracking-tight">{block.oficio}</h3>
                           <p className="mt-2 text-xs font-semibold uppercase text-white/72">{block.material}</p>
+                          <p className="mt-1 text-xs font-semibold text-white/80">
+                            Desde ${block.priceFrom.toLocaleString('es-AR')}
+                          </p>
                         </div>
                       </>
                     ),
@@ -339,6 +347,9 @@ export default function Home() {
                         <h3 className="text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{block.oficio}</h3>
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                           <p className="text-xs font-semibold uppercase text-white/72">{block.material}</p>
+                          <p className="text-xs font-semibold text-white/80">
+                            Desde ${block.priceFrom.toLocaleString('es-AR')}
+                          </p>
                           <p className="text-xs font-semibold uppercase text-white/74 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                             Ver guía específica
                           </p>

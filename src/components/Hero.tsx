@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ActionButton from './ActionButton';
+import { formatPriceFrom } from '@/lib/formatPrice';
 import AutoImageCarousel from './AutoImageCarousel';
 import { prefersReducedMotion } from '@/lib/motion';
 
@@ -12,6 +13,7 @@ gsap.registerPlugin(useGSAP);
 interface HeroProps {
   title: string;
   subtitle: string;
+  priceFrom?: number;
   primaryCta?: {
     text: string;
     mobileText?: string;
@@ -24,7 +26,7 @@ interface HeroProps {
   };
 }
 
-export default function Hero({ title, subtitle, primaryCta, secondaryCta }: HeroProps) {
+export default function Hero({ title, subtitle, priceFrom, primaryCta, secondaryCta }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -97,6 +99,14 @@ export default function Hero({ title, subtitle, primaryCta, secondaryCta }: Hero
             <span className="md:hidden">Sellos de bronce para cuero, madera, alimentos y packaging.</span>
             <span className="hidden md:inline">{subtitle}</span>
           </p>
+          {priceFrom != null && (
+            <p
+              data-hero-reveal
+              className="mb-6 text-sm font-semibold uppercase tracking-wide text-white/90 md:mb-8 md:text-base"
+            >
+              {formatPriceFrom(priceFrom)} · fabricación en 72hs hábiles
+            </p>
+          )}
           {primaryCta && (
             <div data-hero-reveal className="hero-cta-row flex flex-row flex-nowrap gap-2 sm:gap-3">
               <ActionButton

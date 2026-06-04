@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
+import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import StampProductCarousel from '@/components/sellos/StampProductCarousel';
@@ -64,6 +65,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
   }
 
   const buyHref = getStampUseCaseBuyHref(useCase);
+  const priceFrom = getStampPriceFrom(useCase.buyMaterial);
   const canonical = `/sellos/${useCase.slug}`;
   const productCarouselImages = getProductCarouselImages(useCase);
   const relatedUseCases = stampUseCases
@@ -76,7 +78,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
     path: canonical,
     image: useCase.heroImage,
     category: 'Sellos de bronce personalizados',
-    price: getStampPriceFrom(useCase.buyMaterial),
+    price: priceFrom,
     additionalProperty: [
       { name: 'Material de uso', value: useCase.material },
       { name: 'Oficio', value: useCase.oficio },
@@ -115,6 +117,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
             variant: 'secondary',
           }}
           hideHighlightsOnMobile
+          priceFrom={priceFrom}
           highlights={[
             `Uso principal: ${useCase.material}`,
             'Muestra, medida y precio antes de fabricar',
@@ -152,6 +155,8 @@ export default function SelloUseCasePage({ params }: PageParams) {
                 El mismo sello sirve en todos los materiales. Acá ves ejemplos y medidas pensadas para{' '}
                 {useCase.oficio.toLowerCase()}.
               </p>
+
+              <PriceFrom amount={priceFrom} className="mt-4 md:mt-5" size="sm" />
 
               <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--alcohn-line)] pt-4 sm:gap-6 md:mt-5 md:pt-5">
                 <div>
@@ -298,6 +303,9 @@ export default function SelloUseCasePage({ params }: PageParams) {
                   <div className="p-3">
                     <p className="craft-label mb-2">{item.material}</p>
                     <h3 className="text-lg font-semibold leading-snug text-neutral-950">{item.title}</h3>
+                    <p className="mt-2 text-xs font-semibold text-neutral-600">
+                      Desde ${getStampPriceFrom(item.buyMaterial).toLocaleString('es-AR')}
+                    </p>
                   </div>
                 </Link>
               ))}

@@ -6,6 +6,9 @@ import CollectionTabs from '@/components/CollectionTabs';
 import StandardDesignCard from '@/components/StandardDesignCard';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { CollectionType, getStandardDesignsByCollection } from '@/lib/catalog';
+import { getStandardStampMinPrice } from '@/lib/pricing';
+
+const standardMinPrice = getStandardStampMinPrice();
 
 export default function SellosEstandarPage() {
   const [selectedCollection, setSelectedCollection] = useState<CollectionType>('todos');
@@ -27,6 +30,7 @@ export default function SellosEstandarPage() {
             href: '/buy?mode=custom',
             variant: 'secondary',
           }}
+          priceFrom={standardMinPrice}
           highlights={[
             'Diseños listos para elegir',
             'Medidas simples con precio visible',

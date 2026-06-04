@@ -124,8 +124,10 @@ const localBusinessNode = {
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',
+    streetAddress: 'Alberti y Martín Miguel de Güemes',
+    postalCode: '7600',
     addressLocality: 'Mar del Plata',
-    addressRegion: 'Buenos Aires',
+    addressRegion: 'Provincia de Buenos Aires',
     addressCountry: 'AR',
   },
   geo: {

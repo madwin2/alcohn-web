@@ -1,4 +1,5 @@
 import ActionButton from './ActionButton';
+import PriceFrom from './PriceFrom';
 
 interface Cta {
   label: string;
@@ -15,6 +16,7 @@ interface PageIntroProps {
   secondaryCta?: Cta;
   highlights?: string[];
   hideHighlightsOnMobile?: boolean;
+  priceFrom?: number;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export default function PageIntro({
   secondaryCta,
   highlights = [],
   hideHighlightsOnMobile = false,
+  priceFrom,
   className = '',
 }: PageIntroProps) {
   return (
@@ -44,6 +47,10 @@ export default function PageIntro({
             <span className="md:hidden">{mobileDescription || description}</span>
             <span className="hidden md:inline">{description}</span>
           </p>
+
+          {priceFrom != null && (
+            <PriceFrom amount={priceFrom} className="pt-1 border-t border-[var(--alcohn-line)]" />
+          )}
 
           {(primaryCta || secondaryCta) && (
             <div className="flex flex-col sm:flex-row gap-3">

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import ActionButton from './ActionButton';
+import PriceFrom from './PriceFrom';
 
 interface IntentCardProps {
   title: string;
@@ -8,6 +9,7 @@ interface IntentCardProps {
   variant?: 'primary' | 'secondary';
   image?: string;
   imageAlt?: string;
+  priceFrom?: number;
   priority?: boolean;
   className?: string;
 }
@@ -19,6 +21,7 @@ export default function IntentCard({
   variant = 'primary',
   image,
   imageAlt,
+  priceFrom,
   priority = false,
   className = '',
 }: IntentCardProps) {
@@ -50,6 +53,7 @@ export default function IntentCard({
             <span className="md:hidden">{mobileDescription?.endsWith('.') ? mobileDescription : `${mobileDescription}.`}</span>
             <span className="hidden md:inline">{description}</span>
           </p>
+          {priceFrom != null && <PriceFrom amount={priceFrom} className="mt-4" size="sm" />}
         </div>
         
         <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">

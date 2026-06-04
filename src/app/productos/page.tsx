@@ -1,12 +1,20 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import SpecStrip from '@/components/SpecStrip';
 import IntentCard from '@/components/IntentCard';
 import PersonalizadoProductCard from '@/components/sellos/PersonalizadoProductCard';
 import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
+import PriceFrom from '@/components/PriceFrom';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { products } from '@/data/products';
+import { getStampPriceFrom, stampUseCases } from '@/data/stampUseCases';
+import {
+  getAbecedarioMinPrice,
+  getCustomStampMinPrice,
+  getStandardStampMinPrice,
+} from '@/lib/pricing';
 import { absoluteUrl, buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
 const PRODUCTOS_TITLE =
@@ -41,6 +49,10 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Productos', path: '/productos' },
 ]);
 
+const customStampMinPrice = getCustomStampMinPrice();
+const standardStampMinPrice = getStandardStampMinPrice();
+const abecedarioMinPrice = getAbecedarioMinPrice();
+
 export default function ProductosPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
@@ -68,6 +80,7 @@ export default function ProductosPage() {
             variant: 'secondary',
           }}
           hideHighlightsOnMobile
+          priceFrom={customStampMinPrice}
           highlights={[
             'Bronce mecanizado CNC para uso real de taller',
             'Compatible con cuero, madera, packaging y alimentos',
@@ -88,6 +101,7 @@ export default function ProductosPage() {
               description="Subí tu logo, elegí el material y avanzá por el flujo online hasta ver muestra, medida sugerida y precio. Es el camino recomendado para marcas, talleres y productos propios."
               image="/images/sello/sellologo.webp"
               imageAlt="Sello personalizado de bronce"
+              priceFrom={customStampMinPrice}
               priority
             />
             <IntentCard
@@ -97,8 +111,35 @@ export default function ProductosPage() {
               variant="secondary"
               image="/images/sello/selloestandar.webp"
               imageAlt="Sellos estándar de bronce"
+              priceFrom={standardStampMinPrice}
               priority
             />
+          </div>
+        </section>
+
+        <section className="mb-20 border-t border-[var(--alcohn-line)] pt-16">
+          <div className="mb-8">
+            <h2 className="craft-label mb-2">POR MATERIAL Y USO</h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">
+              Precios de referencia para sellos personalizados con tu logo. La medida final se confirma en el diseñador online.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stampUseCases.map((useCase) => (
+              <Link
+                key={useCase.slug}
+                href={`/sellos/${useCase.slug}`}
+                className="material-card group block p-4 transition-colors hover:border-neutral-400"
+              >
+                <p className="craft-label mb-2">{useCase.material}</p>
+                <h3 className="text-lg font-semibold tracking-tight text-neutral-950 group-hover:text-neutral-700">
+                  {useCase.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{useCase.description}</p>
+                <PriceFrom amount={getStampPriceFrom(useCase.buyMaterial)} className="mt-4" size="sm" />
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -126,6 +167,7 @@ export default function ProductosPage() {
                 <p className="text-sm text-neutral-600 leading-relaxed max-w-2xl">
                   Conjunto de letras y números individuales de bronce para marcar textos personalizados, series, fechas o iniciales. Cada pieza funciona como una herramienta modular de taller.
                 </p>
+                <PriceFrom amount={abecedarioMinPrice} className="mt-4" size="sm" />
               </div>
 
               <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">

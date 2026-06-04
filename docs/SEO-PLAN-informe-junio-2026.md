@@ -112,7 +112,7 @@
 |---|---|
 | **Prioridad** | **Crítica (mayor impacto global)** |
 | **Tipo** | `infra` + `externo` |
-| **Estado** | `[ ]` |
+| **Estado** | `[x]` |
 
 **Problema:** `alcohncnc.com` indexado primero; `alcohnsellos.com` casi invisible en búsquedas de marca.
 
@@ -144,7 +144,7 @@
 |---|---|
 | **Prioridad** | Crítica |
 | **Tipo** | `externo` |
-| **Estado** | `[~]` parcial (ver `docs/seo-auditoria-2026-05.md`) |
+| **Estado** | `[x]` (configurado; indexación en curso) |
 
 **Acciones:**
 
@@ -226,7 +226,7 @@
 |---|---|
 | **Prioridad** | Alta (conversión + SEO comparativo) |
 | **Tipo** | `código` + `contenido` |
-| **Estado** | `[ ]` |
+| **Estado** | `[x]` |
 
 **Problema:** Usuario debe ir a `/buy?mode=custom` para ver precio; Hanko muestra precios en home/producto.
 
@@ -495,7 +495,8 @@ Trabajar en este orden (explicación previa cada ítem):
 4. ~~**SEO-003**~~ — stats ✅
 5. ~~**SEO-009**~~ — titles en todas las páginas indexables ✅
 6. ~~**SEO-008**~~ — schema completado ✅
-7. **SEO-010** — precios "desde" en landings ← **siguiente sugerido**
+7. ~~**SEO-010**~~ — precios "desde" en landings ✅
+8. **SEO-015** — footer redes ← **siguiente sugerido**
 7. **SEO-010** — precios "desde"
 8. **SEO-015** — footer redes + sameAs
 9. **SEO-011 / SEO-012** — testimonios + Review schema
@@ -513,6 +514,11 @@ Trabajar en este orden (explicación previa cada ítem):
 | SEO-003 | 2026-06-03 | Stats desktop en `LogoCloud.tsx`: +9 usos/materiales, Bronce para toda la vida. |
 | SEO-009 | 2026-06-03 | Titles/descriptions SEO en todas las páginas; helper `createPageMetadata` en `seo.ts`; `seoTitle`/`seoDescription` en productos y landings `/sellos/*`. |
 | SEO-008 | 2026-06-03 | Schema global (Organization+LocalBusiness), `buildProductJsonLd`, precios en `/sellos/*`, reseñas Google en `/casos-reales` desde `testimonials.ts`. |
+| SEO-005 | 2026-06-04 | Redirección 301 alcohncnc.com → alcohnsellos.com (GoDaddy + hosting). |
+| SEO-006/007 | 2026-06-04 | Search Console + GA4 configurados (indexación en curso). |
+| SEO-013 | 2026-06-04 | GBP alineado con dirección schema (Alberti y Güemes, 7600). |
+| SEO-010 | 2026-06-04 | Precios "desde" en home, productos, landings /sellos/*, estándar; `PriceFrom`, `pricing.ts`. |
+| — | 2026-06-04 | Dirección LocalBusiness en schema (Alberti y Güemes, CP 7600). |
 
 ---
 
