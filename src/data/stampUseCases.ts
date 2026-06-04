@@ -34,12 +34,12 @@ export interface StampUseCase {
 }
 
 const STAMP_PRICE_FROM_ARS: Record<WizardMaterial, number> = {
-  cuero: 44000,
-  madera: 44000,
-  ambos: 48000,
-  ceramica: 46000,
-  alimentos: 50000,
-  otros: 48000,
+  cuero: 69500,
+  madera: 69500,
+  ambos: 69500,
+  ceramica: 69500,
+  alimentos: 69500,
+  otros: 69500,
 };
 
 export function getStampPriceFrom(material: WizardMaterial): number {

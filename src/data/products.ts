@@ -42,7 +42,7 @@ export const products: Product[] = [
       'Sello de bronce con tu logo para cuero y marroquinería. Fabricación CNC en Argentina. Envío a todo el país.',
     description: 'Sellos de bronce personalizados diseñados específicamente para marcar cuero. Fabricados con precisión CNC, garantizan marcas profundas y duraderas en cuero genuino y sintético.',
     category: 'sello',
-    price: { desde: 44000 },
+    price: { desde: 69500 },
     materials: ['cuero'],
     images: {
       default: '/images/sello/sellologo.webp',
@@ -68,7 +68,7 @@ export const products: Product[] = [
       'Sello de bronce para carpintería y madera con tu logo. Precisión CNC, fabricación en Argentina.',
     description: 'Sellos de bronce personalizados diseñados específicamente para marcar madera. Fabricados con precisión CNC, garantizan marcas profundas y duraderas en todo tipo de maderas.',
     category: 'sello',
-    price: { desde: 44000 },
+    price: { desde: 69500 },
     materials: ['madera'],
     images: {
       default: '/images/sello/sellologo.webp',
@@ -94,7 +94,7 @@ export const products: Product[] = [
       'Un sello de bronce para cuero y madera. Versátil para talleres con varios materiales. CNC Argentina.',
     description: 'Sellos de bronce personalizados diseñados para marcar tanto cuero como madera. Versatilidad máxima sin comprometer la calidad. Ideal para talleres que trabajan con múltiples materiales.',
     category: 'sello',
-    price: { desde: 48000 },
+    price: { desde: 69500 },
     materials: ['ambos'],
     images: {
       default: '/images/sello/sellologo.webp',
@@ -120,7 +120,7 @@ export const products: Product[] = [
       'Sello de bronce para pan, queso y gastronomía. Forma adaptada a alimentos. Fabricación CNC Argentina.',
     description: 'Sellos con forma cortada para evitar marcar con la base el alimento, mejorando el resultado. Mayor profundidad para un marcado más definido en pan, queso, mantequilla y otros alimentos.',
     category: 'sello',
-    price: { desde: 50000 },
+    price: { desde: 69500 },
     materials: ['ambos'],
     images: {
       default: '/images/sello/sellologo.webp',
@@ -198,7 +198,7 @@ export const products: Product[] = [
       'Sello de bronce para cerámica en crudo. Marcá antes del horneado con precisión CNC.',
     description: 'Sellos de bronce diseñados específicamente para marcar cerámica en crudo antes de la cocción. Proporcionan marcas limpias y definidas que se mantienen después del proceso de horneado.',
     category: 'sello',
-    price: { desde: 46000 },
+    price: { desde: 69500 },
     materials: ['ambos'],
     images: {
       default: '/images/sello/sellologo.webp',
@@ -224,7 +224,7 @@ export const products: Product[] = [
       'Sello de bronce para lacre en invitaciones y packaging. Diseño elegante, fabricación CNC Argentina.',
     description: 'Sellos de bronce diseñados para marcar lacre caliente. Diseños elegantes y clásicos que crean impresiones perfectas en lacre, ideal para documentos importantes y correspondencia especial.',
     category: 'sello',
-    price: { desde: 45000 },
+    price: { desde: 69500 },
     materials: ['ambos'],
     images: {
       default: '/images/sello/sellologo.webp',

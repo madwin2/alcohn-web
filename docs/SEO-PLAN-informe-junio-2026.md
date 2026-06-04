@@ -315,7 +315,7 @@
 |---|---|
 | **Prioridad** | Media |
 | **Tipo** | `código` |
-| **Estado** | `[ ]` |
+| **Estado** | `[x]` |
 
 **Informe:** sin links sociales en footer; duplicación de texto Alcohn / Mar del Plata.
 
@@ -497,8 +497,6 @@ Trabajar en este orden (explicación previa cada ítem):
 6. ~~**SEO-008**~~ — schema completado ✅
 7. ~~**SEO-010**~~ — precios "desde" en landings ✅
 8. **SEO-015** — footer redes ← **siguiente sugerido**
-7. **SEO-010** — precios "desde"
-8. **SEO-015** — footer redes + sameAs
 9. **SEO-011 / SEO-012** — testimonios + Review schema
 10. Resto Sprint 3–4 y tareas **infra/externo** (SEO-005, 006, 007, 013, 020) en paralelo con vos
 

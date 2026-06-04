@@ -1,12 +1,11 @@
 import { products } from '@/data/products';
 import { standardDesigns } from '@/lib/catalog';
 
-export function getCustomStampMinPrice(): number {
-  const selloPrices = products
-    .filter((product) => product.category === 'sello')
-    .map((product) => (typeof product.price === 'number' ? product.price : product.price.desde));
+/** Precio público "desde" para sellos personalizados con logo (referencia en web). */
+export const CUSTOM_STAMP_PRICE_FROM_ARS = 69500;
 
-  return Math.min(...selloPrices);
+export function getCustomStampMinPrice(): number {
+  return CUSTOM_STAMP_PRICE_FROM_ARS;
 }
 
 export function getStandardStampMinPrice(): number {
