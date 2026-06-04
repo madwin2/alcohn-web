@@ -58,6 +58,10 @@ export const clientesData: Record<string, ClienteData> = {
   },
 };
 
+function clienteImageSlug(nombre: string): string {
+  return nombre.toLowerCase().replace(/\s+/g, '-');
+}
+
 export function getClientes(): Cliente[] {
   const nombresClientes = [
     'amano',
@@ -75,13 +79,12 @@ export function getClientes(): Cliente[] {
 
   return nombresClientes.map((nombre) => {
     const nombreNormalizado = nombre.toLowerCase();
-    // Mantener el nombre del archivo tal como está en el sistema de archivos
-    const nombreArchivo = nombre;
-    
+    const slug = clienteImageSlug(nombre);
+
     const imagenes = [
-      `/images/clientes/${nombreArchivo}.webp`,
-      `/images/clientes/${nombreArchivo}1.webp`,
-      `/images/clientes/${nombreArchivo}2.webp`,
+      `/images/clientes/cliente-${slug}.webp`,
+      `/images/clientes/cliente-${slug}-02.webp`,
+      `/images/clientes/cliente-${slug}-03.webp`,
     ];
     
     return {

@@ -4,7 +4,7 @@ import MobileCarousel from '@/components/MobileCarousel';
 
 type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
 
-export const KIT_ILLUSTRATION_SRC = '/images/sello/Que incluye.png';
+export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
 type InclusionItem = {
   title: string;

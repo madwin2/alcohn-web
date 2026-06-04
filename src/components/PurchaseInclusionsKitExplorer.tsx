@@ -6,10 +6,10 @@ import { KIT_ILLUSTRATION_SRC } from '@/components/PurchaseInclusions';
 import MobileCarousel from '@/components/MobileCarousel';
 
 const KIT_OVERLAY_SRC: Record<number, string> = {
-  0: '/images/sello/Que incluye1.png',
-  1: '/images/sello/Que incluye2.png',
-  2: '/images/sello/Que incluye3.png',
-  3: '/images/sello/Que incluye4.png',
+  0: '/images/sello/kit-sello-pieza-01-cabezal.png',
+  1: '/images/sello/kit-sello-pieza-02-mango.png',
+  2: '/images/sello/kit-sello-pieza-03-varilla.png',
+  3: '/images/sello/kit-sello-pieza-04-accesorios.png',
 };
 
 interface PurchaseInclusionsKitExplorerProps {

@@ -156,7 +156,7 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
               className="min-h-[250px] border-b border-[var(--alcohn-line)] md:min-h-[340px] lg:border-b-0 lg:border-r"
             >
               <Image
-                src="/images/inicio/ultima.webp"
+                src="/images/inicio/billetera-cuero-marca-taller.webp"
                 alt="Billetera de cuero con marca aplicada en taller artesanal"
                 width={1200}
                 height={720}

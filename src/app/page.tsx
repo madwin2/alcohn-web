@@ -44,13 +44,13 @@ const materialProofs = [
   {
     label: 'Madera',
     title: 'Carpintería Profesional',
-    image: '/images/inicio/Madera.webp',
+    image: '/images/inicio/madera-carpinteria-profesional.webp',
     alt: 'Carpintería profesional con marca en madera',
   },
   {
     label: 'Acero',
     title: 'Piezas de autor',
-    image: '/images/inicio/madera2.webp',
+    image: '/images/inicio/pieza-acero-marca-artesanal.webp',
     alt: 'Pieza de autor con marca artesanal',
   },
   {
@@ -65,44 +65,44 @@ const craftStoryImages = [
   {
     label: 'Madera',
     title: 'Piezas con firma repetible',
-    image: '/images/scroll/motoquero2.webp',
+    image: '/images/scroll/madera-firma-repetible.webp',
     alt: 'Piezas de madera con firma repetible',
   },
   {
     label: 'CNC',
     title: 'Precision Industrial',
-    image: '/images/nosotros/mecanizado.webp',
+    image: '/images/nosotros/mecanizado-cnc-precision.webp',
     alt: 'Mecanizado CNC de precisión industrial',
   },
   {
     label: 'Taller',
     title: 'Identidad Propia',
-    image: '/images/scroll/viejo1.webp',
+    image: '/images/scroll/artesano-taller-identidad.webp',
     alt: 'Artesano trabajando en taller',
   },
   {
     label: 'Packaging',
     title: 'Producto listo para vender',
-    image: '/images/scroll/Firefly_Gemini Flash_Una foto producto de una tote ba 586498 ViW (1).png',
+    image: '/images/scroll/tote-packaging-marca-producto.png',
     alt: 'Bolsa de tela con marca aplicada',
   },
 ];
 
 const beforeAfterImages = [
   {
-    src: '/images/transforma/1.jpeg',
+    src: '/images/transforma/antes-despues-logo-sello-01.jpeg',
     alt: 'Sello de bronce personalizado con diseño en relieve',
   },
   {
-    src: '/images/transforma/2.jpeg',
+    src: '/images/transforma/antes-despues-sello-cuero-02.jpeg',
     alt: 'Marca aplicada en cuero con sello de bronce',
   },
   {
-    src: '/images/transforma/3.jpeg',
+    src: '/images/transforma/antes-despues-estampado-cuero-03.jpeg',
     alt: 'Estampado en cuero con sello personalizado',
   },
   {
-    src: '/images/transforma/4.jpeg',
+    src: '/images/transforma/antes-despues-producto-cuero-04.jpeg',
     alt: 'Producto terminado con marca en cuero en el taller',
   },
 ];

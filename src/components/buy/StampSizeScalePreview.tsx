@@ -12,7 +12,7 @@ export const COIN_DIAMETER_MM = 23;
 const PX_PER_MM = 2;
 
 /** SVG en public/images/moneda/ (next/image no sirve SVG locales sin config extra). */
-const COIN_SVG_SRC = '/images/moneda/moneda.svg';
+const COIN_SVG_SRC = '/images/moneda/moneda-escala-referencia.svg';
 
 type StampSizeScalePreviewProps = {
   sizeLabel: string;

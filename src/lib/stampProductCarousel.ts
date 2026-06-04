@@ -7,11 +7,11 @@ export type ProductCarouselImage = {
 };
 
 const STAMP_PRODUCT_CAROUSEL_SRCS = [
-  '/images/producto/1.webp',
-  '/images/producto/2.webp',
-  '/images/producto/3.webp',
-  '/images/producto/4.webp',
-  '/images/producto/5.webp',
+  '/images/producto/sello-bronce-galeria-01.webp',
+  '/images/producto/sello-bronce-galeria-02.webp',
+  '/images/producto/sello-bronce-galeria-03.webp',
+  '/images/producto/sello-bronce-galeria-04.webp',
+  '/images/producto/sello-bronce-galeria-05.webp',
 ] as const;
 
 export function getProductCarouselImages(useCase: StampUseCase): ProductCarouselImage[] {

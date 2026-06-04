@@ -45,9 +45,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['cuero'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -71,9 +71,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['madera'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -97,9 +97,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -123,9 +123,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce grado alimenticio',
@@ -149,9 +149,9 @@ export const products: Product[] = [
     price: { desde: 85000 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -175,9 +175,9 @@ export const products: Product[] = [
     price: { desde: 35000 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -201,9 +201,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',
@@ -227,9 +227,9 @@ export const products: Product[] = [
     price: { desde: 69500 },
     materials: ['ambos'],
     images: {
-      default: '/images/sello/sellologo.webp',
-      onLeather: '/images/sello/sellologo.webp',
-      onWood: '/images/sello/sellologo.webp',
+      default: '/images/sello/sello-personalizado-logo.webp',
+      onLeather: '/images/sello/sello-personalizado-logo.webp',
+      onWood: '/images/sello/sello-personalizado-logo.webp',
     },
     specs: {
       material: 'Bronce de alta calidad',

@@ -69,7 +69,7 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
           images={[
             {
               id: 1,
-              src: '/images/hero/imagen-hero.jpeg',
+              src: '/images/hero/sello-bronce-hero-taller-alcohn.jpeg',
               alt: 'Taller artesanal con sello de bronce personalizado Alcohn',
             },
           ]}

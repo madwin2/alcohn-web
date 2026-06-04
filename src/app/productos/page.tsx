@@ -99,7 +99,7 @@ export default function ProductosPage() {
             <PersonalizadoProductCard
               title="Sellos personalizados"
               description="Subí tu logo, elegí el material y avanzá por el flujo online hasta ver muestra, medida sugerida y precio. Es el camino recomendado para marcas, talleres y productos propios."
-              image="/images/sello/sellologo.webp"
+              image="/images/sello/sello-personalizado-logo.webp"
               imageAlt="Sello personalizado de bronce"
               priceFrom={customStampMinPrice}
               priority
@@ -109,7 +109,7 @@ export default function ProductosPage() {
               description="Diseños listos para comprar: elegís el motivo, seleccionás medida, agregás al carrito y completás checkout. Menos decisión, compra más rápida."
               href="/sellos/estandar"
               variant="secondary"
-              image="/images/sello/selloestandar.webp"
+              image="/images/sello/sello-estandar-bronce.webp"
               imageAlt="Sellos estándar de bronce"
               priceFrom={standardStampMinPrice}
               priority
