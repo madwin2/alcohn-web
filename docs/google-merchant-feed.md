@@ -34,4 +34,5 @@ En Merchant Center, activá **Listados gratuitos de productos** (Free listings) 
 
 URL para pegar en la configuración de la tienda (no está enlazada desde el menú del sitio aún):
 
-**https://alcohnsellos.com/politica-devoluciones**
+- Devoluciones: **https://alcohnsellos.com/politica-devoluciones**
+- Envíos: **https://alcohnsellos.com/politica-envios**

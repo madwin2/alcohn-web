@@ -1,19 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata, SITE_CONTACT } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  ...createPageMetadata({
-    title: 'Política de devoluciones y cambios | Alcohn',
-    description:
-      'Condiciones de devolución, cambios y garantía para sellos de bronce personalizados y estándar fabricados por Alcohn en Argentina.',
-    path: '/politica-devoluciones',
-  }),
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Política de devoluciones y cambios | Alcohn',
+  description:
+    'Condiciones de devolución, cambios y garantía para sellos de bronce personalizados y estándar fabricados por Alcohn en Argentina.',
+  path: '/politica-devoluciones',
+});
 
 const sections: Array<{ title: string; paragraphs: string[] }> = [
   {
@@ -59,7 +53,7 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
   {
     title: 'Cómo iniciar un reclamo',
     paragraphs: [
-      'Escribinos por WhatsApp al +54 9 223 620-9554 o desde la página de contacto, indicando número de pedido (si lo tenés), fecha de compra y descripción del problema con imágenes.',
+      `Escribinos por WhatsApp al ${SITE_CONTACT.phoneDisplay} o desde la página de contacto, indicando número de pedido (si lo tenés), fecha de compra y descripción del problema con imágenes.`,
       'Te responderemos para confirmar los pasos a seguir. No envíes el producto sin coordinar previamente la autorización de devolución.',
     ],
   },
@@ -102,6 +96,13 @@ export default function PoliticaDevolucionesPage() {
         <p className="mt-12 border-t border-neutral-200 pt-8 text-sm text-gray-600">
           <Link href="/" className="font-medium text-gray-900 underline-offset-2 hover:underline">
             Volver al inicio
+          </Link>
+          {' · '}
+          <Link
+            href="/politica-envios"
+            className="font-medium text-gray-900 underline-offset-2 hover:underline"
+          >
+            Envíos
           </Link>
           {' · '}
           <Link

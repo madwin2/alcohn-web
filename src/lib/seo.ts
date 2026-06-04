@@ -90,6 +90,20 @@ export const SITE_SOCIAL = {
   instagram: 'https://www.instagram.com/alcohn.cnc/',
 } as const;
 
+/** Datos de contacto visibles en footer, páginas legales y schema. */
+export const SITE_CONTACT = {
+  phoneDisplay: '+54 9 223 620-9554',
+  phoneTel: '+5492236209554',
+  whatsappUrl: 'https://wa.me/5492236209554',
+  streetAddress: 'Alberti y Martín Miguel de Güemes',
+  postalCode: '7600',
+  addressLocality: 'Mar del Plata',
+  addressRegion: 'Provincia de Buenos Aires',
+  addressCountry: 'Argentina',
+  addressSingleLine:
+    'Alberti y Martín Miguel de Güemes, CP 7600, Mar del Plata, Provincia de Buenos Aires, Argentina',
+} as const;
+
 const organizationNode = {
   '@type': 'Organization',
   '@id': ORGANIZATION_ID,
@@ -107,7 +121,7 @@ const organizationNode = {
     {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      telephone: '+54-9-223-620-9554',
+      telephone: SITE_CONTACT.phoneTel,
       areaServed: 'AR',
       availableLanguage: ['es'],
     },
@@ -120,14 +134,14 @@ const localBusinessNode = {
   name: SITE_NAME,
   url: SITE_URL,
   image: absoluteUrl(DEFAULT_OG_IMAGE),
-  telephone: '+54-9-223-620-9554',
+  telephone: SITE_CONTACT.phoneTel,
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'Alberti y Martín Miguel de Güemes',
-    postalCode: '7600',
-    addressLocality: 'Mar del Plata',
-    addressRegion: 'Provincia de Buenos Aires',
+    streetAddress: SITE_CONTACT.streetAddress,
+    postalCode: SITE_CONTACT.postalCode,
+    addressLocality: SITE_CONTACT.addressLocality,
+    addressRegion: SITE_CONTACT.addressRegion,
     addressCountry: 'AR',
   },
   geo: {

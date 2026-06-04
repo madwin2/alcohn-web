@@ -16,6 +16,8 @@ const staticRoutes = [
   '/sobre-alcohn',
   '/contacto',
   '/cotizar',
+  '/politica-envios',
+  '/politica-devoluciones',
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
