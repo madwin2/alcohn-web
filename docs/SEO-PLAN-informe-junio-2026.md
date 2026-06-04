@@ -11,7 +11,7 @@
 | Campo | Significado |
 |-------|-------------|
 | **Tipo** | `código` = repo Next.js · `infra` = DNS/hosting · `contenido` = copy/fotos que debés proveer · `externo` = Search Console, GBP, etc. |
-| **Estado** | `[ ]` pendiente · `[x]` hecho · `[~]` parcial |
+| **Estado** | `[ ]` pendiente · `[x]` hecho · `[~]` parcial · `[—]` desestimado |
 
 ---
 
@@ -32,7 +32,7 @@
 |---|---|
 | **Prioridad** | Crítica |
 | **Tipo** | `código` + `contenido` |
-| **Estado** | `[x]` |
+| **Estado** | `[—]` desestimado (jun 2026) |
 
 **Problema (informe):** En producción aparece *"Desde que compre alcohn bla bla bla"* — destruye credibilidad.
 
@@ -246,7 +246,7 @@
 |---|---|
 | **Prioridad** | Alta |
 | **Tipo** | `contenido` + `código` |
-| **Estado** | `[ ]` |
+| **Estado** | `[—]` desestimado (jun 2026) |
 
 **Referencia Hanko:** "Martín - Restaurante", "Paula - Marroquinería".
 
@@ -266,7 +266,7 @@
 | **Prioridad** | Media |
 | **Tipo** | `código` |
 | **Estado** | `[ ]` |
-| **Depende de** | SEO-001, SEO-011 |
+| **Depende de** | ~~SEO-001, SEO-011~~ (desestimados); reseñas en `/casos-reales` |
 
 **Implementar** `Review` / `AggregateRating` con nombre, fecha, rating cuando haya reseñas verificables.
 
@@ -300,12 +300,11 @@
 
 - `para-madera`, `para-cuero`, `para-ceramica`, `para-jabon`, `para-packaging`, `para-lacre`, `para-hielo`, `para-pan`, `para-fruta`
 
-**Pendiente del informe (no existen aún):**
+**Informe original:** `para-hamburguesa` separada de pan — **no se hará**: `/sellos/para-pan` ya cubre pan de hamburguesas (mismo producto).
 
-- `para-hamburguesa` (separada de pan) — Sprint 3
-- `para-chocolate` — Sprint 3
+**Opcional sin URL nueva:** ajustar título/H1 de `para-pan` si hace falta más keyword "hamburguesa" (sin duplicar página).
 
-**Acción:** al crear URLs nuevas, agregarlas a `stampUseCases` (el sitemap las tomará automáticamente).
+**Pendiente opcional:** `para-chocolate` — solo si más adelante tiene sentido de negocio.
 
 ---
 
@@ -360,11 +359,11 @@
 |---|---|
 | **Prioridad** | Media-alta |
 | **Tipo** | `código` + `contenido` |
-| **Estado** | `[ ]` |
+| **Estado** | `[—]` desestimado página hamburguesa (jun 2026) |
 
-Separar de `para-pan` para competir con Hanko en "sello para hamburguesa".
+**Decisión:** no crear `/sellos/para-hamburguesa` — superpone con `/sellos/para-pan` (pan de hamburguesas). SEO ya en `seoTitle` de `para-pan`.
 
-**Archivos:** nuevo entry en `src/data/stampUseCases.ts`, imágenes en `public/images/`, rutas `/sellos/para-hamburguesa`, `/sellos/para-chocolate`.
+**Si hace falta:** renombrar copy visible (H1, breadcrumb, grilla home) sin nueva ruta. Chocolate: evaluar aparte solo si aplica.
 
 ---
 
@@ -496,9 +495,12 @@ Trabajar en este orden (explicación previa cada ítem):
 5. ~~**SEO-009**~~ — titles en todas las páginas indexables ✅
 6. ~~**SEO-008**~~ — schema completado ✅
 7. ~~**SEO-010**~~ — precios "desde" en landings ✅
-8. **SEO-015** — footer redes ← **siguiente sugerido**
-9. **SEO-011 / SEO-012** — testimonios + Review schema
-10. Resto Sprint 3–4 y tareas **infra/externo** (SEO-005, 006, 007, 013, 020) en paralelo con vos
+8. ~~**SEO-015**~~ — footer redes ✅
+9. ~~**SEO-001 / SEO-011**~~ — desestimados
+10. ~~**SEO-017** hamburguesa~~ — no nueva página; `para-pan` cubre el caso
+11. **Wizard `/buy`** — precios por medida vía cotizador tras logo (no alinear con "desde $69.500" del marketing)
+12. **Siguiente sugerido:** **SEO-016** (blog) o **SEO-018** (B2B) + monitoreo Search Console
+13. Resto Sprint 3–4 y **externo** (020 backlinks)
 
 ---
 
@@ -516,7 +518,9 @@ Trabajar en este orden (explicación previa cada ítem):
 | SEO-006/007 | 2026-06-04 | Search Console + GA4 configurados (indexación en curso). |
 | SEO-013 | 2026-06-04 | GBP alineado con dirección schema (Alberti y Güemes, 7600). |
 | SEO-010 | 2026-06-04 | Precios "desde" en home, productos, landings /sellos/*, estándar; `PriceFrom`, `pricing.ts`. |
+| SEO-015 | 2026-06-04 | Instagram en footer + `sameAs` en schema. |
 | — | 2026-06-04 | Dirección LocalBusiness en schema (Alberti y Güemes, CP 7600). |
+| SEO-001, 011, 017 (pan) | 2026-06-04 | Desestimados por decisión de producto: sin testimonios extra en home; sin landing hamburguesa duplicada. |
 
 ---
 

@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "images:optimize": "node scripts/optimize-images.mjs",
-    "seo:assets": "node scripts/generate-seo-assets.mjs"
+    "seo:assets": "node scripts/generate-seo-assets.mjs",
+    "feed:merchant": "node scripts/generate-merchant-feed.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
