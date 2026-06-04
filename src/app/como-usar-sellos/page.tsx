@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import PageIntro from '@/components/PageIntro';
+import PageIntroWithMaterialModal from '@/components/sellos/PageIntroWithMaterialModal';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
@@ -125,7 +125,7 @@ export default function ComoUsarSellosPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-        <PageIntro
+        <PageIntroWithMaterialModal
           label="Manual de uso"
           title="Cómo lograr una marca prolija sin depender de soporte"
           description="Una guía de banco de trabajo para elegir método, probar el material, evitar errores comunes y repetir una marca consistente en cuero, madera, packaging, alimentos, cerámica o lacre."
@@ -133,11 +133,6 @@ export default function ComoUsarSellosPage() {
           primaryCta={{
             label: 'Diseñar sello personalizado',
             href: '/buy?mode=custom',
-          }}
-          secondaryCta={{
-            label: 'Ver qué incluye la compra',
-            href: '/productos',
-            variant: 'secondary',
           }}
         />
 

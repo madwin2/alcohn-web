@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionButton from '@/components/ActionButton';
-import PageIntro from '@/components/PageIntro';
+import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
 import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
@@ -102,7 +102,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
-        <PageIntro
+        <StampUseCasePageIntro
           label={useCase.searchIntent}
           title={useCase.title}
           description={useCase.description}
@@ -111,12 +111,6 @@ export default function SelloUseCasePage({ params }: PageParams) {
             label: 'Subir logo y ver precio',
             href: buyHref,
           }}
-          secondaryCta={{
-            label: 'Ver todos los materiales',
-            href: '/productos',
-            variant: 'secondary',
-          }}
-          hideHighlightsOnMobile
           priceFrom={priceFrom}
           highlights={[
             `Uso principal: ${useCase.material}`,

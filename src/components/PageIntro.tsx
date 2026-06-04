@@ -3,7 +3,8 @@ import PriceFrom from './PriceFrom';
 
 interface Cta {
   label: string;
-  href: string;
+  href?: string;
+  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'ghost';
 }
 
@@ -60,7 +61,12 @@ export default function PageIntro({
                 </ActionButton>
               )}
               {secondaryCta && (
-                <ActionButton href={secondaryCta.href} variant={secondaryCta.variant || 'secondary'} className="w-full sm:w-auto">
+                <ActionButton
+                  href={secondaryCta.href}
+                  onClick={secondaryCta.onClick}
+                  variant={secondaryCta.variant || 'secondary'}
+                  className="w-full sm:w-auto"
+                >
                   {secondaryCta.label}
                 </ActionButton>
               )}
