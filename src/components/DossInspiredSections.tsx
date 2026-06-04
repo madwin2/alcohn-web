@@ -54,7 +54,7 @@ export default function DossInspiredSections() {
         <div className="dark-system-panel motion-reveal-delay">
           <div className="relative z-10 grid grid-cols-1 lg:min-h-[620px] lg:grid-cols-[0.32fr_0.68fr]">
             <div className="border-b border-white/10 p-4 md:p-8 lg:border-b-0 lg:border-r lg:p-10">
-              <p className="text-[10px] font-semibold uppercase text-white/52">PASO A PASA PARA COMPRAR</p>
+              <p className="text-[10px] font-semibold uppercase text-white/52">PASO A PASO PARA COMPRAR</p>
               <div className="mt-4 grid grid-cols-2 gap-2 lg:mt-8 lg:grid-cols-1">
                 {stages.map((stage) => (
                   <button

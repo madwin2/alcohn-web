@@ -1,31 +1,12 @@
 import type { Metadata } from 'next';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Sellos estándar - Alcohn',
+export const metadata: Metadata = createPageMetadata({
+  title: 'Sellos estándar de bronce | Comprá online con envío | Alcohn',
   description:
-    'Diseños estándar listos para personalizar. Elegí motivo, medida y completá checkout online.',
-  alternates: {
-    canonical: '/sellos/estandar',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/sellos/estandar',
-    siteName: SITE_NAME,
-    title: 'Sellos estándar - Alcohn',
-    description:
-      'Diseños estándar listos para personalizar. Elegí motivo, medida y completá checkout online.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Sellos estándar - Alcohn',
-    description:
-      'Diseños estándar listos para personalizar. Elegí motivo, medida y completá checkout online.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+    'Diseños estándar de bronce listos para personalizar. Elegí motivo, medida, agregá al carrito y comprá online con envío nacional.',
+  path: '/sellos/estandar',
+});
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },

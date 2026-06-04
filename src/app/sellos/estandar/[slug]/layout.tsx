@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getStandardDesignBySlug } from '@/lib/catalog';
-import { SITE_NAME, absoluteUrl } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildProductJsonLd, createPageMetadata } from '@/lib/seo';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -23,32 +23,17 @@ export function generateMetadata({ params }: LayoutProps): Metadata {
   }
 
   const canonical = `/sellos/estandar/${design.slug}`;
+  const title = `${design.title} | Sello estándar de bronce | Alcohn`;
   const description =
     design.description ||
-    'Diseño estándar listo para personalizar en bronce. Elegí medida, precio y comprá online.';
+    `Sello estándar de bronce "${design.title}". Elegí medida, personalizá y comprá online con envío a todo el país.`;
 
-  return {
-    title: `${design.title} - Sellos estándar | Alcohn`,
+  return createPageMetadata({
+    title,
     description,
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      type: 'website',
-      locale: 'es_AR',
-      url: canonical,
-      siteName: SITE_NAME,
-      title: `${design.title} - Sellos estándar | Alcohn`,
-      description,
-      images: [design.image],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${design.title} - Sellos estándar | Alcohn`,
-      description,
-      images: [design.image],
-    },
-  };
+    path: canonical,
+    image: design.image,
+  });
 }
 
 export default function StandardDesignLayout({ children, params }: LayoutProps) {
@@ -63,50 +48,20 @@ export default function StandardDesignLayout({ children, params }: LayoutProps) 
     design.description ||
     'Diseño estándar listo para personalizar en bronce. Elegí medida, precio y comprá online.';
 
-  const productJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+  const productJsonLd = buildProductJsonLd({
     name: design.title,
     description,
-    image: [absoluteUrl(design.image)],
+    path: canonical,
+    image: design.image,
     category: 'Sellos estándar de bronce',
-    brand: {
-      '@type': 'Brand',
-      name: SITE_NAME,
-    },
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'ARS',
-      price: design.startingPrice,
-      availability: 'https://schema.org/InStock',
-      url: absoluteUrl(canonical),
-    },
-  };
+    price: design.startingPrice,
+  });
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Inicio',
-        item: absoluteUrl('/'),
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Sellos estándar',
-        item: absoluteUrl('/sellos/estandar'),
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: design.title,
-        item: absoluteUrl(canonical),
-      },
-    ],
-  };
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: 'Sellos estándar', path: '/sellos/estandar' },
+    { name: design.title, path: canonical },
+  ]);
 
   return (
     <>

@@ -3,30 +3,14 @@ import PageIntro from '@/components/PageIntro';
 import ContactForm from '@/components/ContactForm';
 import WhatsappButton from '@/components/WhatsappButton';
 import ActionButton from '@/components/ActionButton';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd, localBusinessJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Contacto - Alcohn',
-  description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
-  alternates: {
-    canonical: '/contacto',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/contacto',
-    siteName: SITE_NAME,
-    title: 'Contacto - Alcohn',
-    description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Contacto - Alcohn',
-    description: 'Contactanos para resolver dudas puntuales o avanzar con tu sello de bronce personalizado.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Contacto | Sellos de bronce personalizados Alcohn Argentina',
+  description:
+    'Escribinos por WhatsApp o formulario. Mar del Plata, envío a todo Argentina. Resolvemos dudas sobre tu sello de bronce CNC.',
+  path: '/contacto',
+});
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },
@@ -36,10 +20,6 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 export default function ContactoPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

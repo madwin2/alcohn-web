@@ -3,30 +3,14 @@ import PageIntro from '@/components/PageIntro';
 import FaqList from '@/components/FaqList';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { faqs } from '@/data/faq';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Preguntas frecuentes - Alcohn',
-  description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
-  alternates: {
-    canonical: '/faq',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/faq',
-    siteName: SITE_NAME,
-    title: 'Preguntas frecuentes - Alcohn',
-    description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Preguntas frecuentes - Alcohn',
-    description: 'Respuestas a las preguntas más comunes sobre nuestros sellos de bronce personalizados.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Preguntas frecuentes sobre sellos de bronce personalizados | Alcohn',
+  description:
+    'Dudas sobre medidas, materiales, tiempos de fabricación, envíos y compra de sellos de bronce CNC en Argentina.',
+  path: '/faq',
+});
 
 const faqJsonLd = {
   '@context': 'https://schema.org',

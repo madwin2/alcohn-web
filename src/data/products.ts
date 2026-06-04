@@ -21,6 +21,8 @@ export interface Product {
   name: string;
   slug: string;
   shortDescription: string;
+  seoTitle: string;
+  seoDescription: string;
   description: string;
   category: ProductCategory;
   price: number | { desde: number };
@@ -35,6 +37,9 @@ export const products: Product[] = [
     name: 'Sello Personalizado - Cuero',
     slug: 'sello-personalizado-cuero',
     shortDescription: 'Sello de bronce para marcar cuero con precisión industrial.',
+    seoTitle: 'Sello personalizado para cuero | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce con tu logo para cuero y marroquinería. Fabricación CNC en Argentina. Envío a todo el país.',
     description: 'Sellos de bronce personalizados diseñados específicamente para marcar cuero. Fabricados con precisión CNC, garantizan marcas profundas y duraderas en cuero genuino y sintético.',
     category: 'sello',
     price: { desde: 44000 },
@@ -58,6 +63,9 @@ export const products: Product[] = [
     name: 'Sello Personalizado - Madera',
     slug: 'sello-personalizado-madera',
     shortDescription: 'Sello de bronce para marcar madera con precisión industrial.',
+    seoTitle: 'Sello personalizado para madera | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para carpintería y madera con tu logo. Precisión CNC, fabricación en Argentina.',
     description: 'Sellos de bronce personalizados diseñados específicamente para marcar madera. Fabricados con precisión CNC, garantizan marcas profundas y duraderas en todo tipo de maderas.',
     category: 'sello',
     price: { desde: 44000 },
@@ -81,6 +89,9 @@ export const products: Product[] = [
     name: 'Sello Personalizado - Universal',
     slug: 'sello-personalizado-universal',
     shortDescription: 'Sello de bronce versátil para cuero y madera.',
+    seoTitle: 'Sello personalizado para cuero y madera | Bronce CNC | Alcohn',
+    seoDescription:
+      'Un sello de bronce para cuero y madera. Versátil para talleres con varios materiales. CNC Argentina.',
     description: 'Sellos de bronce personalizados diseñados para marcar tanto cuero como madera. Versatilidad máxima sin comprometer la calidad. Ideal para talleres que trabajan con múltiples materiales.',
     category: 'sello',
     price: { desde: 48000 },
@@ -104,6 +115,9 @@ export const products: Product[] = [
     name: 'Sello para Alimentos',
     slug: 'sello-para-alimentos',
     shortDescription: 'Sello de bronce con forma cortada para alimentos.',
+    seoTitle: 'Sello para alimentos, pan y queso | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para pan, queso y gastronomía. Forma adaptada a alimentos. Fabricación CNC Argentina.',
     description: 'Sellos con forma cortada para evitar marcar con la base el alimento, mejorando el resultado. Mayor profundidad para un marcado más definido en pan, queso, mantequilla y otros alimentos.',
     category: 'sello',
     price: { desde: 50000 },
@@ -127,6 +141,9 @@ export const products: Product[] = [
     name: 'Abecedario de Bronce - Completo',
     slug: 'abecedario-bronce-completo',
     shortDescription: 'Conjunto completo de letras individuales de bronce.',
+    seoTitle: 'Abecedario de bronce completo A-Z | Alcohn Argentina',
+    seoDescription:
+      'Letras y números de bronce individuales para marcar textos en cuero y madera. Fabricación CNC.',
     description: 'Conjunto completo de letras individuales de bronce para marcar textos personalizados. Cada letra es un sello independiente, permitiendo máxima flexibilidad en la composición de textos.',
     category: 'abecedario',
     price: { desde: 85000 },
@@ -150,6 +167,9 @@ export const products: Product[] = [
     name: 'Abecedario de Bronce - Números',
     slug: 'abecedario-bronce-numeros',
     shortDescription: 'Conjunto de números individuales de bronce.',
+    seoTitle: 'Abecedario de números en bronce 0-9 | Alcohn',
+    seoDescription:
+      'Números de bronce 0-9 para fechas y códigos en cuero y madera. Letras CNC, envío nacional.',
     description: 'Conjunto completo de números (0-9) individuales de bronce para marcar fechas, códigos y números de serie. Cada número es un sello independiente.',
     category: 'abecedario',
     price: { desde: 35000 },
@@ -173,6 +193,9 @@ export const products: Product[] = [
     name: 'Sello Personalizado - Cerámica',
     slug: 'sello-personalizado-ceramica',
     shortDescription: 'Sello de bronce para marcar cerámica antes de cocción.',
+    seoTitle: 'Sello personalizado para cerámica | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para cerámica en crudo. Marcá antes del horneado con precisión CNC.',
     description: 'Sellos de bronce diseñados específicamente para marcar cerámica en crudo antes de la cocción. Proporcionan marcas limpias y definidas que se mantienen después del proceso de horneado.',
     category: 'sello',
     price: { desde: 46000 },
@@ -196,6 +219,9 @@ export const products: Product[] = [
     name: 'Sello Personalizado - Lacre',
     slug: 'sello-personalizado-lacre',
     shortDescription: 'Sello de bronce para lacre, diseño elegante y clásico.',
+    seoTitle: 'Sello personalizado para lacre | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para lacre en invitaciones y packaging. Diseño elegante, fabricación CNC Argentina.',
     description: 'Sellos de bronce diseñados para marcar lacre caliente. Diseños elegantes y clásicos que crean impresiones perfectas en lacre, ideal para documentos importantes y correspondencia especial.',
     category: 'sello',
     price: { desde: 45000 },

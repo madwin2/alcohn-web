@@ -6,6 +6,7 @@ export interface StampUseCase {
   material: string;
   title: string;
   seoTitle: string;
+  seoDescription?: string;
   description: string;
   intro: string;
   buyMaterial: WizardMaterial;
@@ -32,13 +33,28 @@ export interface StampUseCase {
   }>;
 }
 
+const STAMP_PRICE_FROM_ARS: Record<WizardMaterial, number> = {
+  cuero: 44000,
+  madera: 44000,
+  ambos: 48000,
+  ceramica: 46000,
+  alimentos: 50000,
+  otros: 48000,
+};
+
+export function getStampPriceFrom(material: WizardMaterial): number {
+  return STAMP_PRICE_FROM_ARS[material];
+}
+
 export const stampUseCases: StampUseCase[] = [
   {
     slug: 'para-madera',
     oficio: 'Carpintería',
     material: 'Madera',
     title: 'Sellos para Madera Personalizados',
-    seoTitle: 'Sellos para madera personalizados',
+    seoTitle: 'Sello de bronce para madera personalizado | Carpintería CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce CNC para tablas, cajas y muebles. Marcá madera con tu logo. Fabricación en Argentina, envío a todo el país.',
     description:
       'Marcá tablas, cajas, muebles y piezas de carpintería con un sello de bronce personalizado.',
     intro:
@@ -89,7 +105,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Marroquinería',
     material: 'Cuero y PU',
     title: 'Sellos de bronce para cuero y PU',
-    seoTitle: 'Sellos para cuero personalizados',
+    seoTitle: 'Sello de bronce para cuero | Marroquinería profesional | Alcohn Argentina',
+    seoDescription:
+      'Sello personalizado para cuero y PU. Marroquinería, billeteras y materas con marca CNC. Envío a todo Argentina.',
     description:
       'Convertí billeteras, carteras, vainas, materas y etiquetas de cuero en piezas con marca propia.',
     intro:
@@ -141,7 +159,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Manualidades',
     material: 'Cerámica',
     title: 'Sellos de bronce para cerámica',
-    seoTitle: 'Sellos para cerámica personalizados',
+    seoTitle: 'Sello de bronce para cerámica personalizado | Alcohn Argentina',
+    seoDescription:
+      'Sellos CNC para cerámica en crudo, placas y piezas de autor. Marcá antes de la cocción con precisión.',
     description:
       'Marcá piezas de cerámica en crudo, placas, objetos decorativos y trabajos de autor con tu logo.',
     intro:
@@ -187,7 +207,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Artesanías',
     material: 'Jabón',
     title: 'Sellos de bronce para jabón artesanal',
-    seoTitle: 'Sellos para jabón artesanal personalizados',
+    seoTitle: 'Sello de bronce para jabón artesanal | Alcohn Argentina',
+    seoDescription:
+      'Sello personalizado para jabones, velas y cosmética natural. Bronce CNC, ideal para ferias y regalos.',
     description:
       'Dale identidad a jabones artesanales, velas blandas y productos de cosmética natural con un sello personalizado.',
     intro:
@@ -224,7 +246,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Packaging',
     material: 'Cartón',
     title: 'Sellos de bronce para packaging y cartón',
-    seoTitle: 'Sellos para packaging personalizados',
+    seoTitle: 'Sello de bronce para packaging y cartón | Alcohn',
+    seoDescription:
+      'Marcá cajas, etiquetas y cartón con sello de bronce CNC. Ideal para series cortas y packaging artesanal.',
     description:
       'Marcá cajas, etiquetas, bolsas, cartón, papel grueso y packaging artesanal con una identidad consistente.',
     intro:
@@ -278,7 +302,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Decoración',
     material: 'Lacre',
     title: 'Sellos de bronce para lacre',
-    seoTitle: 'Sellos para lacre personalizados',
+    seoTitle: 'Sello de bronce para lacre personalizado | Alcohn Argentina',
+    seoDescription:
+      'Sellos para lacre en invitaciones, sobres y packaging boutique. Bronce CNC, diseño elegante.',
     description:
       'Creá cierres, invitaciones, packaging y detalles de marca con lacre personalizado.',
     intro:
@@ -315,7 +341,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Coctelería',
     material: 'Hielo',
     title: 'Sellos de bronce para hielo',
-    seoTitle: 'Sellos para hielo personalizados',
+    seoTitle: 'Sello para hielo y coctelería | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para hielo en bares y eventos. Marcá cubos y roca con tu logo. Envío a todo el país.',
     description:
       'Marcá hielos para bares, coctelería, eventos y experiencias gastronómicas con identidad propia.',
     intro:
@@ -354,7 +382,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Gastronomía',
     material: 'Pan',
     title: 'Sellos de bronce para pan y alimentos',
-    seoTitle: 'Sellos para pan personalizados',
+    seoTitle: 'Sello para pan y hamburguesa personalizado | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sello de bronce para pan, hamburguesas y gastronomía. Marcá masas con tu logo. Fabricación CNC, envío nacional.',
     description:
       'Marcá panes, tapas y productos gastronómicos para que tu marca aparezca en la experiencia de consumo.',
     intro:
@@ -401,7 +431,9 @@ export const stampUseCases: StampUseCase[] = [
     oficio: 'Decoración de cocktails',
     material: 'Fruta',
     title: 'Sellos de bronce para fruta y decoración de cocktails',
-    seoTitle: 'Sellos para fruta personalizados',
+    seoTitle: 'Sello para fruta y decoración de cocktails | Bronce CNC | Alcohn',
+    seoDescription:
+      'Sellos para fruta y cítricos en bares y eventos. Bronce CNC, marca visible en cada servicio.',
     description:
       'Marcá frutas, cítricos y decoraciones de cocktail para bares, eventos y experiencias de marca.',
     intro:

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { products, getProductBySlug } from '@/data/products';
 import ProductSheet from '@/components/ProductSheet';
-import { SITE_NAME, absoluteUrl } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildProductJsonLd, createPageMetadata } from '@/lib/seo';
 
 interface ProductPageProps {
   params: {
@@ -32,28 +32,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   const canonical = `/productos/${product.slug}`;
 
-  return {
-    title: `${product.name} - Alcohn`,
-    description: product.shortDescription,
-    alternates: {
-      canonical,
-    },
-    openGraph: {
-      type: 'website',
-      locale: 'es_AR',
-      url: canonical,
-      siteName: SITE_NAME,
-      title: `${product.name} - Alcohn`,
-      description: product.shortDescription,
-      images: [product.images.default],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${product.name} - Alcohn`,
-      description: product.shortDescription,
-      images: [product.images.default],
-    },
-  };
+  return createPageMetadata({
+    title: product.seoTitle,
+    description: product.seoDescription,
+    path: canonical,
+    image: product.images.default,
+  });
 }
 
 export default function ProductDetailPage({ params }: ProductPageProps) {
@@ -67,51 +51,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const priceValue =
     typeof product.price === 'number' ? product.price : product.price.desde;
 
-  const productJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+  const productJsonLd = buildProductJsonLd({
     name: product.name,
     description: product.shortDescription,
-    image: [absoluteUrl(product.images.default)],
+    path: canonical,
+    image: product.images.default,
     sku: product.id,
     category: product.category,
-    brand: {
-      '@type': 'Brand',
-      name: SITE_NAME,
-    },
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'ARS',
-      price: priceValue,
-      availability: 'https://schema.org/InStock',
-      url: absoluteUrl(canonical),
-    },
-  };
+    price: priceValue,
+  });
 
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Inicio',
-        item: absoluteUrl('/'),
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Productos',
-        item: absoluteUrl('/productos'),
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: product.name,
-        item: absoluteUrl(canonical),
-      },
-    ],
-  };
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: 'Productos', path: '/productos' },
+    { name: product.name, path: canonical },
+  ]);
 
   return (
     <div className="atelier-page min-h-screen py-8 md:py-16">

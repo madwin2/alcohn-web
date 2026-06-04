@@ -7,37 +7,24 @@ import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { products } from '@/data/products';
-import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteUrl, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { absoluteUrl, buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Productos - Alcohn',
-  description: 'Sellos de bronce y abecedarios. Precisión industrial para cuero, madera, cerámica y alimentos.',
-  alternates: {
-    canonical: '/productos',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/productos',
-    siteName: SITE_NAME,
-    title: 'Productos - Alcohn',
-    description: 'Sellos de bronce y abecedarios. Precisión industrial para cuero, madera, cerámica y alimentos.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Productos - Alcohn',
-    description: 'Sellos de bronce y abecedarios. Precisión industrial para cuero, madera, cerámica y alimentos.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+const PRODUCTOS_TITLE =
+  'Sellos de bronce personalizados para cuero, madera, pan y packaging | Alcohn';
+const PRODUCTOS_DESCRIPTION =
+  'Catálogo de sellos de bronce y abecedarios CNC. Cuero, madera, alimentos, cerámica y lacre. Comprá online o diseñá con tu logo.';
+
+export const metadata: Metadata = createPageMetadata({
+  title: PRODUCTOS_TITLE,
+  description: PRODUCTOS_DESCRIPTION,
+  path: '/productos',
+});
 
 const collectionPageJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: 'Productos - Alcohn',
-  description:
-    'Sellos de bronce y abecedarios. Precisión industrial para cuero, madera, cerámica y alimentos.',
+  name: PRODUCTOS_TITLE,
+  description: PRODUCTOS_DESCRIPTION,
   mainEntity: {
     '@type': 'ItemList',
     itemListElement: products.map((product, index) => ({

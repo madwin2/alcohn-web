@@ -10,8 +10,10 @@ import AnalyticsProvider from '@/components/AnalyticsProvider';
 import { CartProvider } from '@/contexts/CartContext';
 import {
   DEFAULT_OG_IMAGE,
+  SITE_DEFAULT_DESCRIPTION,
+  SITE_DEFAULT_TITLE,
   SITE_NAME,
-  organizationJsonLd,
+  buildGlobalSchemaGraph,
   SITE_URL,
 } from '@/lib/seo';
 
@@ -19,16 +21,15 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-  description: 'Sellos de bronce de alta precisión fabricados en CNC. Más que una herramienta, una forma de contar tu historia. Para cuero, madera, alimentos. Hecho en Mar del Plata, Argentina.',
-  keywords: 'sello de bronce, sello de bronce personalizado, sello para cuero, sello para madera, sello para marroquinería, sello con logo, sello para alimentos, hecho en Argentina, precisión CNC, profesionalización del oficio',
+  title: SITE_DEFAULT_TITLE,
+  description: SITE_DEFAULT_DESCRIPTION,
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     url: '/',
     siteName: SITE_NAME,
-    title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-    description: 'Sellos de bronce de alta precisión fabricados en CNC. Más que una herramienta, una forma de contar tu historia. Para cuero, madera, alimentos. Hecho en Mar del Plata, Argentina.',
+    title: SITE_DEFAULT_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
     images: [
       {
         url: DEFAULT_OG_IMAGE,
@@ -40,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-    description: 'Sellos de bronce de alta precisión fabricados en CNC. Más que una herramienta, una forma de contar tu historia.',
+    title: SITE_DEFAULT_TITLE,
+    description: SITE_DEFAULT_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
   },
 };
@@ -56,7 +57,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildGlobalSchemaGraph()) }}
         />
         <CartProvider>
           <Suspense fallback={null}>

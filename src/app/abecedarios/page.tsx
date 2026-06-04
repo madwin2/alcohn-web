@@ -7,30 +7,14 @@ import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
 import { abecedarios } from '@/lib/catalog';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Abecedarios - Alcohn',
-  description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
-  alternates: {
-    canonical: '/abecedarios',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/abecedarios',
-    siteName: SITE_NAME,
-    title: 'Abecedarios - Alcohn',
-    description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Abecedarios - Alcohn',
-    description: 'Conjunto completo de letras y números individuales de bronce para marcar textos personalizados.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Abecedarios de bronce personalizados | Letras y números CNC | Alcohn',
+  description:
+    'Letras y números de bronce individuales para marcar textos en cuero y madera. Fabricación CNC, envío a todo Argentina.',
+  path: '/abecedarios',
+});
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },

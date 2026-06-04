@@ -2,30 +2,14 @@ import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd, localBusinessJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
-  description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
-  alternates: {
-    canonical: '/sobre-alcohn',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/sobre-alcohn',
-    siteName: SITE_NAME,
-    title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
-    description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Sobre Alcohn - Sellos de bronce fabricados en CNC',
-    description: 'Empresa de Mar del Plata con experiencia fabricando sellos de bronce de alta precisión con CNC propia.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Sobre Alcohn | Sellos de bronce CNC en Mar del Plata, Argentina',
+  description:
+    'Fabricamos sellos de bronce de alta precisión con CNC propia. +6.000 sellos, marcas nacionales y envío a todo el país.',
+  path: '/sobre-alcohn',
+});
 
 const values = [
   ['Calidad', 'Cada sello debe ser funcional, preciso y estéticamente impecable.'],
@@ -43,10 +27,6 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 export default function SobreAlcohnPage() {
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

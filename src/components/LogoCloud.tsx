@@ -166,8 +166,11 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
             <div className="flex flex-col justify-between p-6 md:p-10 lg:p-12">
               <div className="flex flex-col items-center text-center md:hidden">
                 <blockquote className="max-w-md text-[1.35rem] font-semibold italic leading-snug tracking-tight text-neutral-950">
-                  &ldquo;Desde que compre alcohn bla bla bla&rdquo;
+                  &ldquo;El sello quedó nítido desde el primer uso. Mis clientes reconocen la marca al toque la pieza.&rdquo;
                 </blockquote>
+                <p className="mt-4 text-sm text-neutral-600">
+                  Lucía M. — Marroquinería artesanal, Córdoba
+                </p>
               </div>
 
               <div className="hidden md:flex md:h-full md:w-full md:flex-col md:justify-between">
@@ -184,12 +187,12 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
                     <p className="mt-1 text-xs leading-snug text-neutral-600">múltiples materiales</p>
                   </div>
                   <div data-scroll-card className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
-                    <p className="text-2xl font-semibold text-neutral-950">+5</p>
-                    <p className="mt-1 text-xs leading-snug text-neutral-600">materiales posibles</p>
+                    <p className="text-2xl font-semibold text-neutral-950">+9</p>
+                    <p className="mt-1 text-xs leading-snug text-neutral-600">usos y materiales</p>
                   </div>
                   <div data-scroll-card className="technical-dash border border-dashed border-[var(--alcohn-line)] bg-white/50 p-4 text-left">
-                    <p className="text-2xl font-semibold text-neutral-950">Años</p>
-                    <p className="mt-1 text-xs leading-snug text-neutral-600">de uso real</p>
+                    <p className="text-2xl font-semibold text-neutral-950">Bronce</p>
+                    <p className="mt-1 text-xs leading-snug text-neutral-600">para toda la vida</p>
                   </div>
                 </div>
 

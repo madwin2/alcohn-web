@@ -2,6 +2,16 @@ export interface Testimonial {
   name: string;
   quote: string;
   image: string;
+  /** Origen de la reseña (casos-reales / Google Business). */
+  source?: 'Google';
+}
+
+/** Para JSON-LD de reseñas en /casos-reales. */
+export function toReviewJsonLdInputs(items: Testimonial[]) {
+  return items.map((item) => ({
+    authorName: item.name,
+    reviewBody: item.quote,
+  }));
 }
 
 const avatar = (filename: string) => `/images/testimonials/${filename}`;

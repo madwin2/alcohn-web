@@ -9,40 +9,19 @@ import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 import { stampUseCases } from '@/data/stampUseCases';
-import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteUrl } from '@/lib/seo';
+import {
+  SITE_DEFAULT_DESCRIPTION,
+  SITE_DEFAULT_TITLE,
+  SITE_NAME,
+  absoluteUrl,
+  createPageMetadata,
+} from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-  description:
-    'Sellos de bronce personalizados para cuero, madera, alimentos y packaging. Subí tu logo, elegí uso y avanzá con muestra, medida y precio.',
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/',
-    siteName: SITE_NAME,
-    title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-    description:
-      'Sellos de bronce personalizados para cuero, madera, alimentos y packaging. Subí tu logo, elegí uso y avanzá con muestra, medida y precio.',
-    images: [
-      {
-        url: DEFAULT_OG_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: 'Alcohn - Sellos de bronce personalizados',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Alcohn - Sellos de bronce personalizados | Hecho en Argentina con CNC',
-    description:
-      'Sellos de bronce personalizados para cuero, madera, alimentos y packaging.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: SITE_DEFAULT_TITLE,
+  description: SITE_DEFAULT_DESCRIPTION,
+  path: '/',
+});
 
 const websiteJsonLd = {
   '@context': 'https://schema.org',

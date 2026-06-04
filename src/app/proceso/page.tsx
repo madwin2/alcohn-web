@@ -3,30 +3,14 @@ import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import Timeline from '@/components/Timeline';
 import { processSteps } from '@/data/process';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Cómo funciona - Alcohn',
-  description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado. Desde el envío de tu logo hasta la entrega final.',
-  alternates: {
-    canonical: '/proceso',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/proceso',
-    siteName: SITE_NAME,
-    title: 'Cómo funciona - Alcohn',
-    description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Cómo funciona - Alcohn',
-    description: 'Proceso simple y transparente para obtener tu sello de bronce personalizado.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: 'Cómo comprar tu sello de bronce | Proceso en 72hs | Alcohn',
+  description:
+    'Pasos para comprar un sello personalizado: subí tu logo, elegí medida y material, revisá muestra y recibí tu sello de bronce CNC.',
+  path: '/proceso',
+});
 
 const facts = [
   {

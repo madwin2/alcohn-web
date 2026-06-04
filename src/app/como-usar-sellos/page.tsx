@@ -2,33 +2,14 @@ import type { Metadata } from 'next';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Cómo usar los sellos - Alcohn',
+export const metadata: Metadata = createPageMetadata({
+  title: 'Cómo usar sellos de bronce en cuero, madera y alimentos | Alcohn',
   description:
-    'Guía práctica para usar sellos de bronce en cuero, madera, packaging, alimentos y otros materiales.',
-  alternates: {
-    canonical: '/como-usar-sellos',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/como-usar-sellos',
-    siteName: SITE_NAME,
-    title: 'Cómo usar los sellos - Alcohn',
-    description:
-      'Guía práctica para usar sellos de bronce en cuero, madera, packaging, alimentos y otros materiales.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Cómo usar los sellos - Alcohn',
-    description:
-      'Guía práctica para usar sellos de bronce en cuero, madera, packaging, alimentos y otros materiales.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+    'Guía práctica: temperatura, presión y técnica para marcar cuero, madera, pan, packaging, hielo y más con sellos de bronce.',
+  path: '/como-usar-sellos',
+});
 
 const materialGuide = [
   {

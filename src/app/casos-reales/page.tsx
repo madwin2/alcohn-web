@@ -6,37 +6,29 @@ import RecognizedBrandsMarquee from '@/components/RecognizedBrandsMarquee';
 import ClienteGallery from '@/components/ClienteGallery';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { getClientes } from '@/lib/clientes';
-import { DEFAULT_OG_IMAGE, SITE_NAME, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { testimonials, toReviewJsonLdInputs } from '@/data/testimonials';
+import {
+  buildBreadcrumbJsonLd,
+  buildGoogleReviewsSchemaGraph,
+  createPageMetadata,
+} from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Casos reales - Alcohn',
-  description: 'Galería de sellos terminados y materiales marcados. Empresas, talleres y emprendedores que ya usan sellos Alcohn.',
-  alternates: {
-    canonical: '/casos-reales',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_AR',
-    url: '/casos-reales',
-    siteName: SITE_NAME,
-    title: 'Casos reales - Alcohn',
-    description:
-      'Galería de sellos terminados y materiales marcados. Empresas, talleres y emprendedores que ya usan sellos Alcohn.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Casos reales - Alcohn',
-    description:
-      'Galería de sellos terminados y materiales marcados. Empresas, talleres y emprendedores que ya usan sellos Alcohn.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title:
+    'Casos reales: marcas que usan sellos Alcohn (Brooksfield, Tucci, Mistral, Lee) | Alcohn',
+  description:
+    'Galería de sellos terminados y trabajos reales. Marcas, talleres y emprendedores que marcan con bronce CNC Alcohn.',
+  path: '/casos-reales',
+});
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },
   { name: 'Casos reales', path: '/casos-reales' },
 ]);
+
+const googleReviewsJsonLd = buildGoogleReviewsSchemaGraph(
+  toReviewJsonLdInputs(testimonials)
+);
 
 export default function CasosRealesPage() {
   const clientes = getClientes();
@@ -46,6 +38,10 @@ export default function CasosRealesPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(googleReviewsJsonLd) }}
       />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
