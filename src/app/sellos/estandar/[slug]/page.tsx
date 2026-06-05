@@ -126,6 +126,7 @@ export default function StandardDesignPage({ params }: PageProps) {
         <PageIntro
           label={COLLECTION_LABELS[design.collection] || design.collection}
           title={design.title}
+          titleOnlyOnMobile
           description={
             design.description ||
             'Elegí medida, agregá al carrito y completá checkout sin esperar una consulta manual.'
@@ -147,7 +148,7 @@ export default function StandardDesignPage({ params }: PageProps) {
         />
 
         <div
-          className="mb-12 grid w-full grid-cols-1 gap-6 md:mb-20 md:gap-16 lg:grid-cols-2 lg:items-stretch lg:gap-16 xl:gap-24"
+          className="mb-12 grid w-full grid-cols-1 gap-4 md:mb-20 md:gap-16 lg:grid-cols-2 lg:items-stretch lg:gap-16 xl:gap-24"
           style={panelHeight ? { gridTemplateRows: `${panelHeight}px` } : undefined}
         >
           <div className="min-w-0 w-full lg:h-full">

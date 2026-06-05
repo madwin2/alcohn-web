@@ -17,6 +17,7 @@ interface PageIntroProps {
   secondaryCta?: Cta;
   highlights?: string[];
   hideHighlightsOnMobile?: boolean;
+  titleOnlyOnMobile?: boolean;
   priceFrom?: number;
   className?: string;
 }
@@ -30,20 +31,35 @@ export default function PageIntro({
   secondaryCta,
   highlights = [],
   hideHighlightsOnMobile = false,
+  titleOnlyOnMobile = false,
   priceFrom,
   className = '',
 }: PageIntroProps) {
+  const hideMobileExtras = titleOnlyOnMobile || hideHighlightsOnMobile;
+
   return (
-    <section className={`technical-sheet motion-reveal mb-8 md:mb-16 ${className}`}>
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.46fr_0.54fr] border-b border-[var(--alcohn-line)]">
-        <div className="p-4 md:p-10 lg:p-12">
+    <section
+      className={`technical-sheet motion-reveal ${titleOnlyOnMobile ? 'mb-4 md:mb-16' : 'mb-8 md:mb-16'} ${className}`}
+    >
+      <div
+        className={`relative z-10 grid grid-cols-1 lg:grid-cols-[0.46fr_0.54fr] border-[var(--alcohn-line)] ${
+          titleOnlyOnMobile ? 'md:border-b' : 'border-b'
+        }`}
+      >
+        <div className={`p-4 md:p-10 lg:p-12 ${titleOnlyOnMobile ? 'pb-3 md:pb-10' : ''}`}>
           <p className="craft-label mb-3 md:mb-4">{label}</p>
           <h1 className="text-[1.75rem] leading-[1.08] md:text-6xl md:leading-[0.98] font-semibold tracking-tight text-neutral-950">
             {title}
           </h1>
         </div>
 
-        <div className="p-4 md:p-10 lg:p-12 border-t lg:border-l lg:border-t-0 border-[var(--alcohn-line)] flex flex-col justify-between gap-5 md:gap-8">
+        <div
+          className={`p-4 md:p-10 lg:p-12 border-[var(--alcohn-line)] flex-col justify-between gap-5 md:gap-8 ${
+            titleOnlyOnMobile
+              ? 'hidden md:flex md:border-t-0 md:border-l'
+              : 'flex border-t lg:border-l lg:border-t-0'
+          }`}
+        >
           <p className="text-sm md:text-base leading-relaxed text-neutral-700 max-w-2xl">
             <span className="md:hidden">{mobileDescription || description}</span>
             <span className="hidden md:inline">{description}</span>
@@ -80,7 +96,7 @@ export default function PageIntro({
           {/* Mobile: lista vertical compacta con check */}
           <ul
             className={`relative z-10 divide-y divide-[var(--alcohn-line)] sm:hidden ${
-              hideHighlightsOnMobile ? 'hidden' : ''
+              hideMobileExtras ? 'hidden' : ''
             }`}
           >
             {highlights.map((highlight, index) => (

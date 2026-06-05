@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import SpecStrip from '@/components/SpecStrip';
 import IntentCard from '@/components/IntentCard';
 import PersonalizadoProductCard from '@/components/sellos/PersonalizadoProductCard';
@@ -8,8 +7,7 @@ import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
 import PriceFrom from '@/components/PriceFrom';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import { products } from '@/data/products';
-import { getStampPriceFrom, stampUseCases } from '@/data/stampUseCases';
+import { stampUseCases } from '@/data/stampUseCases';
 import {
   getAbecedarioMinPrice,
   getAccessoryMinPriceFrom,
@@ -36,12 +34,26 @@ const collectionPageJsonLd = {
   description: PRODUCTOS_DESCRIPTION,
   mainEntity: {
     '@type': 'ItemList',
-    itemListElement: products.map((product, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      url: absoluteUrl(`/productos/${product.slug}`),
-      name: product.name,
-    })),
+    itemListElement: [
+      ...stampUseCases.map((useCase, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: absoluteUrl(`/sellos/${useCase.slug}`),
+        name: useCase.title,
+      })),
+      {
+        '@type': 'ListItem',
+        position: stampUseCases.length + 1,
+        url: absoluteUrl('/abecedarios'),
+        name: 'Abecedarios',
+      },
+      {
+        '@type': 'ListItem',
+        position: stampUseCases.length + 2,
+        url: absoluteUrl('/sellos/estandar'),
+        name: 'Sellos estándar',
+      },
+    ],
   },
 };
 
@@ -116,32 +128,6 @@ export default function ProductosPage() {
               priceFrom={standardStampMinPrice}
               priority
             />
-          </div>
-        </section>
-
-        <section className="mb-20 border-t border-[var(--alcohn-line)] pt-16">
-          <div className="mb-8">
-            <h2 className="craft-label mb-2">POR MATERIAL Y USO</h2>
-            <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">
-              Precios de referencia para sellos personalizados con tu logo. La medida final se confirma en el diseñador online.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {stampUseCases.map((useCase) => (
-              <Link
-                key={useCase.slug}
-                href={`/sellos/${useCase.slug}`}
-                className="material-card group block p-4 transition-colors hover:border-neutral-400"
-              >
-                <p className="craft-label mb-2">{useCase.material}</p>
-                <h3 className="text-lg font-semibold tracking-tight text-neutral-950 group-hover:text-neutral-700">
-                  {useCase.title}
-                </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{useCase.description}</p>
-                <PriceFrom amount={getStampPriceFrom(useCase.buyMaterial)} className="mt-4" size="sm" />
-              </Link>
-            ))}
           </div>
         </section>
 

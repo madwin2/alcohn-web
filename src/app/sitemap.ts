@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { products } from '@/data/products';
 import { stampUseCases } from '@/data/stampUseCases';
 import { standardDesigns } from '@/lib/catalog';
 import { SITE_URL } from '@/lib/seo';
@@ -29,11 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
   }));
 
-  const productEntries = products.map((product) => ({
-    url: `${SITE_URL}/productos/${product.slug}`,
-    lastModified: now,
-  }));
-
   const useCaseEntries = stampUseCases.map((useCase) => ({
     url: `${SITE_URL}/sellos/${useCase.slug}`,
     lastModified: now,
@@ -44,5 +38,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
   }));
 
-  return [...staticEntries, ...productEntries, ...useCaseEntries, ...standardEntries];
+  return [...staticEntries, ...useCaseEntries, ...standardEntries];
 }

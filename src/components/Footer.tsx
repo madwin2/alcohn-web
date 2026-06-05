@@ -116,17 +116,17 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/productos/sello-personalizado-cuero" className={footerLinkClass}>
+                <Link href="/sellos/para-cuero" className={footerLinkClass}>
                   Para cuero
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sello-personalizado-madera" className={footerLinkClass}>
+                <Link href="/sellos/para-madera" className={footerLinkClass}>
                   Para madera
                 </Link>
               </li>
               <li>
-                <Link href="/productos/sello-para-alimentos" className={footerLinkClass}>
+                <Link href="/sellos/para-pan" className={footerLinkClass}>
                   Para alimentos
                 </Link>
               </li>
