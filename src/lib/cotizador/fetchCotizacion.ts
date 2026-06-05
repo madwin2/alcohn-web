@@ -10,6 +10,24 @@ export type CotizacionApiResponse = {
   error?: string;
 };
 
+export async function cotizarCm(
+  anchoCm: number,
+  altoCm: number
+): Promise<CotizacionApiResponse | null> {
+  try {
+    const res = await fetch('/api/cotizador', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ancho_cm: anchoCm, alto_cm: altoCm }),
+    });
+    const json = (await res.json()) as CotizacionApiResponse & { error?: string };
+    if (!res.ok || !json.cotizable) return null;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
 export async function cotizarMm(
   anchoMm: number,
   altoMm: number

@@ -1,18 +1,12 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { StandardDesign } from '@/lib/catalog';
+import { COLLECTION_LABELS, StandardDesign } from '@/lib/catalog';
 
 interface StandardDesignCardProps {
   design: StandardDesign;
 }
-
-const collectionLabels: Record<string, string> = {
-  futbol: 'Fútbol',
-  argentina: 'Argentina',
-  cuero: 'Cuero',
-  madera: 'Madera',
-  oficios: 'Oficios',
-};
 
 export default function StandardDesignCard({ design }: StandardDesignCardProps) {
   const priceDisplay = `Desde $${design.startingPrice.toLocaleString('es-AR')}`;
@@ -20,17 +14,27 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
   return (
     <Link href={`/sellos/estandar/${design.slug}`} className="group block">
       <div className="material-card p-3">
-        {/* Image */}
         <div className="material-frame aspect-square relative overflow-hidden">
           {design.image ? (
-            <Image
-              src={design.image}
-              alt={design.title}
-              width={400}
-              height={400}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              priority
-            />
+            <>
+              <Image
+                src={design.image}
+                alt={design.title}
+                width={400}
+                height={400}
+                className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-0"
+                priority
+              />
+              {design.hoverImage && (
+                <Image
+                  src={design.hoverImage}
+                  alt={`${design.title} marcado en cuero`}
+                  width={400}
+                  height={400}
+                  className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-neutral-300">
               <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,31 +44,24 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
           )}
         </div>
 
-        {/* Content */}
         <div className="px-2 pb-2 pt-5 space-y-4">
-          {/* Collection label */}
           <div className="craft-label">
-            {collectionLabels[design.collection] || design.collection}
+            {COLLECTION_LABELS[design.collection] || design.collection}
           </div>
 
-          {/* Title */}
           <h3 className="text-lg font-semibold text-neutral-900 tracking-tight">
             {design.title}
           </h3>
 
-          {/* Description */}
           {design.description && (
             <p className="text-sm text-neutral-600 leading-relaxed line-clamp-2">
               {design.description}
             </p>
           )}
 
-          {/* Price */}
           <div className="pt-4 border-t border-[var(--alcohn-line)]">
             <p className="text-sm text-neutral-600">
-              <span className="craft-label mr-2">
-                Desde
-              </span>
+              <span className="craft-label mr-2">Desde</span>
               {priceDisplay}
             </p>
             <p className="mt-2 text-xs text-neutral-500">
@@ -72,7 +69,6 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
             </p>
           </div>
 
-          {/* CTA */}
           <div className="pt-2">
             <div className="w-full inline-flex min-h-[44px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-semibold bg-[var(--alcohn-surface)] text-neutral-900 border border-neutral-300 hover:border-[var(--alcohn-bronze)] hover:bg-white transition-all duration-200">
               Elegir este diseño
@@ -86,4 +82,3 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
     </Link>
   );
 }
-

@@ -12,6 +12,7 @@ import { products } from '@/data/products';
 import { getStampPriceFrom, stampUseCases } from '@/data/stampUseCases';
 import {
   getAbecedarioMinPrice,
+  getAccessoryMinPriceFrom,
   getCustomStampMinPrice,
   getStandardStampMinPrice,
 } from '@/lib/pricing';
@@ -52,6 +53,7 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 const customStampMinPrice = getCustomStampMinPrice();
 const standardStampMinPrice = getStandardStampMinPrice();
 const abecedarioMinPrice = getAbecedarioMinPrice();
+const accessoryMinPrice = getAccessoryMinPriceFrom();
 
 export default function ProductosPage() {
   return (
@@ -173,6 +175,42 @@ export default function ProductosPage() {
               <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">
                 <ActionButton href="/abecedarios" variant="secondary" className="w-full sm:w-auto">
                   Ver abecedarios
+                </ActionButton>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-[var(--alcohn-line)] pt-16 mb-20">
+          <div className="mb-8">
+            <h2 className="craft-label mb-2">ACCESORIOS</h2>
+          </div>
+
+          <div className="material-card p-3 flex flex-col">
+            <div className="material-frame aspect-[8/3] relative overflow-hidden">
+              <Image
+                src="/images/accesorios/calentador electrico/calentador-electrico.png"
+                alt="Calentador eléctrico para sellos de bronce"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 100vw"
+              />
+            </div>
+
+            <div className="p-5 md:p-9 flex flex-col flex-1">
+              <div className="mb-6">
+                <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
+                  Accesorios
+                </h3>
+                <p className="text-sm text-neutral-600 leading-relaxed max-w-2xl">
+                  Calentador eléctrico, mango de golpe y base de aluminio para remachadora. Complementos para marcar cuero y madera con mayor control y comodidad en el taller.
+                </p>
+                <PriceFrom amount={accessoryMinPrice} className="mt-4" size="sm" />
+              </div>
+
+              <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">
+                <ActionButton href="/accesorios" variant="secondary" className="w-full sm:w-auto">
+                  Ver accesorios
                 </ActionButton>
               </div>
             </div>

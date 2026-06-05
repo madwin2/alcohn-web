@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { getStandardDesignBySlug } from '@/lib/catalog';
+import { getSizeLabel } from '@/data/standardStamps';
+import { COLLECTION_LABELS, getStandardDesignBySlug } from '@/lib/catalog';
+import { cotizarCm } from '@/lib/cotizador/fetchCotizacion';
 import ActionButton from '@/components/ActionButton';
 import PageIntro from '@/components/PageIntro';
 import SpecChips from '@/components/SpecChips';
 import SizeSelector from '@/components/SizeSelector';
-import PurchaseInclusions from '@/components/PurchaseInclusions';
+import PurchaseInclusions, { buildStandardStampInclusions } from '@/components/PurchaseInclusions';
+import BeforeBuySection from '@/components/sellos/BeforeBuySection';
+import StampSpecificationsCard from '@/components/sellos/StampSpecificationsCard';
+import { standardStampBeforeBuyFaqs } from '@/data/standardStampBeforeBuyFaqs';
 import { useCart } from '@/contexts/CartContext';
 
 interface PageProps {
@@ -18,10 +23,53 @@ interface PageProps {
 
 export default function StandardDesignPage({ params }: PageProps) {
   const { addItem } = useCart();
-  const design = getStandardDesignBySlug(params.slug);
+  const design = useMemo(() => getStandardDesignBySlug(params.slug), [params.slug]);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [selectedPrice, setSelectedPrice] = useState<number | undefined>(undefined);
+  const [selectedTransferPrice, setSelectedTransferPrice] = useState<number | undefined>(undefined);
+  const [priceLoading, setPriceLoading] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [imageHover, setImageHover] = useState(false);
+  const [panelHeight, setPanelHeight] = useState<number | undefined>(undefined);
+  const imagePanelRef = useRef<HTMLDivElement>(null);
+  const quoteRequestId = useRef(0);
+
+  const sizeOptions = useMemo(
+    () => (design ? design.sizes.map((s) => ({ size: getSizeLabel(s) })) : []),
+    [design]
+  );
+
+  const inclusionItems = useMemo(
+    () => (design ? buildStandardStampInclusions(design.title) : []),
+    [design]
+  );
+
+  useEffect(() => {
+    const node = imagePanelRef.current;
+    if (!node) return;
+
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+
+    const syncPanelHeight = () => {
+      if (!desktopQuery.matches) {
+        setPanelHeight(undefined);
+        return;
+      }
+      setPanelHeight(Math.round(node.getBoundingClientRect().height));
+    };
+
+    const observer = new ResizeObserver(syncPanelHeight);
+    observer.observe(node);
+    desktopQuery.addEventListener('change', syncPanelHeight);
+    window.addEventListener('resize', syncPanelHeight);
+    syncPanelHeight();
+
+    return () => {
+      observer.disconnect();
+      desktopQuery.removeEventListener('change', syncPanelHeight);
+      window.removeEventListener('resize', syncPanelHeight);
+    };
+  }, [params.slug]);
 
   if (!design) {
     return (
@@ -33,32 +81,31 @@ export default function StandardDesignPage({ params }: PageProps) {
     );
   }
 
-  // Definir medidas disponibles basadas en el precio base
-  const availableSizes = [
-    { size: '30x30mm', price: design.startingPrice },
-    { size: '40x40mm', price: Math.round(design.startingPrice * 1.25) },
-    { size: '50x50mm', price: Math.round(design.startingPrice * 1.5) },
-  ];
+  const handleSizeSelect = async (sizeLabel: string) => {
+    const size = design.sizes.find((s) => getSizeLabel(s) === sizeLabel);
+    if (!size) return;
 
-  const handleSizeSelect = (size: string, price: number) => {
-    setSelectedSize(size);
-    setSelectedPrice(price);
+    setSelectedSize(sizeLabel);
+    setSelectedPrice(undefined);
+    setSelectedTransferPrice(undefined);
     setAddedToCart(false);
+    setPriceLoading(true);
+
+    const requestId = ++quoteRequestId.current;
+    const quote = await cotizarCm(size.widthCm, size.heightCm);
+
+    if (requestId !== quoteRequestId.current) return;
+
+    setSelectedPrice(quote?.precio_link_ars);
+    setSelectedTransferPrice(quote?.precio_transferencia_ars);
+    setPriceLoading(false);
   };
 
   const handleAddToCart = () => {
     if (selectedSize && selectedPrice) {
-      const collectionLabels: Record<string, string> = {
-        futbol: 'Fútbol',
-        argentina: 'Argentina',
-        cuero: 'Cuero',
-        madera: 'Madera',
-        oficios: 'Oficios',
-      };
-
       addItem({
         title: design.title,
-        collection: collectionLabels[design.collection] || design.collection,
+        collection: COLLECTION_LABELS[design.collection] || design.collection,
         material: 'Bronce',
         process: 'CNC',
         variantSize: selectedSize,
@@ -67,30 +114,22 @@ export default function StandardDesignPage({ params }: PageProps) {
         designSlug: design.slug,
       });
 
-      // Resetear selección después de agregar
       setAddedToCart(true);
     }
   };
 
-  const priceDisplay = selectedPrice
-    ? `$${selectedPrice.toLocaleString('es-AR')}`
-    : `Desde $${design.startingPrice.toLocaleString('es-AR')}`;
-
-  const collectionLabels: Record<string, string> = {
-    futbol: 'Fútbol',
-    argentina: 'Argentina',
-    cuero: 'Cuero',
-    madera: 'Madera',
-    oficios: 'Oficios',
-  };
+  const canAddToCart = Boolean(selectedSize && selectedPrice && !priceLoading);
 
   return (
     <div className="atelier-page min-h-screen py-8 md:py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
-          label={collectionLabels[design.collection] || design.collection}
+          label={COLLECTION_LABELS[design.collection] || design.collection}
           title={design.title}
-          description={design.description || 'Elegí medida, agregá al carrito y completá checkout sin esperar una consulta manual.'}
+          description={
+            design.description ||
+            'Elegí medida, agregá al carrito y completá checkout sin esperar una consulta manual.'
+          }
           primaryCta={{
             label: 'Elegir medida',
             href: '#medidas',
@@ -107,19 +146,37 @@ export default function StandardDesignPage({ params }: PageProps) {
           ]}
         />
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-16 lg:gap-24 mb-12 md:mb-20">
-          {/* Image */}
-          <div className="material-frame aspect-square relative overflow-hidden">
+        <div
+          className="mb-12 grid w-full grid-cols-1 gap-6 md:mb-20 md:gap-16 lg:grid-cols-2 lg:items-stretch lg:gap-16 xl:gap-24"
+          style={panelHeight ? { gridTemplateRows: `${panelHeight}px` } : undefined}
+        >
+          <div className="min-w-0 w-full lg:h-full">
+            <div
+              ref={imagePanelRef}
+              className="material-frame relative aspect-square w-full max-w-full overflow-hidden"
+              onMouseEnter={() => setImageHover(true)}
+              onMouseLeave={() => setImageHover(false)}
+            >
             {design.image ? (
-              <Image
-                src={design.image}
-                alt={design.title}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-                priority
-              />
+              <>
+                <Image
+                  src={design.image}
+                  alt={design.title}
+                  fill
+                  className={`object-cover transition-opacity duration-300 ${imageHover && design.hoverImage ? 'opacity-0' : 'opacity-100'}`}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+                {design.hoverImage && (
+                  <Image
+                    src={design.hoverImage}
+                    alt={`${design.title} marcado en cuero`}
+                    fill
+                    className={`object-cover transition-opacity duration-300 ${imageHover ? 'opacity-100' : 'opacity-0'}`}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                )}
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-neutral-300">
                 <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,170 +184,125 @@ export default function StandardDesignPage({ params }: PageProps) {
                 </svg>
               </div>
             )}
+            </div>
           </div>
 
-          {/* Details */}
-          <div className="space-y-5 md:space-y-8">
-            {/* Spec Chips */}
-            <SpecChips
-              specs={[
-                { label: 'Colección', value: collectionLabels[design.collection] || design.collection },
-                { label: 'Material', value: 'Bronce' },
-                { label: 'Proceso', value: 'CNC' },
-              ]}
-            />
-
-            {/* Description */}
-            {design.description && (
-              <div>
-                <h3 className="craft-label mb-3">
-                  DESCRIPCIÓN
-                </h3>
-                <p className="text-sm text-neutral-700 leading-relaxed">
-                  {design.description}
-                </p>
-              </div>
-            )}
-
-            {/* Size Selector */}
-            <div id="medidas" className="pt-6 border-t border-[var(--alcohn-line)] space-y-4 scroll-mt-24">
-              <div className="atelier-panel p-4">
-                <h3 className="craft-label mb-2">
-                  Guía rápida de medida
-                </h3>
-                <p className="text-sm text-neutral-700 leading-relaxed">
-                  30x30mm funciona bien para etiquetas, piezas chicas o marcas simples.
-                  40x40mm es la opción recomendada para la mayoría de usos. 50x50mm conviene
-                  cuando querés más presencia o mejor lectura en piezas grandes.
-                </p>
-              </div>
-              <SizeSelector
-                sizes={availableSizes}
-                selectedSize={selectedSize}
-                onSelect={handleSizeSelect}
-                basePrice={design.startingPrice}
+          <div className="flex h-full min-h-0 w-full min-w-0 flex-col justify-between">
+            <div className="flex min-h-0 flex-1 flex-col gap-5 lg:gap-3 lg:overflow-y-auto lg:pr-1">
+              <SpecChips
+                specs={[
+                  {
+                    label: 'Colección',
+                    value: COLLECTION_LABELS[design.collection] || design.collection,
+                  },
+                  { label: 'Material', value: 'Bronce' },
+                  { label: 'Proceso', value: 'CNC' },
+                ]}
               />
+
+              <StampSpecificationsCard className="lg:p-3 [&>div:first-child]:lg:pb-2 [&>div:last-child]:lg:mt-2" />
+
+              <div id="medidas" className="scroll-mt-24">
+                <SizeSelector
+                  sizes={sizeOptions}
+                  selectedSize={selectedSize}
+                  onSelect={handleSizeSelect}
+                />
+              </div>
             </div>
 
-            <PurchaseInclusions
-              variant="estandar"
-              compact
-              title="Incluido en este diseño"
-            />
+            <div className="mt-6 shrink-0 space-y-4 border-t border-[var(--alcohn-line)] pt-5 lg:mt-0 lg:space-y-3 lg:pt-4">
+              <div className="space-y-2">
+                <p className="craft-label">{selectedSize ? 'Precio' : 'Desde'}</p>
 
-            {/* Price */}
-            <div className="pt-6 border-t border-[var(--alcohn-line)]">
-              <p className="text-lg text-neutral-600">
-                {selectedPrice ? (
-                  <>
-                    <span className="craft-label mr-3">
-                      Precio
-                    </span>
-                    {priceDisplay}
-                  </>
-                ) : (
-                  <>
-                    <span className="craft-label mr-3">
-                      Desde
-                    </span>
-                    {priceDisplay}
-                  </>
-                )}
-              </p>
-            </div>
-
-            {/* CTA Principal */}
-            <div className="pt-6 border-t border-[var(--alcohn-line)]">
-              {selectedSize ? (
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full sm:w-auto min-h-[44px] border border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] text-white px-6 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
-                >
-                  Agregar al carrito
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full sm:w-auto min-h-[44px] border border-neutral-300 bg-neutral-100 text-neutral-500 px-6 py-3 text-sm font-medium uppercase tracking-wider cursor-not-allowed"
-                >
-                  Eleg&iacute; una medida para comprar
-                </button>
-              )}
-              {addedToCart && (
-                <div className="mt-4 border border-[var(--alcohn-bronze)] bg-[var(--alcohn-paper)] p-4">
-                  <p className="text-sm font-medium text-neutral-900">
-                    Agregado al carrito. Pod&eacute;s finalizar la compra ahora o seguir mirando dise&ntilde;os.
+                <div className="space-y-1.5">
+                  <p className="min-h-[2.25rem] text-2xl font-bold leading-tight tracking-tight text-neutral-900 md:min-h-[2.75rem] md:text-3xl">
+                    {priceLoading ? (
+                      <span className="text-lg font-semibold text-neutral-400">Cotizando...</span>
+                    ) : (
+                      <>
+                        ${(selectedPrice ?? design.startingPrice).toLocaleString('es-AR')}
+                        <span
+                          className={[
+                            'text-sm font-bold text-neutral-700 md:text-base',
+                            selectedSize && selectedPrice != null ? '' : 'invisible',
+                          ].join(' ')}
+                          aria-hidden={!(selectedSize && selectedPrice != null)}
+                        >
+                          {' '}
+                          (3 cuotas sin interés)
+                        </span>
+                      </>
+                    )}
                   </p>
-                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                    <ActionButton href="/checkout" variant="primary" className="flex-1">
-                      Finalizar compra
-                    </ActionButton>
-                    <ActionButton href="/sellos/estandar" variant="secondary" className="flex-1">
-                      Seguir comprando
-                    </ActionButton>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Especificaciones */}
-            <div className="pt-6 border-t border-[var(--alcohn-line)] space-y-4">
-              <h3 className="craft-label mb-4">
-                ESPECIFICACIONES
-              </h3>
-              <dl className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="craft-label w-1/3">
-                    Material
-                  </span>
-                  <span className="text-sm text-neutral-900 flex-1">
-                    Bronce de alta calidad
-                  </span>
+                  <p
+                    className={[
+                      'min-h-[1.25rem] text-sm font-semibold leading-snug',
+                      selectedTransferPrice != null ? 'text-green-600' : 'invisible',
+                    ].join(' ')}
+                    aria-hidden={selectedTransferPrice == null}
+                  >
+                    Transferencia: $
+                    {(selectedTransferPrice ?? design.startingPrice).toLocaleString('es-AR')}
+                  </p>
                 </div>
-                <div className="flex justify-between items-start">
-                  <span className="craft-label w-1/3">
-                    Proceso
-                  </span>
-                  <span className="text-sm text-neutral-900 flex-1">
-                    CNC alta precisión
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="craft-label w-1/3">
-                    Profundidad
-                  </span>
-                  <span className="text-sm text-neutral-900 flex-1">
-                    1.5mm - 2mm
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="craft-label w-1/3">
-                    Uso
-                  </span>
-                  <span className="text-sm text-neutral-900 flex-1">
-                    Cuero y madera
-                  </span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="craft-label w-1/3">
-                    Tiempo
-                  </span>
-                  <span className="text-sm text-neutral-900 flex-1">
-                    7-10 días hábiles
-                  </span>
-                </div>
-              </dl>
+
+                <p className="min-h-[1.25rem] text-sm leading-snug text-neutral-500">
+                  {selectedSize && !priceLoading && selectedPrice == null
+                    ? 'No pudimos cotizar esta medida. Escribinos por WhatsApp.'
+                    : '\u00A0'}
+                </p>
+              </div>
+
+              <div className="min-h-[44px]">
+                {canAddToCart ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="min-h-[44px] w-full border border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:border-[var(--alcohn-bronze)] hover:bg-[var(--alcohn-ink-soft)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 sm:w-auto"
+                  >
+                    Agregar al carrito
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="min-h-[44px] w-full cursor-not-allowed border border-neutral-300 bg-neutral-100 px-6 py-3 text-sm font-medium uppercase tracking-wider text-neutral-500 sm:w-auto"
+                  >
+                    {priceLoading ? 'Cotizando medida...' : 'Eleg\u00ed una medida para comprar'}
+                  </button>
+                )}
+                {addedToCart && (
+                  <div className="mt-4 border border-[var(--alcohn-bronze)] bg-[var(--alcohn-paper)] p-4">
+                    <p className="text-sm font-medium text-neutral-900">
+                      Agregado al carrito. Pod&eacute;s finalizar la compra ahora o seguir mirando dise&ntilde;os.
+                    </p>
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <ActionButton href="/checkout" variant="primary" className="flex-1">
+                        Finalizar compra
+                      </ActionButton>
+                      <ActionButton href="/sellos/estandar" variant="secondary" className="flex-1">
+                        Seguir comprando
+                      </ActionButton>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Volver a colección */}
+        <div className="mb-12 space-y-12 md:mb-20 md:space-y-16">
+          <PurchaseInclusions
+            inclusionItems={inclusionItems}
+            showKitIllustration
+            title="Qué incluye tu compra"
+          />
+          <BeforeBuySection faqs={standardStampBeforeBuyFaqs} />
+        </div>
+
         <div className="border-t border-[var(--alcohn-line)] pt-12">
-          <ActionButton
-            href="/sellos/estandar"
-            variant="ghost"
-          >
+          <ActionButton href="/sellos/estandar" variant="ghost">
             ← Ver todos los diseños estándar
           </ActionButton>
         </div>
@@ -298,4 +310,3 @@ export default function StandardDesignPage({ params }: PageProps) {
     </div>
   );
 }
-

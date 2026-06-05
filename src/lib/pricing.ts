@@ -1,5 +1,6 @@
+import { getAccessoryMinPrice } from '@/data/accessories';
 import { products } from '@/data/products';
-import { standardDesigns } from '@/lib/catalog';
+import { STANDARD_STAMP_PRICE_FROM_ARS } from '@/lib/catalog';
 
 /** Precio público "desde" para sellos personalizados con logo (referencia en web). */
 export const CUSTOM_STAMP_PRICE_FROM_ARS = 69500;
@@ -9,7 +10,11 @@ export function getCustomStampMinPrice(): number {
 }
 
 export function getStandardStampMinPrice(): number {
-  return Math.min(...standardDesigns.map((design) => design.startingPrice));
+  return STANDARD_STAMP_PRICE_FROM_ARS;
+}
+
+export function getAccessoryMinPriceFrom(): number {
+  return getAccessoryMinPrice();
 }
 
 export function getAbecedarioMinPrice(): number {

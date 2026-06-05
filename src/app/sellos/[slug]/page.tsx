@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionButton from '@/components/ActionButton';
 import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
+import StampUsageGuideSection from '@/components/sellos/StampUsageGuideSection';
 import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
@@ -15,6 +16,7 @@ import {
   getStampUseCaseBySlug,
   stampUseCases,
 } from '@/data/stampUseCases';
+import { getStampUsageGuideBySlug } from '@/data/stampUsageGuides';
 import { getProductCarouselImages } from '@/lib/stampProductCarousel';
 import {
   buildBreadcrumbJsonLd,
@@ -68,6 +70,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
   const priceFrom = getStampPriceFrom(useCase.buyMaterial);
   const canonical = `/sellos/${useCase.slug}`;
   const productCarouselImages = getProductCarouselImages(useCase);
+  const usageGuide = getStampUsageGuideBySlug(useCase.slug);
   const relatedUseCases = stampUseCases
     .filter((item) => item.slug !== useCase.slug)
     .slice(0, 3);
@@ -171,8 +174,8 @@ export default function SelloUseCasePage({ params }: PageParams) {
                 <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">
                   Diseñar para {useCase.material.toLowerCase()}
                 </ActionButton>
-                <ActionButton href="#medidas" variant="ghost" className="w-full sm:w-auto">
-                  Ver medidas
+                <ActionButton href="#guia-uso" variant="ghost" className="w-full sm:w-auto">
+                  Ver guía de uso
                 </ActionButton>
               </div>
             </div>
@@ -231,30 +234,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
             </MobileCarousel>
           </section>
 
-          <section id="medidas">
-            <div className="technical-sheet">
-              <div className="border-b border-[var(--alcohn-line)] p-6 md:p-10 lg:p-12">
-                <p className="craft-label mb-4">Guía de compra</p>
-                <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
-                  Medidas recomendadas para {useCase.material.toLowerCase()}.
-                </h2>
-                <p className="mt-5 max-w-2xl text-sm leading-relaxed text-neutral-700 md:text-base">
-                  La medida final depende del logo y de la superficie real. Estas referencias ayudan a llegar al
-                  diseñador con una decisión más clara.
-                </p>
-              </div>
-
-              <MobileCarousel rowClassName="md:grid md:grid-cols-3" hint="Deslizá medidas">
-                {useCase.recommendedSizes.map((item) => (
-                  <article key={item.label} className="mobile-snap-card border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-6 md:min-w-0 md:border-b-0 md:border-r md:bg-transparent md:last:border-r-0 md:p-8">
-                    <p className="craft-label mb-5">{item.label}</p>
-                    <h3 className="text-2xl font-semibold tracking-tight text-neutral-950">{item.size}</h3>
-                    <p className="mt-4 text-sm leading-relaxed text-neutral-700">{item.copy}</p>
-                  </article>
-                ))}
-              </MobileCarousel>
-            </div>
-          </section>
+          {usageGuide ? <StampUsageGuideSection guide={usageGuide} /> : null}
 
           <section>
             <div className="mb-8">

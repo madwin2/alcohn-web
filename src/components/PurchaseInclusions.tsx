@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import ProductCompactCard from '@/components/sellos/ProductCompactCard';
 import PurchaseInclusionsKitExplorer from '@/components/PurchaseInclusionsKitExplorer';
 import MobileCarousel from '@/components/MobileCarousel';
 
@@ -6,7 +7,7 @@ type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
 
 export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
-type InclusionItem = {
+export type InclusionItem = {
   title: string;
   copy: string;
 };
@@ -14,6 +15,8 @@ type InclusionItem = {
 interface PurchaseInclusionsProps {
   variant?: InclusionVariant;
   items?: string[];
+  /** Reemplaza los ítems por defecto del variant (título + descripción). */
+  inclusionItems?: InclusionItem[];
   className?: string;
   compact?: boolean;
   title?: string;
@@ -85,6 +88,17 @@ const defaultItems: Record<InclusionVariant, InclusionItem[]> = {
   ],
 };
 
+export function buildStandardStampInclusions(designTitle: string): InclusionItem[] {
+  const [first, ...rest] = defaultItems.personalizado;
+  return [
+    {
+      ...first,
+      title: `Sello Estándar - ${designTitle}`,
+    },
+    ...rest,
+  ];
+}
+
 function normalizeItems(variant: InclusionVariant, items?: string[]): InclusionItem[] {
   if (!items || items.length === 0) return defaultItems[variant];
 
@@ -130,6 +144,7 @@ function normalizeItems(variant: InclusionVariant, items?: string[]): InclusionI
 export default function PurchaseInclusions({
   variant = 'personalizado',
   items,
+  inclusionItems,
   className = '',
   compact = false,
   title = 'Qué incluye tu compra',
@@ -137,14 +152,15 @@ export default function PurchaseInclusions({
   showKitIllustration = true,
   logoUrl,
 }: PurchaseInclusionsProps) {
-  const normalizedItems = normalizeItems(variant, items);
+  const normalizedItems = inclusionItems ?? normalizeItems(variant, items);
+  const usesFullKit = inclusionItems != null || variant === 'personalizado';
   const introCopy =
     copy ||
-    (variant === 'personalizado'
+    (usesFullKit
       ? 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.'
       : 'El pedido deja claro qué recibís antes de avanzar al pago.');
 
-  if (!compact && showKitIllustration && variant === 'personalizado') {
+  if (!compact && showKitIllustration && usesFullKit) {
     return (
       <PurchaseInclusionsKitExplorer
         items={normalizedItems}
@@ -156,21 +172,8 @@ export default function PurchaseInclusions({
   if (compact) {
     const logoSrc = logoUrl || null;
     return (
-      <div
-        className={`technical-sheet blueprint-sheet p-4 relative flex flex-col min-h-[220px] ${className}`}
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--alcohn-line)] pb-3">
-          <div>
-            <p className="craft-label mb-1">Incluido</p>
-            <h3 className="text-base font-semibold tracking-tight text-neutral-950">
-              {title}
-            </h3>
-          </div>
-          <span className="hidden sm:block text-[10px] font-semibold uppercase text-neutral-400 shrink-0">
-            ALC-KIT
-          </span>
-        </div>
-        <ul className="mt-3 flex-1 space-y-2">
+      <ProductCompactCard label="Incluido" title={title} className={className}>
+        <ul className="space-y-2">
           {normalizedItems.slice(0, 6).map((item, index) => (
             <li
               key={`${item.title}-${index}`}
@@ -189,10 +192,7 @@ export default function PurchaseInclusions({
           )}
         </ul>
         {logoSrc && (
-          <div
-            className="mt-3 flex justify-end"
-            title="Tu logo"
-          >
+          <div className="mt-3 flex justify-end" title="Tu logo">
             <div className="h-14 w-14 overflow-hidden border border-[var(--alcohn-line-strong)] bg-white/90 shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -203,7 +203,7 @@ export default function PurchaseInclusions({
             </div>
           </div>
         )}
-      </div>
+      </ProductCompactCard>
     );
   }
 

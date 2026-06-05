@@ -9,6 +9,7 @@ const staticRoutes = [
   '/productos',
   '/sellos/estandar',
   '/abecedarios',
+  '/accesorios',
   '/proceso',
   '/como-usar-sellos',
   '/faq',
