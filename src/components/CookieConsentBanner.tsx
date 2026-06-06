@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { setConsentState, getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
+import { loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
 
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
@@ -19,7 +20,10 @@ export default function CookieConsentBanner() {
     });
     setVisible(false);
 
+    updateGtmConsent(analytics, false);
+
     if (analytics) {
+      loadGtmContainer();
       await trackEvent('cookie_consent_accepted', {
         metadata: { analytics: true },
       });

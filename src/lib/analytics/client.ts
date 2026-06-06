@@ -6,6 +6,7 @@ import {
   getOrCreateVisitorId,
 } from './cookies';
 import type { ClientTrackingEvent } from './types';
+import { pushGtmEvent } from './gtm';
 
 function collectUtmParams(
   url: URL
@@ -48,6 +49,13 @@ export async function trackEvent(
     ...collectUtmParams(currentUrl),
     metadata: options.metadata ?? {},
   };
+
+  pushGtmEvent(eventName, {
+    page_path: payload.pagePath,
+    page_location: payload.pageUrl,
+    page_referrer: payload.referrer,
+    ...payload.metadata,
+  });
 
   try {
     await fetch('/api/analytics/events', {

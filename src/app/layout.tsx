@@ -7,6 +7,7 @@ import ConditionalFooter from '@/components/ConditionalFooter';
 import ConditionalWhatsapp from '@/components/ConditionalWhatsapp';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 import AnalyticsProvider from '@/components/AnalyticsProvider';
+import GoogleTagManager from '@/components/GoogleTagManager';
 import { CartProvider } from '@/contexts/CartContext';
 import {
   DEFAULT_OG_IMAGE,
@@ -18,6 +19,20 @@ import {
 } from '@/lib/seo';
 
 const inter = Inter({ subsets: ['latin'] });
+
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+
+const GTM_CONSENT_DEFAULTS_SCRIPT = `
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent','default',{
+  'analytics_storage':'denied',
+  'ad_storage':'denied',
+  'ad_user_data':'denied',
+  'ad_personalization':'denied',
+  'wait_for_update':500
+});
+`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -54,7 +69,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        {GTM_ID ? (
+          <script dangerouslySetInnerHTML={{ __html: GTM_CONSENT_DEFAULTS_SCRIPT }} />
+        ) : null}
+      </head>
       <body className={inter.className}>
+        {GTM_ID ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        ) : null}
+        <GoogleTagManager />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildGlobalSchemaGraph()) }}
