@@ -1,8 +1,10 @@
 'use client';
 
+type DataLayerEntry = Record<string, unknown> | unknown[];
+
 declare global {
   interface Window {
-    dataLayer?: Record<string, unknown>[];
+    dataLayer?: DataLayerEntry[];
   }
 }
 
