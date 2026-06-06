@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import MaterialUsageSelector from '@/components/sellos/MaterialUsageSelector';
 import PageIntroWithMaterialModal from '@/components/sellos/PageIntroWithMaterialModal';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
@@ -10,45 +11,6 @@ export const metadata: Metadata = createPageMetadata({
     'Guía práctica: temperatura, presión y técnica para marcar cuero, madera, pan, packaging, hielo y más con sellos de bronce.',
   path: '/como-usar-sellos',
 });
-
-const materialGuide = [
-  {
-    material: 'Cuero',
-    method: 'Frío o caliente',
-    recommendation: 'Frío para bajo relieve limpio; caliente cuando buscás contraste más visible.',
-    note: 'Probá en retazo del mismo cuero: cambia mucho según curtido, espesor y terminación.',
-  },
-  {
-    material: 'Madera',
-    method: 'Caliente',
-    recommendation: 'Calor parejo, apoyo perpendicular y presión firme por pocos segundos.',
-    note: 'Las maderas blandas marcan más rápido; las duras necesitan más prueba previa.',
-  },
-  {
-    material: 'Packaging',
-    method: 'Caliente o presión',
-    recommendation: 'Usá baja temperatura y tiempos cortos para no deformar cartón o papel.',
-    note: 'Conviene empezar con presión leve y aumentar de a poco.',
-  },
-  {
-    material: 'Alimentos',
-    method: 'Caso especial',
-    recommendation: 'Usá sello limpio, prueba de temperatura y contacto breve.',
-    note: 'La compatibilidad depende del alimento, humedad, grasa y superficie.',
-  },
-  {
-    material: 'Cerámica cruda',
-    method: 'Presión',
-    recommendation: 'Marcá antes de la cocción con base estable y presión controlada.',
-    note: 'Evitá arrastrar el sello para no deformar bordes finos.',
-  },
-  {
-    material: 'Lacre',
-    method: 'Presión sobre lacre',
-    recommendation: 'Aplicá cuando el lacre ya no esté líquido pero siga blando.',
-    note: 'Esperá unos segundos antes de retirar para lograr bordes definidos.',
-  },
-];
 
 const guideBlocks = [
   {
@@ -137,56 +99,18 @@ export default function ComoUsarSellosPage() {
         />
 
         <section className="mb-14 md:mb-20 motion-reveal">
-          <div className="technical-sheet blueprint-sheet hidden md:block">
+          <div className="technical-sheet blueprint-sheet">
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.34fr_0.66fr]">
-              <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-8">
+              <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-4 md:p-6 lg:p-8">
                 <p className="craft-label mb-4">Selector de método</p>
-                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-950">
+                <h2 className="text-[1.9rem] md:text-3xl lg:text-4xl font-semibold leading-[1.08] md:leading-tight tracking-tight text-neutral-950">
                   Qué técnica usar según el material
                 </h2>
-                <p className="mt-5 text-sm leading-relaxed text-neutral-700">
+                <p className="mt-3 md:mt-5 text-sm leading-relaxed text-neutral-700">
                   Esto evita la consulta más repetida: no todos los materiales se marcan igual, y una prueba chica suele ahorrar una pieza arruinada.
                 </p>
               </div>
-              <div className="divide-y divide-[var(--alcohn-line)]">
-                {materialGuide.map((item) => (
-                  <article key={item.material} className="grid grid-cols-1 md:grid-cols-[0.18fr_0.22fr_0.6fr]">
-                    <div className="border-b md:border-b-0 md:border-r border-[var(--alcohn-line)] p-4 md:p-5">
-                      <p className="text-sm font-semibold text-neutral-950">{item.material}</p>
-                    </div>
-                    <div className="border-b md:border-b-0 md:border-r border-[var(--alcohn-line)] p-4 md:p-5">
-                      <p className="craft-label">{item.method}</p>
-                    </div>
-                    <div className="p-4 md:p-5">
-                      <p className="text-sm font-medium text-neutral-900">{item.recommendation}</p>
-                      <p className="mt-2 text-xs leading-relaxed text-neutral-600">{item.note}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="md:hidden border-y border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]">
-            <div className="p-4 border-b border-[var(--alcohn-line)]">
-              <p className="craft-label mb-3">Selector de método</p>
-              <h2 className="text-[1.9rem] font-semibold leading-[1.08] tracking-tight text-neutral-950">
-                Qué técnica usar según el material
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-700">
-                Guía rápida para elegir método sin arruinar piezas.
-              </p>
-            </div>
-            <div className="divide-y divide-[var(--alcohn-line)]">
-              {materialGuide.map((item) => (
-                <article key={item.material} className="p-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="text-lg font-semibold text-neutral-950">{item.material}</h3>
-                    <p className="craft-label">{item.method}</p>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-neutral-900">{item.recommendation}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-700">{item.note}</p>
-                </article>
-              ))}
+              <MaterialUsageSelector />
             </div>
           </div>
         </section>
