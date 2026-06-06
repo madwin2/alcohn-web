@@ -13,7 +13,7 @@ export default function GoogleTagManager() {
     if (!consent?.analytics) return;
 
     updateGtmConsent(consent.analytics, consent.marketing);
-    loadGtmContainer();
+    loadGtmContainer(consent.analytics);
   }, []);
 
   return null;
