@@ -22,32 +22,57 @@ function isFbqReady(): boolean {
   return typeof window !== 'undefined' && typeof window.fbq === 'function';
 }
 
-function runWhenFbqReady(callback: () => void, attemptsLeft = 25): void {
-  if (isFbqReady()) {
-    callback();
-    return;
+/** Envío directo a Meta (respaldo si fbevents.js está bloqueado). */
+function sendPixelBeacon(
+  eventName: string,
+  params: Record<string, unknown> = {}
+): void {
+  if (!META_PIXEL_ID || typeof window === 'undefined') return;
+
+  const search = new URLSearchParams({
+    id: META_PIXEL_ID,
+    ev: eventName,
+    dl: window.location.href,
+    rl: document.referrer || '',
+    noscript: '1',
+  });
+
+  if (typeof params.value === 'number') {
+    search.set('cd[value]', String(params.value));
+    search.set('cd[currency]', String(params.currency ?? 'ARS'));
   }
-  if (attemptsLeft <= 0) return;
-  window.setTimeout(() => runWhenFbqReady(callback, attemptsLeft - 1), 200);
+
+  const img = new Image(1, 1);
+  img.src = `https://www.facebook.com/tr?${search.toString()}`;
 }
 
 function trackNow(eventName: string, params: Record<string, unknown> = {}): void {
-  if (!META_PIXEL_ID || !isFbqReady()) return;
+  if (!META_PIXEL_ID) return;
+
+  sendPixelBeacon(eventName, params);
+
+  if (!isFbqReady()) return;
   window.fbq!('track', eventName, {
     ...pageContext(),
     ...params,
   });
 }
 
+function runWhenReady(callback: () => void, attemptsLeft = 15): void {
+  callback();
+  if (isFbqReady() || attemptsLeft <= 0) return;
+  window.setTimeout(() => runWhenReady(callback, attemptsLeft - 1), 300);
+}
+
 export function trackMetaPageView(): void {
-  runWhenFbqReady(() => trackNow('PageView'));
+  runWhenReady(() => trackNow('PageView'));
 }
 
 export function trackMetaEvent(
   eventName: string,
   params: Record<string, unknown> = {}
 ): void {
-  runWhenFbqReady(() => trackNow(eventName, params));
+  runWhenReady(() => trackNow(eventName, params));
 }
 
 export function trackMetaInitiateCheckout(params: {
@@ -103,6 +128,7 @@ export function initMetaPixel(): void {
 
 /** @deprecated El pixel ya se inicializa en el head. */
 export function grantMetaPixelConsent(): void {
+  if (isFbqReady()) window.fbq!('consent', 'grant');
   trackMetaPageView();
 }
 
