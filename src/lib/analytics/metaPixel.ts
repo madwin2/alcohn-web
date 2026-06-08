@@ -1,6 +1,5 @@
 'use client';
 
-import { getConsentState } from './cookies';
 import type { PurchaseSnapshot } from './purchaseSnapshot';
 
 declare global {
@@ -9,61 +8,26 @@ declare global {
   }
 }
 
-let consentGranted = false;
-
 export function getMetaPixelId(): string | null {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
   return id || null;
 }
 
-function canTrack(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (!getMetaPixelId()) return false;
-  const consent = getConsentState();
-  return consent?.marketing === true;
-}
-
-export function revokeMetaPixelConsent(): void {
-  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
-  window.fbq('consent', 'revoke');
-  consentGranted = false;
-}
-
-export function grantMetaPixelConsent(): void {
-  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
-  if (!getMetaPixelId()) return;
-
-  window.fbq('consent', 'grant');
-  if (!consentGranted) {
-    consentGranted = true;
-    window.fbq('track', 'PageView');
-    window.dispatchEvent(new CustomEvent('alcohn:consent-granted'));
-  }
-}
-
-export function hasMarketingConsent(): boolean {
-  return canTrack();
-}
-
-/** Activa el pixel si el usuario ya aceptó cookies de marketing. */
-export function initMetaPixel(): void {
-  if (!canTrack()) return;
-  grantMetaPixelConsent();
+function canUseFbq(): boolean {
+  return typeof window !== 'undefined' && typeof window.fbq === 'function';
 }
 
 export function trackMetaPageView(): void {
-  if (!canTrack()) return;
-  grantMetaPixelConsent();
-  window.fbq?.('track', 'PageView');
+  if (!canUseFbq()) return;
+  window.fbq!('track', 'PageView');
 }
 
 export function trackMetaEvent(
   eventName: string,
   params: Record<string, unknown> = {}
 ): void {
-  if (!canTrack()) return;
-  grantMetaPixelConsent();
-  window.fbq?.('track', eventName, params);
+  if (!canUseFbq()) return;
+  window.fbq!('track', eventName, params);
 }
 
 export function trackMetaAddToCart(item: {
@@ -96,4 +60,22 @@ export function trackMetaPurchase(snapshot: PurchaseSnapshot): void {
       item_price: item.price,
     })),
   });
+}
+
+/** @deprecated Mantener compatibilidad con imports existentes. */
+export function initMetaPixel(): void {
+  trackMetaPageView();
+}
+
+/** @deprecated El pixel ya se inicializa en el head. */
+export function grantMetaPixelConsent(): void {
+  trackMetaPageView();
+}
+
+/** @deprecated Ya no usamos consent API de Meta. */
+export function revokeMetaPixelConsent(): void {}
+
+/** @deprecated Ya no bloqueamos eventos por cookie de marketing. */
+export function hasMarketingConsent(): boolean {
+  return true;
 }

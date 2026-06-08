@@ -23,7 +23,7 @@ import {
 } from '@/lib/shipping/storage';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
-import { hasMarketingConsent, trackMetaEvent } from '@/lib/analytics/metaPixel';
+import { trackMetaEvent } from '@/lib/analytics/metaPixel';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
@@ -71,25 +71,15 @@ export default function CheckoutPage() {
   const orderTotalConEnvio = orderSubtotal + shippingCost;
 
   useEffect(() => {
-    if (items.length === 0) return;
-
-    const trackInitiateCheckout = () => {
-      if (initiateCheckoutTrackedRef.current || !hasMarketingConsent()) return;
-      initiateCheckoutTrackedRef.current = true;
-      trackMetaEvent('InitiateCheckout', {
-        value: subtotal + shippingCost,
-        currency: 'ARS',
-        content_ids: items.map((item) => item.id),
-        num_items: items.reduce((sum, item) => sum + item.qty, 0),
-        content_type: 'product',
-      });
-    };
-
-    trackInitiateCheckout();
-    window.addEventListener('alcohn:consent-granted', trackInitiateCheckout);
-    return () => {
-      window.removeEventListener('alcohn:consent-granted', trackInitiateCheckout);
-    };
+    if (items.length === 0 || initiateCheckoutTrackedRef.current) return;
+    initiateCheckoutTrackedRef.current = true;
+    trackMetaEvent('InitiateCheckout', {
+      value: subtotal + shippingCost,
+      currency: 'ARS',
+      content_ids: items.map((item) => item.id),
+      num_items: items.reduce((sum, item) => sum + item.qty, 0),
+      content_type: 'product',
+    });
   }, [items, subtotal, shippingCost]);
 
   useEffect(() => {

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { setConsentState, getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
 import { loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
-import { grantMetaPixelConsent, revokeMetaPixelConsent } from '@/lib/analytics/metaPixel';
 
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
@@ -25,13 +24,10 @@ export default function CookieConsentBanner() {
 
     if (accepted) {
       loadGtmContainer(true);
-      grantMetaPixelConsent();
       await trackEvent('cookie_consent_accepted', {
         metadata: { analytics: true, marketing: true },
       });
       await trackEvent('page_view');
-    } else {
-      revokeMetaPixelConsent();
     }
   };
 
