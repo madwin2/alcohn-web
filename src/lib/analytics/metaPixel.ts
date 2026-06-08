@@ -3,56 +3,17 @@
 import { getConsentState } from './cookies';
 import type { PurchaseSnapshot } from './purchaseSnapshot';
 
-type FbqFunction = {
-  (...args: unknown[]): void;
-  callMethod?: (...args: unknown[]) => void;
-  queue?: unknown[][];
-  push?: FbqFunction;
-  loaded?: boolean;
-  version?: string;
-};
-
 declare global {
   interface Window {
-    fbq?: FbqFunction;
-    _fbq?: FbqFunction;
+    fbq?: (...args: unknown[]) => void;
   }
 }
 
-let pixelInitialized = false;
-let pixelScriptInjected = false;
+let consentGranted = false;
 
 export function getMetaPixelId(): string | null {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
   return id || null;
-}
-
-function injectMetaPixelScript(): void {
-  if (typeof window === 'undefined' || pixelScriptInjected) return;
-  pixelScriptInjected = true;
-
-  if (window.fbq) return;
-
-  const n = function (...args: unknown[]) {
-    if (n.callMethod) {
-      n.callMethod(...args);
-    } else {
-      n.queue!.push(args);
-    }
-  } as FbqFunction;
-
-  if (!window._fbq) window._fbq = n;
-  window.fbq = n;
-  n.push = n;
-  n.loaded = true;
-  n.version = '2.0';
-  n.queue = [];
-
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
-  const firstScript = document.getElementsByTagName('script')[0];
-  firstScript.parentNode?.insertBefore(script, firstScript);
 }
 
 function canTrack(): boolean {
@@ -62,26 +23,32 @@ function canTrack(): boolean {
   return consent?.marketing === true;
 }
 
-function ensurePixelReady(): void {
-  if (!canTrack()) return;
-  injectMetaPixelScript();
-  if (pixelInitialized || typeof window.fbq !== 'function') return;
-
-  const pixelId = getMetaPixelId();
-  if (!pixelId) return;
-
-  pixelInitialized = true;
-  window.fbq('init', pixelId);
-  window.fbq('track', 'PageView');
+export function revokeMetaPixelConsent(): void {
+  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+  window.fbq('consent', 'revoke');
+  consentGranted = false;
 }
 
+export function grantMetaPixelConsent(): void {
+  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+  if (!getMetaPixelId()) return;
+
+  window.fbq('consent', 'grant');
+  if (!consentGranted) {
+    consentGranted = true;
+    window.fbq('track', 'PageView');
+  }
+}
+
+/** Activa el pixel si el usuario ya aceptó cookies de marketing. */
 export function initMetaPixel(): void {
-  ensurePixelReady();
+  if (!canTrack()) return;
+  grantMetaPixelConsent();
 }
 
 export function trackMetaPageView(): void {
   if (!canTrack()) return;
-  ensurePixelReady();
+  grantMetaPixelConsent();
   window.fbq?.('track', 'PageView');
 }
 
@@ -90,7 +57,7 @@ export function trackMetaEvent(
   params: Record<string, unknown> = {}
 ): void {
   if (!canTrack()) return;
-  ensurePixelReady();
+  grantMetaPixelConsent();
   window.fbq?.('track', eventName, params);
 }
 

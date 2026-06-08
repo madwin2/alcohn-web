@@ -22,6 +22,11 @@ import {
 const inter = Inter({ subsets: ['latin'] });
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID?.trim();
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+
+const META_PIXEL_BASE_SCRIPT = META_PIXEL_ID
+  ? `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('consent','revoke');fbq('init','${META_PIXEL_ID}');`
+  : null;
 
 const GTM_CONSENT_DEFAULTS_SCRIPT = `
 window.dataLayer=window.dataLayer||[];
@@ -74,6 +79,9 @@ export default function RootLayout({
       <head>
         {GTM_ID ? (
           <script dangerouslySetInnerHTML={{ __html: GTM_CONSENT_DEFAULTS_SCRIPT }} />
+        ) : null}
+        {META_PIXEL_BASE_SCRIPT ? (
+          <script dangerouslySetInnerHTML={{ __html: META_PIXEL_BASE_SCRIPT }} />
         ) : null}
       </head>
       <body className={inter.className}>
