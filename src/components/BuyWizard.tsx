@@ -1197,6 +1197,7 @@ export default function BuyWizard({
     if (wizardPaymentTrackedRef.current) return;
     wizardPaymentTrackedRef.current = true;
 
+    window.dispatchEvent(new Event('alcohn:navigation'));
     trackMetaPageView();
     trackMetaInitiateCheckout({
       value: data.selectedPrice + shippingCost,

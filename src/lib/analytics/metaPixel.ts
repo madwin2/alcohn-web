@@ -5,17 +5,11 @@ import type { PurchaseSnapshot } from './purchaseSnapshot';
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+    _fbq?: (...args: unknown[]) => void;
   }
 }
 
-export function getMetaPixelId(): string | null {
-  const id = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-  return id || null;
-}
-
-function canUseFbq(): boolean {
-  return typeof window !== 'undefined' && typeof window.fbq === 'function';
-}
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || '';
 
 function pageContext(): { page_path: string; page_location: string } {
   return {
@@ -24,20 +18,36 @@ function pageContext(): { page_path: string; page_location: string } {
   };
 }
 
+function isFbqReady(): boolean {
+  return typeof window !== 'undefined' && typeof window.fbq === 'function';
+}
+
+function runWhenFbqReady(callback: () => void, attemptsLeft = 25): void {
+  if (isFbqReady()) {
+    callback();
+    return;
+  }
+  if (attemptsLeft <= 0) return;
+  window.setTimeout(() => runWhenFbqReady(callback, attemptsLeft - 1), 200);
+}
+
+function trackNow(eventName: string, params: Record<string, unknown> = {}): void {
+  if (!META_PIXEL_ID || !isFbqReady()) return;
+  window.fbq!('track', eventName, {
+    ...pageContext(),
+    ...params,
+  });
+}
+
 export function trackMetaPageView(): void {
-  if (!canUseFbq()) return;
-  window.fbq!('track', 'PageView', pageContext());
+  runWhenFbqReady(() => trackNow('PageView'));
 }
 
 export function trackMetaEvent(
   eventName: string,
   params: Record<string, unknown> = {}
 ): void {
-  if (!canUseFbq()) return;
-  window.fbq!('track', eventName, {
-    ...pageContext(),
-    ...params,
-  });
+  runWhenFbqReady(() => trackNow(eventName, params));
 }
 
 export function trackMetaInitiateCheckout(params: {

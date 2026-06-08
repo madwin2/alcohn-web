@@ -23,12 +23,11 @@ import {
 } from '@/lib/shipping/storage';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
-import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, isHydrated, getSubtotal, clearCart } = useCart();
+  const { items, getSubtotal, clearCart } = useCart();
   const [step, setStep] = useState(1);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -60,8 +59,6 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
-  const initiateCheckoutTrackedRef = useRef(false);
-  const checkoutPageViewTrackedRef = useRef(false);
 
   const subtotal = getSubtotal();
   const totalConEnvio = subtotal + shippingCost;
@@ -70,27 +67,6 @@ export default function CheckoutPage() {
   const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
   const orderSubtotal = orderData?.subtotal ?? subtotal;
   const orderTotalConEnvio = orderSubtotal + shippingCost;
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    if (!checkoutPageViewTrackedRef.current) {
-      checkoutPageViewTrackedRef.current = true;
-      trackMetaPageView();
-    }
-
-    if (initiateCheckoutTrackedRef.current) return;
-    const checkoutItems = orderData?.items ?? items;
-    if (checkoutItems.length === 0) return;
-
-    initiateCheckoutTrackedRef.current = true;
-    const checkoutSubtotal = orderData?.subtotal ?? subtotal;
-    trackMetaInitiateCheckout({
-      value: checkoutSubtotal + shippingCost,
-      contentIds: checkoutItems.map((item) => item.id),
-      numItems: checkoutItems.reduce((sum, item) => sum + item.qty, 0),
-    });
-  }, [isHydrated, items, orderData, subtotal, shippingCost]);
 
   useEffect(() => {
     fetch('/api/checkout/openpay')

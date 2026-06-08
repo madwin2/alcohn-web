@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import CheckoutPixelEvents from '@/components/CheckoutPixelEvents';
 import { createPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
@@ -9,5 +10,10 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <CheckoutPixelEvents />
+      {children}
+    </>
+  );
 }
