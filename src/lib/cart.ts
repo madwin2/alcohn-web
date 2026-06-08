@@ -14,6 +14,7 @@ export interface CartItem {
 
 export interface CartState {
   items: CartItem[];
+  isHydrated: boolean;
   addItem: (item: Omit<CartItem, 'id' | 'qty'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;

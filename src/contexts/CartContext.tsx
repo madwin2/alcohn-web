@@ -114,6 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        isHydrated,
         addItem,
         removeItem,
         updateQuantity,

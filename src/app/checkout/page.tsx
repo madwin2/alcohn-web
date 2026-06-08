@@ -28,7 +28,7 @@ import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getSubtotal, clearCart } = useCart();
+  const { items, isHydrated, getSubtotal, clearCart } = useCart();
   const [step, setStep] = useState(1);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -71,16 +71,20 @@ export default function CheckoutPage() {
   const orderTotalConEnvio = orderSubtotal + shippingCost;
 
   useEffect(() => {
-    if (items.length === 0 || initiateCheckoutTrackedRef.current) return;
+    if (!isHydrated || initiateCheckoutTrackedRef.current) return;
+    const checkoutItems = orderData?.items ?? items;
+    if (checkoutItems.length === 0) return;
+
     initiateCheckoutTrackedRef.current = true;
+    const checkoutSubtotal = orderData?.subtotal ?? subtotal;
     trackMetaEvent('InitiateCheckout', {
-      value: subtotal + shippingCost,
+      value: checkoutSubtotal + shippingCost,
       currency: 'ARS',
-      content_ids: items.map((item) => item.id),
-      num_items: items.reduce((sum, item) => sum + item.qty, 0),
+      content_ids: checkoutItems.map((item) => item.id),
+      num_items: checkoutItems.reduce((sum, item) => sum + item.qty, 0),
       content_type: 'product',
     });
-  }, [items, subtotal, shippingCost]);
+  }, [isHydrated, items, orderData, subtotal, shippingCost]);
 
   useEffect(() => {
     fetch('/api/checkout/openpay')
