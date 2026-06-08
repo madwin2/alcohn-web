@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import { analyzeLogoStampHeuristics } from '@/lib/logoStampHeuristics';
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
@@ -169,9 +170,34 @@ async function optimizeLogoLikePipeline(buffer: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
+/** Invierte RGB conservando alpha (blanco↔negro). */
+export async function invertLogoRgb(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .ensureAlpha()
+    .negate({ alpha: false })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
+/**
+ * Si el logo es monocromático invertido (diseño claro sobre fondo oscuro), lo invierte
+ * antes de prepararlo para sello/mockup.
+ */
+export async function invertMonochromeLogoIfNeeded(
+  buffer: Buffer,
+): Promise<{ buffer: Buffer; inverted: boolean }> {
+  const heuristics = await analyzeLogoStampHeuristics(buffer);
+  if (!heuristics.isInvertedMonochrome) {
+    return { buffer, inverted: false };
+  }
+  const inverted = await invertLogoRgb(buffer);
+  return { buffer: inverted, inverted: true };
+}
+
 /**
  * Normaliza y aísla el dibujo del logo para mockup/sello.
  */
 export async function prepareLogoForStamp(buffer: Buffer): Promise<Buffer> {
-  return optimizeLogoLikePipeline(buffer);
+  const { buffer: normalized } = await invertMonochromeLogoIfNeeded(buffer);
+  return optimizeLogoLikePipeline(normalized);
 }

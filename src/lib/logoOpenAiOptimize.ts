@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import sharp from 'sharp';
 import { measureLogoAspectRatio } from '@/lib/logoMeasure';
-import { prepareLogoForStamp } from '@/lib/logoStampPrepare';
+import { invertMonochromeLogoIfNeeded, prepareLogoForStamp } from '@/lib/logoStampPrepare';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -91,7 +91,8 @@ export async function optimizeLogoWithOpenAI(uploadedBuffer: Buffer): Promise<Op
   }
 
   const normalized = await sharp(uploadedBuffer).png({ compressionLevel: 9 }).toBuffer();
-  const imageBuffer = await prepareImageForOpenAIEdit(normalized);
+  const { buffer: polaritySafe } = await invertMonochromeLogoIfNeeded(normalized);
+  const imageBuffer = await prepareImageForOpenAIEdit(polaritySafe);
   const { b64, model } = await runImageEdit(imageBuffer);
 
   const aiBuffer = Buffer.from(b64, 'base64');

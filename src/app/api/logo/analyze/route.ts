@@ -58,10 +58,12 @@ IMPORTANTE — marcar isOptimal=false y needsOptimization=true si:
 - Hay muchos colores, sombras fuertes o degradados.
 - No es un archivo de logo/diseño vectorial o PNG limpio.
 
-Solo isOptimal=true si es un DISEÑO monocromático (negro/gris) con fondo blanco liso o transparente, listo para grabado.
+Solo isOptimal=true si es un DISEÑO monocromático listo para grabado:
+- negro/gris sobre fondo blanco o transparente, O
+- blanco/gris claro sobre fondo negro u oscuro liso (se invierte automáticamente sin IA).
 
 Determina:
-1. ¿Fondo liso blanco o transparente con diseño en negro/gris?
+1. ¿Fondo liso (blanco, transparente u oscuro) con diseño monocromático contrastante?
 2. ¿Es foto o imagen compleja (NO es un logo limpio)?
 3. ¿Apto para grabado en bronce?
 4. aspectRatio del DISEÑO (no del lienzo), ignorando márgenes vacíos.

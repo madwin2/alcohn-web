@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { measureLogoAspectRatio } from '@/lib/logoMeasure';
 import { optimizeLogoWithOpenAI } from '@/lib/logoOpenAiOptimize';
+import { analyzeLogoStampHeuristics } from '@/lib/logoStampHeuristics';
+import { prepareLogoForStamp } from '@/lib/logoStampPrepare';
 
 /** Vercel/Next: gpt-image puede tardar. */
 export const maxDuration = 120;
@@ -42,9 +45,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[logo/optimize] OpenAI gpt-image (forceAi)');
     const arrayBuffer = await file.arrayBuffer();
     const uploadedBuffer = Buffer.from(arrayBuffer);
+    const heuristics = await analyzeLogoStampHeuristics(uploadedBuffer);
+
+    if (heuristics.isInvertedMonochrome) {
+      console.log('[logo/optimize] Logo invertido → preparación determinística (sin IA)');
+      const prepared = await prepareLogoForStamp(uploadedBuffer);
+      const optimizedLogo = `data:image/png;base64,${prepared.toString('base64')}`;
+      let aspectRatio = 1;
+      try {
+        const measured = await measureLogoAspectRatio(optimizedLogo);
+        aspectRatio = measured.aspectRatio;
+      } catch {
+        // fallback silencioso
+      }
+      return NextResponse.json({
+        success: true,
+        optimizedLogo,
+        aspectRatio,
+        method: 'invert_deterministic',
+        description:
+          'Logo en blanco sobre fondo oscuro invertido y preparado sin IA para evitar deformaciones.',
+      });
+    }
+
+    console.log('[logo/optimize] OpenAI gpt-image (forceAi)');
     const result = await optimizeLogoWithOpenAI(uploadedBuffer);
 
     return NextResponse.json({
