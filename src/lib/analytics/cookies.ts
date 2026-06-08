@@ -2,7 +2,7 @@
 
 import type { ConsentState } from './types';
 
-export const CONSENT_COOKIE_KEY = 'alcohn_cookie_consent_v1';
+export const CONSENT_COOKIE_KEY = 'alcohn_cookie_consent_v2';
 export const VISITOR_COOKIE_KEY = 'alcohn_visitor_id';
 export const SESSION_STORAGE_KEY = 'alcohn_session_id';
 

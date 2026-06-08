@@ -8,6 +8,7 @@ import ConditionalWhatsapp from '@/components/ConditionalWhatsapp';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
 import AnalyticsProvider from '@/components/AnalyticsProvider';
 import GoogleTagManager from '@/components/GoogleTagManager';
+import MetaPixel from '@/components/MetaPixel';
 import { CartProvider } from '@/contexts/CartContext';
 import {
   DEFAULT_OG_IMAGE,
@@ -88,6 +89,9 @@ export default function RootLayout({
           </noscript>
         ) : null}
         <GoogleTagManager />
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildGlobalSchemaGraph()) }}

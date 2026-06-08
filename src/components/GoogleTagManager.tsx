@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { getConsentState } from '@/lib/analytics/cookies';
 import { getGtmId, loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
+import { initMetaPixel } from '@/lib/analytics/metaPixel';
 
 export default function GoogleTagManager() {
   useEffect(() => {
@@ -14,6 +15,9 @@ export default function GoogleTagManager() {
 
     updateGtmConsent(consent.analytics, consent.marketing);
     loadGtmContainer(consent.analytics);
+    if (consent.marketing) {
+      initMetaPixel();
+    }
   }, []);
 
   return null;

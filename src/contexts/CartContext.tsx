@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, CartState, generateCartItemId, loadCartFromStorage, saveCartToStorage } from '@/lib/cart';
+import { trackMetaAddToCart } from '@/lib/analytics/metaPixel';
 
 const CartContext = createContext<CartState | undefined>(undefined);
 
@@ -25,18 +26,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (item: Omit<CartItem, 'id' | 'qty'>) => {
     const id = generateCartItemId(item.designSlug, item.variantSize);
-    
+
     setItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === id);
-      
+
       if (existingItem) {
-        // Si ya existe, aumentar cantidad
+        trackMetaAddToCart({
+          id,
+          title: item.title,
+          price: item.price,
+          qty: 1,
+        });
         return prevItems.map((i) =>
           i.id === id ? { ...i, qty: i.qty + 1 } : i
         );
       }
-      
-      // Si no existe, agregar nuevo item
+
+      trackMetaAddToCart({
+        id,
+        title: item.title,
+        price: item.price,
+        qty: 1,
+      });
       return [...prevItems, { ...item, id, qty: 1 }];
     });
   };

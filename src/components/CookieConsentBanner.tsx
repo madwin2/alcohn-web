@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { setConsentState, getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
 import { loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
+import { initMetaPixel } from '@/lib/analytics/metaPixel';
 
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
@@ -13,19 +14,20 @@ export default function CookieConsentBanner() {
     setVisible(!consent);
   }, []);
 
-  const handleChoice = async (analytics: boolean) => {
+  const handleChoice = async (accepted: boolean) => {
     setConsentState({
-      analytics,
-      marketing: false,
+      analytics: accepted,
+      marketing: accepted,
     });
     setVisible(false);
 
-    updateGtmConsent(analytics, false);
+    updateGtmConsent(accepted, accepted);
 
-    if (analytics) {
+    if (accepted) {
       loadGtmContainer(true);
+      initMetaPixel();
       await trackEvent('cookie_consent_accepted', {
-        metadata: { analytics: true },
+        metadata: { analytics: true, marketing: true },
       });
       await trackEvent('page_view');
     }
@@ -43,7 +45,7 @@ export default function CookieConsentBanner() {
           </h3>
           <p className="text-sm leading-relaxed text-neutral-800">
             Usamos cookies necesarias para el sitio y, con tu permiso, cookies de
-            analitica para entender la navegacion de los usuarios y mejorar su experiencia de uso.
+            analitica y publicidad para mejorar la experiencia y medir campañas.
           </p>
         </div>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -63,7 +65,7 @@ export default function CookieConsentBanner() {
               void handleChoice(true);
             }}
           >
-            Aceptar analitica
+            Aceptar cookies
           </button>
         </div>
       </div>

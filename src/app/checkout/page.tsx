@@ -23,6 +23,8 @@ import {
 } from '@/lib/shipping/storage';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
+import { trackMetaEvent } from '@/lib/analytics/metaPixel';
+import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -58,6 +60,7 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
+  const initiateCheckoutTrackedRef = useRef(false);
 
   const subtotal = getSubtotal();
   const totalConEnvio = subtotal + shippingCost;
@@ -66,6 +69,18 @@ export default function CheckoutPage() {
   const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
   const orderSubtotal = orderData?.subtotal ?? subtotal;
   const orderTotalConEnvio = orderSubtotal + shippingCost;
+
+  useEffect(() => {
+    if (items.length === 0 || initiateCheckoutTrackedRef.current) return;
+    initiateCheckoutTrackedRef.current = true;
+    trackMetaEvent('InitiateCheckout', {
+      value: subtotal + shippingCost,
+      currency: 'ARS',
+      content_ids: items.map((item) => item.id),
+      num_items: items.reduce((sum, item) => sum + item.qty, 0),
+      content_type: 'product',
+    });
+  }, [items, subtotal, shippingCost]);
 
   useEffect(() => {
     fetch('/api/checkout/openpay')
@@ -224,6 +239,22 @@ export default function CheckoutPage() {
     return base;
   };
 
+  const persistPurchaseForTracking = (
+    ordenId: string,
+    cartItems: typeof items
+  ) => {
+    savePurchaseSnapshot({
+      orderId: ordenId,
+      value: cartItems.reduce((sum, item) => sum + item.price * item.qty, 0) + shippingCost,
+      items: cartItems.map((item) => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        qty: item.qty,
+      })),
+    });
+  };
+
   const handleOpenpayCheckout = async () => {
     setOpenpayError(null);
     setCheckoutError(null);
@@ -234,6 +265,7 @@ export default function CheckoutPage() {
       setOrderId(intent.orden_id);
 
       if (openpaySimulateSuccess) {
+        persistPurchaseForTracking(intent.orden_id, [...items]);
         clearCart();
         clearWizardSupabaseSession();
         window.location.href = `/checkout/openpay/success?orden_id=${encodeURIComponent(intent.orden_id)}`;
@@ -252,6 +284,7 @@ export default function CheckoutPage() {
         return;
       }
       if (data.checkoutUrl) {
+        persistPurchaseForTracking(intent.orden_id, [...items]);
         clearCart();
         window.location.href = data.checkoutUrl;
         return;
@@ -330,6 +363,8 @@ export default function CheckoutPage() {
 
     try {
       await uploadComprobante(orderId, file);
+      const currentItems = orderData?.items || items;
+      persistPurchaseForTracking(orderId, currentItems);
       clearWizardSupabaseSession();
       router.push(
         `/checkout/transferencia/confirmacion?orden_id=${encodeURIComponent(orderId)}`

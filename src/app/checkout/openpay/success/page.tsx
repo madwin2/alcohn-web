@@ -4,6 +4,8 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
+import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 function OpenpaySuccessContent() {
   const searchParams = useSearchParams();
@@ -11,10 +13,19 @@ function OpenpaySuccessContent() {
   const { clearCart } = useCart();
   const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const confirmSentRef = useRef(false);
+  const purchaseTrackedRef = useRef(false);
 
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+
+  useEffect(() => {
+    if (!ordenId || purchaseTrackedRef.current) return;
+    const snapshot = consumePurchaseSnapshot(ordenId);
+    if (!snapshot) return;
+    purchaseTrackedRef.current = true;
+    trackMetaPurchase(snapshot);
+  }, [ordenId]);
 
   useEffect(() => {
     if (!ordenId) return;

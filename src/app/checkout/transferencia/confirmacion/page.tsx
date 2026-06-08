@@ -1,12 +1,23 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
+import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 function TransferenciaConfirmacionContent() {
   const searchParams = useSearchParams();
   const ordenId = searchParams.get('orden_id');
+  const purchaseTrackedRef = useRef(false);
+
+  useEffect(() => {
+    if (!ordenId || purchaseTrackedRef.current) return;
+    const snapshot = consumePurchaseSnapshot(ordenId);
+    if (!snapshot) return;
+    purchaseTrackedRef.current = true;
+    trackMetaPurchase(snapshot);
+  }, [ordenId]);
 
   return (
     <div className="min-h-screen bg-white py-16">
