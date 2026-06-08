@@ -17,9 +17,16 @@ function canUseFbq(): boolean {
   return typeof window !== 'undefined' && typeof window.fbq === 'function';
 }
 
+function pageContext(): { page_path: string; page_location: string } {
+  return {
+    page_path: `${window.location.pathname}${window.location.search}`,
+    page_location: window.location.href,
+  };
+}
+
 export function trackMetaPageView(): void {
   if (!canUseFbq()) return;
-  window.fbq!('track', 'PageView');
+  window.fbq!('track', 'PageView', pageContext());
 }
 
 export function trackMetaEvent(
@@ -27,7 +34,24 @@ export function trackMetaEvent(
   params: Record<string, unknown> = {}
 ): void {
   if (!canUseFbq()) return;
-  window.fbq!('track', eventName, params);
+  window.fbq!('track', eventName, {
+    ...pageContext(),
+    ...params,
+  });
+}
+
+export function trackMetaInitiateCheckout(params: {
+  value: number;
+  contentIds: string[];
+  numItems: number;
+}): void {
+  trackMetaEvent('InitiateCheckout', {
+    value: params.value,
+    currency: 'ARS',
+    content_ids: params.contentIds,
+    num_items: params.numItems,
+    content_type: 'product',
+  });
 }
 
 export function trackMetaAddToCart(item: {

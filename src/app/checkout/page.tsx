@@ -23,7 +23,7 @@ import {
 } from '@/lib/shipping/storage';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
-import { trackMetaEvent } from '@/lib/analytics/metaPixel';
+import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
@@ -61,6 +61,7 @@ export default function CheckoutPage() {
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
   const initiateCheckoutTrackedRef = useRef(false);
+  const checkoutPageViewTrackedRef = useRef(false);
 
   const subtotal = getSubtotal();
   const totalConEnvio = subtotal + shippingCost;
@@ -71,18 +72,23 @@ export default function CheckoutPage() {
   const orderTotalConEnvio = orderSubtotal + shippingCost;
 
   useEffect(() => {
-    if (!isHydrated || initiateCheckoutTrackedRef.current) return;
+    if (!isHydrated) return;
+
+    if (!checkoutPageViewTrackedRef.current) {
+      checkoutPageViewTrackedRef.current = true;
+      trackMetaPageView();
+    }
+
+    if (initiateCheckoutTrackedRef.current) return;
     const checkoutItems = orderData?.items ?? items;
     if (checkoutItems.length === 0) return;
 
     initiateCheckoutTrackedRef.current = true;
     const checkoutSubtotal = orderData?.subtotal ?? subtotal;
-    trackMetaEvent('InitiateCheckout', {
+    trackMetaInitiateCheckout({
       value: checkoutSubtotal + shippingCost,
-      currency: 'ARS',
-      content_ids: checkoutItems.map((item) => item.id),
-      num_items: checkoutItems.reduce((sum, item) => sum + item.qty, 0),
-      content_type: 'product',
+      contentIds: checkoutItems.map((item) => item.id),
+      numItems: checkoutItems.reduce((sum, item) => sum + item.qty, 0),
     });
   }, [isHydrated, items, orderData, subtotal, shippingCost]);
 

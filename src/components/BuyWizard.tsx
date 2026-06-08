@@ -22,6 +22,8 @@ import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
+import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
+import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
   syncWizardContact,
@@ -924,6 +926,7 @@ export default function BuyWizard({
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [transferCheckoutError, setTransferCheckoutError] = useState<string | null>(null);
   const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
+  const wizardPaymentTrackedRef = useRef(false);
   const [shippingMethod, setShippingMethod] = useState<ShippingMetodoUi>('retiro');
   const [shippingCost, setShippingCost] = useState(0);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -1188,6 +1191,19 @@ export default function BuyWizard({
     data.logoOptimized,
     data.logoAnalysis?.contentWidthPx,
   ]);
+
+  useEffect(() => {
+    if (step !== 5 || data.needsManualPreview || !data.selectedPrice) return;
+    if (wizardPaymentTrackedRef.current) return;
+    wizardPaymentTrackedRef.current = true;
+
+    trackMetaPageView();
+    trackMetaInitiateCheckout({
+      value: data.selectedPrice + shippingCost,
+      contentIds: [`wizard-${data.selectedSize || 'personalizado'}`],
+      numItems: 1,
+    });
+  }, [step, data.needsManualPreview, data.selectedPrice, data.selectedSize, shippingCost]);
 
   // Generate preview when size is selected (solo para logos óptimos u optimizados)
   // Mockup serverless (Sharp + texturas en public/mockup-textures)
@@ -1689,6 +1705,28 @@ export default function BuyWizard({
       items: buildWizardTransferCartItems(),
       envio_costo: shippingCost > 0 ? shippingCost : 0,
       envio_metodo: shippingMethod,
+    });
+  };
+
+  const persistWizardPurchaseSnapshot = (
+    ordenId: string,
+    total: number,
+    unitPrice: number
+  ) => {
+    const variantSize = data.selectedSize || getSizeDisplayText();
+    const materialLabel = wizardUsoDisplayLabel(data);
+    const designSlug = `personalizado-${ordenId}`;
+    savePurchaseSnapshot({
+      orderId: ordenId,
+      value: total,
+      items: [
+        {
+          id: generateCartItemId(designSlug, variantSize),
+          title: `Sello personalizado (${materialLabel}, ${variantSize})`,
+          price: unitPrice,
+          qty: 1,
+        },
+      ],
     });
   };
 
@@ -2784,6 +2822,7 @@ export default function BuyWizard({
             try {
               const intent = await createWizardTransferOrder();
               await uploadComprobante(intent.orden_id, receiptFile);
+              persistWizardPurchaseSnapshot(intent.orden_id, transferTotal, transferPrice);
               goToTransferConfirmation(intent.orden_id);
             } catch (error) {
               console.error('Error confirmando pedido por transferencia:', error);
@@ -2802,6 +2841,7 @@ export default function BuyWizard({
             setIsUploadingReceipt(true);
             try {
               const intent = await createWizardTransferOrder();
+              persistWizardPurchaseSnapshot(intent.orden_id, transferTotal, transferPrice);
               const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
               const message = encodeURIComponent(
                 [
