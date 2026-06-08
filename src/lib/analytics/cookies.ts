@@ -26,9 +26,17 @@ function readCookie(name: string): string | null {
   return decodeURIComponent(value);
 }
 
+function getCookieDomainAttribute(): string {
+  if (typeof window === 'undefined') return '';
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return '';
+  if (host.endsWith('alcohnsellos.com')) return '; domain=.alcohnsellos.com';
+  return '';
+}
+
 function writeCookie(name: string, value: string, maxAgeSeconds: number): void {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax${getCookieDomainAttribute()}`;
 }
 
 export function getConsentState(): ConsentState | null {

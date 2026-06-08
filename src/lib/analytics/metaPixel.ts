@@ -37,7 +37,12 @@ export function grantMetaPixelConsent(): void {
   if (!consentGranted) {
     consentGranted = true;
     window.fbq('track', 'PageView');
+    window.dispatchEvent(new CustomEvent('alcohn:consent-granted'));
   }
+}
+
+export function hasMarketingConsent(): boolean {
+  return canTrack();
 }
 
 /** Activa el pixel si el usuario ya aceptó cookies de marketing. */
