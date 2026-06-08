@@ -77,6 +77,10 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        <meta
+          name="facebook-domain-verification"
+          content="nm2dt01nlz693pflegun6lmmz5ewvk"
+        />
         {GTM_ID ? (
           <script dangerouslySetInnerHTML={{ __html: GTM_CONSENT_DEFAULTS_SCRIPT }} />
         ) : null}
