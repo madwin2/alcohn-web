@@ -18,6 +18,8 @@ const staticRoutes = [
   '/cotizar',
   '/politica-envios',
   '/politica-devoluciones',
+  '/terminos',
+  '/privacidad',
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

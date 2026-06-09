@@ -31,6 +31,14 @@ function FooterContactDetails({ className = '' }: { className?: string }) {
           WhatsApp
         </a>
       </p>
+      <p className="mt-1">
+        <a
+          href={`mailto:${SITE_CONTACT.email}`}
+          className="text-neutral-400 hover:text-white transition-colors break-all"
+        >
+          {SITE_CONTACT.email}
+        </a>
+      </p>
     </address>
   );
 }
@@ -44,7 +52,67 @@ function FooterLegalLinks({ linkClass }: { linkClass: string }) {
       <Link href="/politica-devoluciones" className={linkClass}>
         Política de devoluciones
       </Link>
+      <Link href="/terminos" className={linkClass}>
+        Términos y condiciones
+      </Link>
+      <Link href="/privacidad" className={linkClass}>
+        Política de privacidad
+      </Link>
     </>
+  );
+}
+
+function PaymentMethods({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+        Medios de pago
+      </span>
+      <span
+        aria-label="Visa"
+        title="Visa"
+        className="inline-flex h-6 items-center justify-center rounded-sm bg-neutral-100 px-2 text-[10px] font-bold tracking-wide text-neutral-700"
+      >
+        <svg
+          viewBox="0 0 48 16"
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-auto"
+          aria-hidden="true"
+        >
+          <text
+            x="24"
+            y="13"
+            textAnchor="middle"
+            fontFamily="Arial, Helvetica, sans-serif"
+            fontWeight="900"
+            fontStyle="italic"
+            fontSize="14"
+            fill="#1A1F71"
+          >
+            VISA
+          </text>
+        </svg>
+      </span>
+      <span
+        aria-label="Mastercard"
+        title="Mastercard"
+        className="inline-flex h-6 items-center justify-center rounded-sm bg-neutral-100 px-2"
+      >
+        <svg
+          viewBox="0 0 32 20"
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-auto"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="10" r="6.5" fill="#EB001B" />
+          <circle cx="20" cy="10" r="6.5" fill="#F79E1B" />
+          <path
+            d="M16 5.2a6.48 6.48 0 0 1 0 9.6 6.48 6.48 0 0 1 0-9.6z"
+            fill="#FF5F00"
+          />
+        </svg>
+      </span>
+    </div>
   );
 }
 
@@ -172,6 +240,16 @@ export default function Footer() {
                   Política de devoluciones
                 </Link>
               </li>
+              <li>
+                <Link href="/terminos" className={footerLinkClass}>
+                  Términos y condiciones
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacidad" className={footerLinkClass}>
+                  Política de privacidad
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -193,8 +271,9 @@ export default function Footer() {
           </div>
         </div>
         <Divider className="mt-5 md:mt-12 pt-4 md:pt-8 border-neutral-800" />
-        <div className="text-center text-xs md:text-sm text-neutral-500">
+        <div className="flex flex-col items-center gap-3 text-center text-xs md:text-sm text-neutral-500 md:flex-row md:justify-between md:gap-4 md:text-left">
           <p>© {new Date().getFullYear()} Alcohn. Todos los derechos reservados.</p>
+          <PaymentMethods />
         </div>
       </div>
     </footer>

@@ -80,6 +80,63 @@ export default function ContactoPage() {
                 </WhatsappButton>
               </div>
             </section>
+
+            <section className="technical-sheet p-6 md:p-8">
+              <div className="relative z-10">
+                <p className="craft-label mb-4">Datos de contacto</p>
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-neutral-950 mb-5">
+                  Toda la información para ubicarnos
+                </h2>
+                <dl className="space-y-4 text-sm leading-relaxed text-neutral-800">
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                      Email
+                    </dt>
+                    <dd>
+                      <a
+                        href={`mailto:${SITE_CONTACT.email}`}
+                        className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                      >
+                        {SITE_CONTACT.email}
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                      Teléfono y WhatsApp
+                    </dt>
+                    <dd>
+                      <a
+                        href={`tel:${SITE_CONTACT.phoneTel}`}
+                        className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                      >
+                        {SITE_CONTACT.phoneDisplay}
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                      Dirección del taller
+                    </dt>
+                    <dd className="not-italic">
+                      <address className="not-italic">
+                        {SITE_CONTACT.streetAddress}
+                        <br />
+                        CP {SITE_CONTACT.postalCode}, {SITE_CONTACT.addressLocality}
+                        <br />
+                        {SITE_CONTACT.addressRegion}, {SITE_CONTACT.addressCountry}
+                      </address>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                      Horario de atención
+                    </dt>
+                    <dd>Lunes a viernes, de 8:00 a 16:00hs. Respondemos por WhatsApp y email.</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
           </aside>
 
           <section className="technical-sheet p-6 md:p-8">

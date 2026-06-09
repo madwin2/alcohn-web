@@ -92,6 +92,7 @@ export const SITE_SOCIAL = {
 
 /** Datos de contacto visibles en footer, páginas legales y schema. */
 export const SITE_CONTACT = {
+  email: 'alcohn.cnc@gmail.com',
   phoneDisplay: '+54 9 223 620-9554',
   phoneTel: '+5492236209554',
   whatsappUrl: 'https://wa.me/5492236209554',
@@ -122,6 +123,7 @@ const organizationNode = {
       '@type': 'ContactPoint',
       contactType: 'customer support',
       telephone: SITE_CONTACT.phoneTel,
+      email: SITE_CONTACT.email,
       areaServed: 'AR',
       availableLanguage: ['es'],
     },
