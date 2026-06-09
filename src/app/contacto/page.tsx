@@ -3,7 +3,8 @@ import PageIntro from '@/components/PageIntro';
 import ContactForm from '@/components/ContactForm';
 import WhatsappButton from '@/components/WhatsappButton';
 import ActionButton from '@/components/ActionButton';
-import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
+import { config } from '@/lib/config';
+import { buildBreadcrumbJsonLd, createPageMetadata, SITE_CONTACT } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Contacto | Sellos de bronce personalizados Alcohn Argentina',
@@ -34,8 +35,8 @@ export default function ContactoPage() {
             href: '/buy?mode=custom',
           }}
           secondaryCta={{
-            label: 'Comprar estándar',
-            href: '/sellos/estandar',
+            label: 'Contactar por WhatsApp',
+            href: `${SITE_CONTACT.whatsappUrl}?text=${encodeURIComponent(config.whatsapp.message.base)}`,
             variant: 'secondary',
           }}
         />
