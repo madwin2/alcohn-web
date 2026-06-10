@@ -19,13 +19,13 @@ export const config = {
     amount: 10000, // Seña inicial
   },
   bank: {
-    // TODO: Reemplazar con datos bancarios reales
-    name: 'Banco [Nombre]',
-    accountType: 'Cuenta Corriente',
-    accountNumber: '0000000000000000000000',
-    cbu: '0000000000000000000000',
+    name: 'BBVA',
+    accountType: 'Caja de Ahorro',
+    accountNumber: '90-495078/8',
+    cbu: '0170090940000049507885',
     alias: 'ALCOHN.SELLOS',
-    cuit: '00-00000000-0',
+    titular: 'MORENO JULIAN',
+    cuit: '20-41306528-4',
   },
 };
 

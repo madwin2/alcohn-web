@@ -3104,7 +3104,7 @@ export default function BuyWizard({
                       </div>
                       <div>
                         <span className="text-gray-600 block mb-1">Titular:</span>
-                        <span className="text-gray-900 font-medium">{config.bank.cuit}</span>
+                        <span className="text-gray-900 font-medium">{config.bank.titular}</span>
                       </div>
                       <div className="pt-3 border-t border-gray-200">
                         <span className="text-gray-600 block mb-1">Monto a transferir:</span>
