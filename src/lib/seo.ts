@@ -62,7 +62,49 @@ export function createPageMetadata({
 }
 
 export function absoluteUrl(path: string) {
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${SITE_URL}${encodeURI(normalized)}`;
+}
+
+/** Políticas enlazadas en schema de ofertas (Merchant Listings / Product). */
+export const MERCHANT_SHIPPING_POLICY_URL = `${SITE_URL}/politica-envios`;
+export const MERCHANT_RETURN_POLICY_URL = `${SITE_URL}/politica-devoluciones`;
+
+function buildOfferShippingDetails() {
+  return {
+    '@type': 'OfferShippingDetails',
+    shippingDestination: {
+      '@type': 'DefinedRegion',
+      addressCountry: 'AR',
+    },
+    deliveryTime: {
+      '@type': 'ShippingDeliveryTime',
+      handlingTime: {
+        '@type': 'QuantitativeValue',
+        minValue: 3,
+        maxValue: 5,
+        unitCode: 'DAY',
+      },
+      transitTime: {
+        '@type': 'QuantitativeValue',
+        minValue: 3,
+        maxValue: 10,
+        unitCode: 'DAY',
+      },
+    },
+  };
+}
+
+function buildMerchantReturnPolicy() {
+  return {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: 'AR',
+    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+    merchantReturnDays: 10,
+    returnMethod: 'https://schema.org/ReturnByMail',
+    returnFees: 'https://schema.org/ReturnShippingFees',
+    url: MERCHANT_RETURN_POLICY_URL,
+  };
 }
 
 export type BreadcrumbItem = {
@@ -226,6 +268,8 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
       availability: 'https://schema.org/InStock',
       url: absoluteUrl(input.path),
       seller: { '@id': ORGANIZATION_ID },
+      shippingDetails: buildOfferShippingDetails(),
+      hasMerchantReturnPolicy: buildMerchantReturnPolicy(),
     };
   }
 

@@ -1,10 +1,12 @@
 /**
  * Genera feeds/google-merchant-products.tsv para Google Merchant Center.
- * Ejecutar: node scripts/generate-merchant-feed.mjs
+ * Ejecutar: npm run feed:merchant
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { standardStampDesigns } from '../src/data/standardStamps';
+import { STANDARD_STAMP_PRICE_FROM_ARS } from '../src/lib/catalog';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -14,9 +16,16 @@ const GOOGLE_CATEGORY = 'Herramientas y ferretería > Herramientas > Sellos y pu
 
 const CUSTOM_FROM = 69500;
 
-/** @type {Array<{ id: string; title: string; description: string; link: string; image: string; price: number }>} */
-const ROWS = [
-  // —— Fichas /productos ——
+type FeedRow = {
+  id: string;
+  title: string;
+  description: string;
+  link: string;
+  image: string;
+  price: number;
+};
+
+const STATIC_ROWS: FeedRow[] = [
   {
     id: 'prod-sello-personalizado-cuero',
     title: 'Sello de bronce personalizado para cuero | Alcohn',
@@ -89,8 +98,6 @@ const ROWS = [
     image: '/images/abecedario/abecedario.webp',
     price: 35000,
   },
-
-  // —— Landings /sellos (intención de búsqueda) ——
   {
     id: 'sello-para-madera',
     title: 'Sello de bronce para madera personalizado | Carpintería CNC',
@@ -172,22 +179,20 @@ const ROWS = [
     image: '/images/carousel/fruta.webp',
     price: CUSTOM_FROM,
   },
-
-  // —— Sellos estándar (diseño fijo) ——
-  { id: 'estandar-bandera-argentina', title: 'Sello estándar Bandera Argentina en bronce', description: 'Sello de bronce con diseño Bandera Argentina, listo para marcar cuero y madera.', link: '/sellos/estandar/bandera-argentina', image: '/images/sello/sello-estandar-bronce.webp', price: 45000 },
-  { id: 'estandar-sol-de-mayo', title: 'Sello estándar Sol de Mayo en bronce', description: 'Sello de bronce Sol de Mayo para productos y packaging con identidad argentina.', link: '/sellos/estandar/sol-de-mayo', image: '/images/sello/sello-estandar-bronce.webp', price: 45000 },
-  { id: 'estandar-escudo-argentina', title: 'Sello estándar Escudo Nacional en bronce', description: 'Escudo nacional argentino en sello de bronce para marcar productos premium.', link: '/sellos/estandar/escudo-argentina', image: '/images/sello/sello-estandar-bronce.webp', price: 48000 },
-  { id: 'estandar-pelota-futbol', title: 'Sello estándar Pelota de Fútbol en bronce', description: 'Diseño pelota de fútbol en sello de bronce para productos deportivos.', link: '/sellos/estandar/pelota-futbol', image: '/images/sello/sello-estandar-bronce.webp', price: 42000 },
-  { id: 'estandar-camiseta-argentina', title: 'Sello estándar Camiseta Argentina en bronce', description: 'Silueta camiseta selección argentina en sello de bronce.', link: '/sellos/estandar/camiseta-argentina', image: '/images/sello/sello-estandar-bronce.webp', price: 46000 },
-  { id: 'estandar-trophy-copa', title: 'Sello estándar Trofeo Copa en bronce', description: 'Trofeo o copa en sello de bronce para productos deportivos y regalos.', link: '/sellos/estandar/trophy-copa', image: '/images/sello/sello-estandar-bronce.webp', price: 44000 },
-  { id: 'estandar-cuero-textura', title: 'Sello estándar Textura de Cuero en bronce', description: 'Patrón textura cuero en sello de bronce para marroquinería.', link: '/sellos/estandar/cuero-textura', image: '/images/sello/sello-estandar-bronce.webp', price: 40000 },
-  { id: 'estandar-herradura', title: 'Sello estándar Herradura en bronce', description: 'Herradura clásica en sello de bronce para productos de cuero.', link: '/sellos/estandar/herradura', image: '/images/sello/sello-estandar-bronce.webp', price: 42000 },
-  { id: 'estandar-vaca-silueta', title: 'Sello estándar Silueta de Vaca en bronce', description: 'Silueta de vaca para marcar cuero genuino y productos rurales.', link: '/sellos/estandar/vaca-silueta', image: '/images/sello/sello-estandar-bronce.webp', price: 44000 },
-  { id: 'estandar-madera-nudos', title: 'Sello estándar Nudos de Madera en bronce', description: 'Patrón nudos de madera en sello de bronce para carpintería.', link: '/sellos/estandar/madera-nudos', image: '/images/sello/sello-estandar-bronce.webp', price: 40000 },
-  { id: 'estandar-hoja-arce', title: 'Sello estándar Hoja de Arce en bronce', description: 'Hoja de arce en sello de bronce para productos de madera.', link: '/sellos/estandar/hoja-arce', image: '/images/sello/sello-estandar-bronce.webp', price: 42000 },
-  { id: 'estandar-martillo', title: 'Sello estándar Martillo en bronce', description: 'Martillo en sello de bronce para oficios y productos artesanales.', link: '/sellos/estandar/martillo', image: '/images/sello/sello-estandar-bronce.webp', price: 40000 },
-  { id: 'estandar-llave-inglesa', title: 'Sello estándar Llave Inglesa en bronce', description: 'Llave inglesa en sello de bronce para productos técnicos y regalos.', link: '/sellos/estandar/llave-inglesa', image: '/images/sello/sello-estandar-bronce.webp', price: 40000 },
 ];
+
+function standardStampRows(): FeedRow[] {
+  return standardStampDesigns.map((design) => ({
+    id: `estandar-${design.slug}`,
+    title: `Sello estándar ${design.title} en bronce | Alcohn`,
+    description:
+      design.description ||
+      `Sello de bronce con diseño ${design.title}. Elegí medida, personalizá y comprá online con envío a todo Argentina.`,
+    link: `/sellos/estandar/${design.slug}`,
+    image: design.image,
+    price: STANDARD_STAMP_PRICE_FROM_ARS,
+  }));
+}
 
 const HEADERS = [
   'id',
@@ -201,25 +206,24 @@ const HEADERS = [
   'condition',
   'google_product_category',
   'identifier_exists',
-  'country',
-  'language',
 ];
 
-function absoluteUrl(path) {
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+function absoluteUrl(relativePath: string) {
+  const normalized = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+  return `${SITE_URL}${encodeURI(normalized)}`;
 }
 
-function formatPrice(ars) {
+function formatPrice(ars: number) {
   return `${Number(ars).toFixed(2)} ARS`;
 }
 
-function escapeTsv(value) {
+function escapeTsv(value: string | number) {
   const s = String(value).replace(/\r?\n/g, ' ').replace(/\t/g, ' ').trim();
   if (/["\t\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
 
-function rowToLine(row) {
+function rowToLine(row: FeedRow) {
   const cells = [
     row.id,
     row.title.slice(0, 150),
@@ -232,18 +236,17 @@ function rowToLine(row) {
     'new',
     GOOGLE_CATEGORY,
     'no',
-    'AR',
-    'es',
   ];
   return cells.map(escapeTsv).join('\t');
 }
 
+const rows = [...STATIC_ROWS, ...standardStampRows()];
 const outDir = path.join(ROOT, 'feeds');
 const outFile = path.join(outDir, 'google-merchant-products.tsv');
 fs.mkdirSync(outDir, { recursive: true });
 
-const lines = [HEADERS.join('\t'), ...ROWS.map((r) => rowToLine(r))];
+const lines = [HEADERS.join('\t'), ...rows.map((row) => rowToLine(row))];
 fs.writeFileSync(outFile, `${lines.join('\n')}\n`, 'utf8');
 
 console.log(`Feed generado: ${outFile}`);
-console.log(`${ROWS.length} productos · ${SITE_URL}`);
+console.log(`${rows.length} productos (${standardStampDesigns.length} sellos estándar) · ${SITE_URL}`);

@@ -1,38 +1,47 @@
 # Feed para Google Merchant Center
 
-Archivo listo para subir: **`feeds/google-merchant-products.tsv`** (30 productos).
+Archivo listo para subir: **`feeds/google-merchant-products.tsv`**.
 
-Regenerar cuando cambien precios o URLs:
+Regenerar cuando cambien precios, sellos estándar o URLs:
 
 ```bash
-node scripts/generate-merchant-feed.mjs
+npm run feed:merchant
 ```
 
-## Cómo subirlo (rápido)
+Los sellos estándar se leen automáticamente desde `src/data/standardStamps.ts`.
 
-1. Entrá a [Google Merchant Center](https://merchants.google.com/).
-2. **Productos** → **Añadir productos** → **Añadir otra fuente de productos**.
-3. Elegí **Subir un archivo** (o “Hoja de cálculo / archivo”).
-4. País de venta: **Argentina**.
-5. Idioma: **Español**.
-6. Subí el archivo `feeds/google-merchant-products.tsv` (formato TSV, separado por tabulaciones).
-7. Mapeá columnas si Google lo pide (los nombres del encabezado ya coinciden con el estándar).
-8. Completá antes **envío** y **impuestos** en la configuración de la cuenta (obligatorio para aprobar productos).
+## Cómo actualizar el feed en Merchant Center
 
-## Notas
+1. Ejecutá `npm run feed:merchant` en el proyecto.
+2. Entrá a [Google Merchant Center](https://merchants.google.com/).
+3. **Productos** → **Fuentes de datos** → clic en **`google-merchant-products.tsv`** (la fuente existente; no crees otra).
+4. **Subir archivo** y elegí `feeds/google-merchant-products.tsv`.
+5. Si te pregunta el tipo de carga: **Reemplazar todos los productos de esta fuente**.
+6. Esperá el procesamiento (puede tardar unas horas) y revisá **Diagnósticos**.
 
-- Los precios son el **“desde”** publicado en la web (personalizados $69.500, estándar según diseño).
-- `identifier_exists = no` porque no hay GTIN/EAN (producto artesanal a medida).
-- Las URLs apuntan a fichas reales en `alcohnsellos.com` (productos, landings `/sellos/*`, estándar).
-- Si Google rechaza algún ítem por imagen genérica en sellos estándar, reemplazá `image_link` en el TSV por una foto específica de ese diseño.
+## Configuración de la cuenta (una vez)
 
-## Listados gratuitos
+En Merchant Center, verificá que estén completos:
 
-En Merchant Center, activá **Listados gratuitos de productos** (Free listings) para aparecer en resultados tipo Shopping sin campaña de pago.
+- **Envío:** https://alcohnsellos.com/politica-envios
+- **Devoluciones:** https://alcohnsellos.com/politica-devoluciones
+- **Impuestos** para Argentina
+- **Listados gratuitos de productos** activados (opcional pero recomendado)
 
-## Política de devoluciones (obligatorio en Merchant)
+## Notas del feed
 
-URL para pegar en la configuración de la tienda (no está enlazada desde el menú del sitio aún):
+- Precio **desde** $69.500 ARS (personalizados y estándar); abecedarios con precio fijo.
+- `identifier_exists = no` porque no hay GTIN/EAN.
+- Cada sello estándar usa su imagen real del catálogo.
+- Las columnas `country` y `language` ya no van en el TSV (se definen en la fuente: Argentina + Español).
 
-- Devoluciones: **https://alcohnsellos.com/politica-devoluciones**
-- Envíos: **https://alcohnsellos.com/politica-envios**
+## Schema en la web (Search Console)
+
+Las fichas de producto incluyen en `offers`:
+
+- `shippingDetails` (envío a Argentina, plazos de fabricación y tránsito)
+- `hasMerchantReturnPolicy` (10 días, enlace a política de devoluciones)
+
+Eso corrige las alertas de **Fichas de comerciantes** en Search Console tras desplegar y revalidar.
+
+Las alertas de **reseñas** (`aggregateRating` / `review`) requieren reseñas visibles en cada ficha; por ahora no se incluyen.

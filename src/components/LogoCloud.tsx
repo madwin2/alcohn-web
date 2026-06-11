@@ -17,13 +17,6 @@ const trustWords = [
   'emprendedores',
 ];
 
-const trustStats = [
-  { value: '+7', label: 'años de experiencia', mobileLabel: 'años de exp.' },
-  { value: '+6000', label: 'sellos fabricados', mobileLabel: 'sellos fabricados' },
-  { value: '72hs', label: 'hábiles de fabricación', mobileLabel: 'fabricación' },
-  { value: 'Envíos', label: 'a todo el país', mobileLabel: 'todo el país' },
-];
-
 const mobileBrands = brands.slice(0, 12);
 
 const longestTrustWord = trustWords.reduce(
@@ -89,20 +82,9 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
                 </span>
               </span>
             </h2>
-            <div className="mx-auto mt-8 hidden max-w-4xl grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
-              {trustStats.map((stat) => (
-                <div key={stat.label} data-scroll-card className="technical-dash bg-white/50 p-4 text-center">
-                  <p className="text-[1.5rem] font-semibold leading-tight text-neutral-950 md:text-2xl">{stat.value}</p>
-                  <p className="mt-1 text-sm text-neutral-600 md:text-xs">
-                    <span className="md:hidden">{stat.mobileLabel}</span>
-                    <span className="hidden md:inline">{stat.label}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
 
-          <div className="border-b border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]">
+          <div className="bg-[var(--alcohn-surface)]">
             <div className="brand-marquee brand-marquee--mobile sm:hidden">
               <div className="brand-marquee-track flex w-max flex-nowrap">
                 {[...mobileBrands, ...mobileBrands].map((brand, index) => (
@@ -150,17 +132,17 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[0.48fr_0.52fr]">
+          <div className="grid grid-cols-1 gap-0 pt-7 md:pt-9 lg:grid-cols-[0.48fr_0.52fr] lg:items-stretch lg:pt-10">
             <div
               data-scroll-card
-              className="min-h-[250px] border-b border-[var(--alcohn-line)] md:min-h-[340px] lg:border-b-0 lg:border-r"
+              className="relative min-h-[250px] md:min-h-[340px] lg:min-h-0 lg:border-r lg:border-[var(--alcohn-line)]"
             >
               <Image
                 src="/images/inicio/billetera-cuero-marca-taller.webp"
                 alt="Billetera de cuero con marca aplicada en taller artesanal"
                 width={1200}
                 height={720}
-                className="h-full min-h-[250px] w-full object-cover md:min-h-[340px]"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             </div>
             <div className="flex flex-col justify-between p-6 md:p-10 lg:p-12">

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Hero from '@/components/Hero';
 import ActionButton from '@/components/ActionButton';
 import LogoCloud from '@/components/LogoCloud';
+import TrustStatsStrip from '@/components/TrustStatsStrip';
 import BeforeAfterStrip from '@/components/BeforeAfterStrip';
 import HomeScrollShell from '@/components/animations/HomeScrollShell';
 import DossInspiredSections from '@/components/DossInspiredSections';
@@ -63,26 +64,26 @@ const materialProofs = [
 
 const craftStoryImages = [
   {
-    label: 'Madera',
-    title: 'Piezas con firma repetible',
+    label: 'Produccion Local',
+    title: 'Industria Argentina',
     image: '/images/scroll/madera-firma-repetible.webp',
     alt: 'Piezas de madera con firma repetible',
   },
   {
-    label: 'CNC',
+    label: 'Mecanizado CNC',
     title: 'Precision Industrial',
     image: '/images/nosotros/mecanizado-cnc-precision.webp',
     alt: 'Mecanizado CNC de precisión industrial',
   },
   {
-    label: 'Taller',
-    title: 'Identidad Propia',
-    image: '/images/scroll/artesano-taller-identidad.webp',
-    alt: 'Artesano trabajando en taller',
+    label: 'Experiencia Unica',
+    title: 'Atencion Personalizada',
+    image: '/images/nosotros/atencion.png',
+    alt: 'Artesano cosiendo cuero a mano en taller',
   },
   {
-    label: 'Packaging',
-    title: 'Producto listo para vender',
+    label: 'Valor Agregado',
+    title: 'Piezas con Identidad',
     image: '/images/scroll/tote-packaging-marca-producto.png',
     alt: 'Bolsa de tela con marca aplicada',
   },
@@ -134,7 +135,7 @@ export default function Home() {
         priceFrom={customStampMinPrice}
       />
 
-      <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-y border-[var(--alcohn-line)] py-6 md:py-24 md:min-h-0">
+      <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-t border-[var(--alcohn-line)] py-6 md:py-24 md:min-h-0">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div
             data-scroll-panel
@@ -157,9 +158,6 @@ export default function Home() {
                       Convertimos a los trabajadores del cuero y la madera en profesionales del oficio, revalorizando su trabajo y su identidad profesional.
                     </span>
                   </blockquote>
-                  <p className="mt-4 hidden max-w-xl text-sm leading-relaxed text-neutral-700 md:block md:text-base">
-                    Los sellos de bronce transforman una pieza bien hecha en un producto reconocible: firma, repetición y presencia de marca sin perder el carácter artesanal del taller.
-                  </p>
 
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row md:mt-8 md:gap-3">
                     <ActionButton href="/sobre-alcohn" variant="primary" className="hidden md:inline-flex">
@@ -212,7 +210,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="lo-transforma" className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:py-24">
+      <TrustStatsStrip />
+
+      <section id="lo-transforma" className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <div
             data-scroll-panel
