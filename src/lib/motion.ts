@@ -1,3 +1,8 @@
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -67,3 +72,43 @@ export const panelHide = {
   duration: 0.52,
   ease: 'power2.in',
 } as const;
+
+type ScrollRevealOptions = {
+  from?: gsap.TweenVars;
+  to: gsap.TweenVars;
+  start?: string;
+  stagger?: number;
+  playImmediately?: boolean;
+};
+
+export function bindScrollReveal(
+  targets: gsap.DOMTarget,
+  { from = { y: 28, opacity: 0 }, to, start = 'top 88%', stagger = 0, playImmediately = false }: ScrollRevealOptions
+) {
+  const list = gsap.utils.toArray<HTMLElement>(targets);
+
+  list.forEach((el, index) => {
+    const delay = typeof to.delay === 'number' ? to.delay : stagger * index;
+
+    if (playImmediately) {
+      gsap.fromTo(el, from, { ...to, delay });
+      return;
+    }
+
+    gsap.set(el, from);
+    const tween = gsap.to(el, {
+      ...to,
+      delay,
+      scrollTrigger: {
+        trigger: el,
+        start,
+        once: true,
+        toggleActions: 'play none none none',
+      },
+    });
+
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.95) {
+      tween.progress(1);
+    }
+  });
+}

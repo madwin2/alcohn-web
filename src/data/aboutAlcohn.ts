@@ -1,6 +1,8 @@
 export interface WhyChooseReason {
   title: string;
   copy: string;
+  image: string;
+  alt: string;
 }
 
 export interface TeamMember {
@@ -16,18 +18,26 @@ export const whyChooseReasons: WhyChooseReason[] = [
   {
     title: 'Líderes en la industria nacional',
     copy: 'Fabricamos en nuestro taller de Mar del Plata y acompañamos a marcas, talleres y emprendedores de todo el país. Más de 6.000 sellos entregados, clientes conformes y marcas reconocidas respaldan una forma de trabajar basada en diseño, precisión y compromiso.',
+    image: '/images/hero/sello-bronce-hero-taller-alcohn.jpeg',
+    alt: 'Taller Alcohn en Mar del Plata, fabricación de sellos de bronce',
   },
   {
     title: 'Experiencia comprobada',
     copy: 'Desde 2019 fabricamos sellos personalizados para cuero, madera, papel, packaging, alimentos y otros materiales. Esa experiencia nos permite saber qué funciona en cada superficie, cómo adaptar cada diseño y qué necesita cada cliente para lograr una marca clara, duradera y profesional.',
+    image: '/images/inicio/billetera-cuero-marca-taller.webp',
+    alt: 'Sello de bronce aplicado en cuero en un taller artesanal',
   },
   {
     title: 'Atención personalizada',
     copy: 'Estamos presentes antes, durante y después de cada pedido. Respondemos dudas, asesoramos medidas, revisamos diseños, enviamos muestras digitales y acompañamos a cada cliente para que compre con seguridad y reciba un sello a la altura de su trabajo.',
+    image: '/images/nosotros/atencion.png',
+    alt: 'Atención personalizada de Alcohn con un cliente',
   },
   {
     title: 'Sellos de calidad profesional',
     copy: 'Fabricamos sellos de bronce con mecanizado CNC, profundidad de grabado de hasta 3 mm y detalles finos de alta precisión. Cada pieza está pensada para lograr marcas definidas, soportar el uso diario en taller y diferenciarse de los sellos genéricos del mercado.',
+    image: '/images/nosotros/mecanizado-cnc-precision.webp',
+    alt: 'Mecanizado CNC de precisión en un sello de bronce Alcohn',
   },
 ];
 

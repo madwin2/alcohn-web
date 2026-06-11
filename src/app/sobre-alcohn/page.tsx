@@ -3,7 +3,7 @@ import AlcohnTeamSection from '@/components/AlcohnTeamSection';
 import AlcohnValuesSection from '@/components/AlcohnValuesSection';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import WhyChooseAlcohnSection from '@/components/WhyChooseAlcohnSection';
+import WhyChooseDifferentiatorsSection from '@/components/WhyChooseDifferentiatorsSection';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
@@ -69,7 +69,7 @@ export default function SobreAlcohnPage() {
           </div>
         </section>
 
-        <WhyChooseAlcohnSection />
+        <WhyChooseDifferentiatorsSection />
 
         <AlcohnTeamSection />
 
