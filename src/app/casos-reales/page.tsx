@@ -46,7 +46,7 @@ export default function CasosRealesPage() {
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Prueba real"
-          title="Sellos terminados en productos de verdad"
+          title="Clientes que confiaron en Alcohn"
           description="La confianza no sale de promesas: sale de ver marcas aplicadas, materiales reales y clientes que ya usan Alcohn para profesionalizar sus productos."
           mobileDescription="Casos reales para ver resultado, escala y lectura antes de elegir tu sello."
           primaryCta={{

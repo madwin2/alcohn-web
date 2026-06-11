@@ -89,7 +89,7 @@ export default function ComoUsarSellosPage() {
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntroWithMaterialModal
           label="Manual de uso"
-          title="Cómo lograr una marca prolija sin depender de soporte"
+          title="Cómo usar nuestros sellos"
           description="Una guía de banco de trabajo para elegir método, probar el material, evitar errores comunes y repetir una marca consistente en cuero, madera, packaging, alimentos, cerámica o lacre."
           mobileDescription="Guía rápida para elegir método, probar material y evitar errores al marcar."
           primaryCta={{
@@ -100,18 +100,7 @@ export default function ComoUsarSellosPage() {
 
         <section className="mb-14 md:mb-20 motion-reveal">
           <div className="technical-sheet blueprint-sheet">
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.34fr_0.66fr]">
-              <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-4 md:p-6 lg:p-8">
-                <p className="craft-label mb-4">Selector de método</p>
-                <h2 className="text-[1.9rem] md:text-3xl lg:text-4xl font-semibold leading-[1.08] md:leading-tight tracking-tight text-neutral-950">
-                  Qué técnica usar según el material
-                </h2>
-                <p className="mt-3 md:mt-5 text-sm leading-relaxed text-neutral-700">
-                  Esto evita la consulta más repetida: no todos los materiales se marcan igual, y una prueba chica suele ahorrar una pieza arruinada.
-                </p>
-              </div>
-              <MaterialUsageSelector />
-            </div>
+            <MaterialUsageSelector />
           </div>
         </section>
 

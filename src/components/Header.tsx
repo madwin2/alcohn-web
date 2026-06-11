@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ActionButton from './ActionButton';
 import CartButton from './cart/CartButton';
+import ScrollProgressBar from './ScrollProgressBar';
 
 const logoLinkClassName =
   'font-semibold uppercase tracking-[0.14em] text-white hover:text-neutral-300 transition-colors';
@@ -47,7 +48,7 @@ export default function Header() {
     href === '/' ? pathname === '/' : pathname?.startsWith(href);
 
   return (
-    <header className="atelier-header text-white sticky top-0 z-50">
+    <header className="atelier-header relative text-white sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-8">
         {/* Mobile: menú | ALCOHN | carrito */}
         <div className="grid h-14 grid-cols-[2.75rem_1fr_2.75rem] items-center lg:hidden">
@@ -186,6 +187,8 @@ export default function Header() {
           </div>
         </nav>
       )}
+
+      <ScrollProgressBar />
     </header>
   );
 }

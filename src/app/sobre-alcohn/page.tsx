@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import AlcohnTeamSection from '@/components/AlcohnTeamSection';
+import AlcohnValuesSection from '@/components/AlcohnValuesSection';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import MobileCarousel from '@/components/MobileCarousel';
+import WhyChooseAlcohnSection from '@/components/WhyChooseAlcohnSection';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
@@ -10,14 +12,6 @@ export const metadata: Metadata = createPageMetadata({
     'Fabricamos sellos de bronce de alta precisión con CNC propia. +6.000 sellos, marcas nacionales y envío a todo el país.',
   path: '/sobre-alcohn',
 });
-
-const values = [
-  ['Calidad', 'Cada sello debe ser funcional, preciso y estéticamente impecable.'],
-  ['Diseño', 'El proceso de diseño es fundamental para nuestra empresa.'],
-  ['Tecnología', 'Usamos CNC para lograr repetibilidad, profundidad y control.'],
-  ['Oficio', 'Terminamos piezas reales para talleres, marcas y emprendedores.'],
-  ['Innovacion', 'Buscamos siempre la innovacion en el diseño y la tecnologia.'],
-];
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },
@@ -75,28 +69,11 @@ export default function SobreAlcohnPage() {
           </div>
         </section>
 
-        <section className="mb-20">
-          <div className="technical-sheet">
-            <div className="relative z-10 border-b border-[var(--alcohn-line)] p-6 md:p-10">
-              <p className="craft-label mb-4">Valores de fabricación</p>
-              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-neutral-950">
-                Precisión, material y criterio
-              </h2>
-            </div>
-            <MobileCarousel rowClassName="relative z-10 md:grid md:grid-cols-2 lg:grid-cols-5" hint="Deslizá valores">
-              {values.map(([title, copy]) => (
-                <article key={title} className="mobile-snap-card border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-5 md:min-w-0 md:border-b md:border-r md:bg-transparent md:last:border-r-0 md:p-6">
-                  <h3 className="text-lg font-semibold tracking-tight text-neutral-950">
-                    {title}
-                  </h3>
-                  <p className="mt-4 text-sm leading-relaxed text-neutral-700">
-                    {copy}
-                  </p>
-                </article>
-              ))}
-            </MobileCarousel>
-          </div>
-        </section>
+        <WhyChooseAlcohnSection />
+
+        <AlcohnTeamSection />
+
+        <AlcohnValuesSection />
 
         <SalesCtaBand
           title="La mejor forma de conocer Alcohn es probar tu marca en el flujo"

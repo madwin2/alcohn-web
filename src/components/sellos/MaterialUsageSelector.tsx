@@ -48,6 +48,31 @@ function Chip({
   );
 }
 
+function MaterialGridButton({
+  label,
+  isActive,
+  onClick,
+}: {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'min-h-[44px] w-full border px-2 py-2.5 text-center text-xs font-semibold uppercase tracking-wider transition-colors',
+        isActive
+          ? 'border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] text-white'
+          : 'border-[var(--alcohn-line)] bg-white text-neutral-700 hover:border-neutral-950',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  );
+}
+
 function MaterialSectionBody({
   section,
   methodIndex,
@@ -77,7 +102,7 @@ function MaterialSectionBody({
     const showMethodTabs = section.methods.length > 1;
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         {showMethodTabs && onMethodChange ? (
           <div className="flex flex-wrap gap-2">
             {section.methods.map((item, index) => (
@@ -119,25 +144,44 @@ export default function MaterialUsageSelector({
 
   return (
     <>
-      <div className="hidden lg:block p-5 xl:p-6">
-        <div className="mb-5 flex flex-wrap gap-2">
-          {guides.map((section, index) => (
-            <Chip
-              key={section.material}
-              label={section.material}
-              isActive={index === activeIndex}
-              onClick={() => setActiveIndex(index)}
-            />
-          ))}
+      <div className="relative z-10 hidden lg:grid lg:grid-cols-[0.34fr_0.66fr]">
+        <div className="border-r border-[var(--alcohn-line)] p-6 xl:p-8">
+          <p className="craft-label mb-4">Selector de método</p>
+          <h2 className="text-3xl xl:text-4xl font-semibold leading-tight tracking-tight text-neutral-950">
+            Qué material querés marcar
+          </h2>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {guides.map((section, index) => (
+              <MaterialGridButton
+                key={section.material}
+                label={section.material}
+                isActive={index === activeIndex}
+                onClick={() => setActiveIndex(index)}
+              />
+            ))}
+          </div>
         </div>
-        <MaterialSectionBody
-          section={activeSection}
-          methodIndex={methodIndex}
-          onMethodChange={setMethodIndex}
-        />
+
+        <div className="p-6 xl:p-8">
+          {activeSection.methods && activeSection.methods.length > 1 ? (
+            <p className="craft-label mb-4">Técnica</p>
+          ) : null}
+          <MaterialSectionBody
+            section={activeSection}
+            methodIndex={methodIndex}
+            onMethodChange={setMethodIndex}
+          />
+        </div>
       </div>
 
-      <div className="lg:hidden divide-y divide-[var(--alcohn-line)]">
+      <div className="lg:hidden">
+        <div className="border-b border-[var(--alcohn-line)] p-4 md:p-6">
+          <p className="craft-label mb-4">Selector de método</p>
+          <h2 className="text-[1.9rem] md:text-3xl font-semibold leading-[1.08] tracking-tight text-neutral-950">
+            Qué material querés marcar
+          </h2>
+        </div>
+        <div className="divide-y divide-[var(--alcohn-line)]">
         {guides.map((section) => {
           const isOpen = mobileOpen === section.material;
 
@@ -161,6 +205,7 @@ export default function MaterialUsageSelector({
             </article>
           );
         })}
+        </div>
       </div>
     </>
   );
