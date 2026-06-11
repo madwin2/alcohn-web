@@ -30,8 +30,8 @@ export const whyChooseReasons: WhyChooseReason[] = [
   {
     title: 'Atención personalizada',
     copy: 'Estamos presentes antes, durante y después de cada pedido. Respondemos dudas, asesoramos medidas, revisamos diseños, enviamos muestras digitales y acompañamos a cada cliente para que compre con seguridad y reciba un sello a la altura de su trabajo.',
-    image: '/images/nosotros/atencion.png',
-    alt: 'Atención personalizada de Alcohn con un cliente',
+    image: '/images/sobre%20alcohn/atencion%20personalizada.jpeg',
+    alt: 'Atención personalizada en el taller Alcohn con diseño y asesoramiento',
   },
   {
     title: 'Sellos de calidad profesional',

@@ -3,6 +3,7 @@ import AlcohnTeamSection from '@/components/AlcohnTeamSection';
 import AlcohnValuesSection from '@/components/AlcohnValuesSection';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
+import StoryPhraseStrip from '@/components/StoryPhraseStrip';
 import WhyChooseDifferentiatorsSection from '@/components/WhyChooseDifferentiatorsSection';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
@@ -62,13 +63,14 @@ export default function SobreAlcohnPage() {
               <p>
                 Cada sello está pensado para sentirse como una pieza de joyería industrial: una herramienta duradera, clara y lista para llevar la identidad de una marca al producto final.
               </p>
-              <p className="text-xl md:text-2xl font-semibold tracking-tight text-neutral-950">
-                Una forma de contar tu historia.
-              </p>
             </div>
           </div>
         </section>
+      </div>
 
+      <StoryPhraseStrip />
+
+      <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <WhyChooseDifferentiatorsSection />
 
         <AlcohnTeamSection />

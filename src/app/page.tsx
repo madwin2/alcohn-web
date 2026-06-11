@@ -39,8 +39,8 @@ const materialProofs = [
   {
     label: 'Cuero',
     title: 'Marroquinería Profesional',
-    image: '/images/inicio/cuero.webp',
-    alt: 'Marroquinería profesional con sello aplicado en cuero',
+    image: '/images/no%20solo%20fabricamos/a%20mano.jpeg',
+    alt: 'Marroquinería profesional con productos hechos a mano',
   },
   {
     label: 'Madera',
@@ -49,10 +49,10 @@ const materialProofs = [
     alt: 'Carpintería profesional con marca en madera',
   },
   {
-    label: 'Acero',
-    title: 'Piezas de autor',
-    image: '/images/inicio/pieza-acero-marca-artesanal.webp',
-    alt: 'Pieza de autor con marca artesanal',
+    label: 'Alimentos',
+    title: 'Diferenciación',
+    image: '/images/no%20solo%20fabricamos/inferno.jpeg',
+    alt: 'Diferenciación de productos alimenticios con sello personalizado',
   },
   {
     label: 'Packaging',
@@ -78,8 +78,8 @@ const craftStoryImages = [
   {
     label: 'Experiencia Unica',
     title: 'Atencion Personalizada',
-    image: '/images/nosotros/atencion.png',
-    alt: 'Artesano cosiendo cuero a mano en taller',
+    image: '/images/sobre%20alcohn/atencion%20personalizada.jpeg',
+    alt: 'Atención personalizada en el taller Alcohn con diseño y asesoramiento',
   },
   {
     label: 'Valor Agregado',
