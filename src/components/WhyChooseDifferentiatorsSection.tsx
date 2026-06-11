@@ -106,43 +106,34 @@ function MobilePanelCard({
           decoding="async"
         />
 
-        {/* Capa base oscura — siempre legible en estado cerrado */}
+        {/* Cerrado: degradé izquierda → derecha, imagen visible a la derecha */}
         <div
           className={[
-            'absolute inset-0 bg-neutral-950/65 transition-opacity duration-700 ease-out',
-            isOpen ? 'opacity-40' : 'opacity-100',
-          ].join(' ')}
-          aria-hidden="true"
-        />
-        <div
-          className={[
-            'absolute inset-0 bg-gradient-to-r from-neutral-950/90 via-neutral-950/60 to-neutral-950/35',
+            'absolute inset-0 bg-gradient-to-r from-neutral-950/90 via-neutral-950/45 via-[38%] to-transparent',
             'transition-opacity duration-700 ease-out',
-            isOpen ? 'opacity-50' : 'opacity-100',
+            isOpen ? 'opacity-0' : 'opacity-100',
           ].join(' ')}
           aria-hidden="true"
         />
 
-        {/* Degradé inferior global al expandir */}
+        {/* Abierto: degradé mínimo solo bajo el título */}
         <div
           className={[
-            'absolute inset-x-0 bottom-0 h-[72%]',
-            'bg-gradient-to-t from-neutral-950 via-neutral-950/95 via-50% to-transparent',
+            'absolute inset-x-0 top-0 h-[5.5rem]',
+            'bg-gradient-to-r from-neutral-950/70 via-neutral-950/25 to-transparent',
             'transition-opacity duration-700 ease-out',
             isOpen ? 'opacity-100' : 'opacity-0',
           ].join(' ')}
           aria-hidden="true"
         />
 
-        {/* Feedback al tocar */}
-        <div
-          className={[
-            'absolute inset-0 bg-neutral-950 transition-opacity duration-300 ease-out',
-            'opacity-0 group-active:opacity-25',
-            isOpen ? 'opacity-0' : 'group-hover:opacity-10',
-          ].join(' ')}
-          aria-hidden="true"
-        />
+        {/* Feedback al tocar — solo en estado cerrado */}
+        {!isOpen && (
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-neutral-950/35 to-transparent opacity-0 transition-opacity duration-300 ease-out group-active:opacity-100"
+            aria-hidden="true"
+          />
+        )}
 
         <div className="relative flex min-h-[5.5rem] shrink-0 items-center justify-between gap-3 px-4 py-4">
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -168,19 +159,24 @@ function MobilePanelCard({
           <div className="overflow-hidden">
             <div
               className={[
-                'relative px-4 pb-6 pt-10',
+                'relative px-4 pb-6 pt-6',
                 'transition-[opacity,transform] duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
                 isOpen ? 'translate-y-0 opacity-100 delay-100' : 'translate-y-3 opacity-0 delay-0',
               ].join(' ')}
             >
-              {/* Scrim dedicado detrás del texto */}
+              {/* Transición suave hacia la imagen */}
               <div
-                className="pointer-events-none absolute inset-x-0 -top-10 bottom-0 bg-gradient-to-t from-neutral-950 via-neutral-950/98 to-neutral-950/75"
+                className="pointer-events-none absolute inset-x-0 -top-12 h-12 bg-gradient-to-b from-transparent to-neutral-950/80"
+                aria-hidden="true"
+              />
+              {/* Fondo negro moderado bajo el texto — legible sin tapar del todo */}
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 bottom-0 bg-neutral-950/80"
                 aria-hidden="true"
               />
               <div className="relative">
                 <div className="mb-3 h-px w-10 bg-[var(--alcohn-bronze)]" aria-hidden="true" />
-                <p className="text-sm leading-relaxed text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.4)]">
+                <p className="text-sm leading-relaxed text-white/95">
                   {reason.copy}
                 </p>
               </div>
