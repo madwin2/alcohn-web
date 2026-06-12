@@ -36,40 +36,92 @@ export default function AboutHeroSection() {
         return Math.max((vw - contentWidth) / 2, 0);
       };
 
+      // Capturar la referencia antes de crear el pin: ScrollTrigger envuelve
+      // la sección en un spacer y cambia sus hermanos en el DOM.
+      const nextBlock = section.nextElementSibling as HTMLElement | null;
+
+      // Hero fijado SIN spacer: mientras el hero queda quieto, el contenido
+      // siguiente (la tarjeta de Historia) sube por encima con el scroll
+      // natural. La duración del pin es exactamente la altura del hero, así
+      // al soltarse no hay ningún salto: el flujo del documento coincide.
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: () => `top ${headerOffset()}px`,
-          end: '+=90%',
+          end: () => `+=${section.offsetHeight}`,
           pin: true,
+          pinSpacing: false,
           scrub: 0.7,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
       });
 
-      tl.to(
-        '.about-hero__content',
-        { yPercent: -26, autoAlpha: 0, duration: 0.5, ease: 'power1.in' },
-        0
-      )
-        .to('.about-hero__cue', { autoAlpha: 0, duration: 0.18, ease: 'power1.out' }, 0)
+      // Tween vacío de duración 1: fija la duración total del timeline para
+      // que las posiciones (0.26, 0.34…) sean fracciones exactas del pin.
+      tl.to({}, { duration: 1 }, 0)
+        .to(
+          '.about-hero__content',
+          { yPercent: -26, autoAlpha: 0, duration: 0.3, ease: 'power1.in' },
+          0
+        )
+        .to('.about-hero__cue', { autoAlpha: 0, duration: 0.12, ease: 'power1.out' }, 0)
+        // 1) La imagen se recorta hasta quedar como lámina centrada…
         .to(
           '.about-hero__media',
           {
             clipPath: () => `inset(13% ${sideInset()}px 12% ${sideInset()}px)`,
-            duration: 1,
+            duration: 0.34,
             ease: 'power2.inOut',
           },
           0
         )
-        .to('.about-hero__img', { scale: 1, duration: 1, ease: 'power2.inOut' }, 0)
-        .to('.about-hero__overlay', { opacity: 0.3, duration: 1, ease: 'power1.inOut' }, 0)
+        .to('.about-hero__img', { scale: 1, duration: 0.34, ease: 'power2.inOut' }, 0)
+        .to('.about-hero__overlay', { opacity: 0.3, duration: 0.34, ease: 'power1.inOut' }, 0)
         .to(
           '.about-hero__plate-label',
-          { autoAlpha: 1, y: 0, duration: 0.28, ease: 'power1.out' },
-          0.66
+          { autoAlpha: 1, y: 0, duration: 0.08, ease: 'power1.out' },
+          0.26
+        )
+        // 2) …y después sigue achicándose hasta desaparecer por completo
+        // antes de que la tarjeta termine de hacerse visible.
+        .to(
+          '.about-hero__media',
+          {
+            scale: 0.5,
+            yPercent: -6,
+            autoAlpha: 0,
+            transformOrigin: '50% 50%',
+            duration: 0.16,
+            ease: 'power1.in',
+          },
+          0.34
+        )
+        .to(
+          '.about-hero__plate-label',
+          { autoAlpha: 0, duration: 0.08, ease: 'power1.in' },
+          0.38
         );
+
+      // Fade de entrada de la tarjeta mientras sube sobre el hero. Como el
+      // movimiento lo da el scroll natural, solo se anima la opacidad.
+      if (nextBlock) {
+        gsap.fromTo(
+          nextBlock,
+          { autoAlpha: 0 },
+          {
+            autoAlpha: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: nextBlock,
+              start: 'top 92%',
+              end: 'top 45%',
+              scrub: 0.5,
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
     },
     { scope: sectionRef }
   );
@@ -78,9 +130,9 @@ export default function AboutHeroSection() {
     <section
       ref={sectionRef}
       aria-label="Sobre Alcohn"
-      className="about-hero relative h-[calc(100svh-3.5rem)] w-full overflow-hidden lg:h-[calc(100svh-4rem)]"
+      className="about-hero relative z-0 h-[calc(100svh-3.5rem)] w-full overflow-hidden lg:h-[calc(100svh-4rem)]"
     >
-      <div className="about-hero__media absolute inset-0 will-change-[clip-path]">
+      <div className="about-hero__media absolute inset-0 will-change-[clip-path,transform]">
         <Image
           src={HERO_IMAGE}
           alt="Taller Alcohn en Mar del Plata, fabricación de sellos de bronce"

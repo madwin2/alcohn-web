@@ -29,7 +29,8 @@ export default function SobreAlcohnPage() {
       />
       <AboutHeroSection />
 
-      <div className="container mx-auto px-4 md:px-8 max-w-7xl pt-6 md:pt-8">
+      <div className="relative z-10">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl pt-6 md:pt-8">
         <section className="mb-20 technical-sheet">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.44fr_0.56fr]">
             <div className="relative min-h-[240px] border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] md:min-h-[320px] lg:min-h-0">
@@ -77,6 +78,7 @@ export default function SobreAlcohnPage() {
           secondaryHref="/proceso"
           dark
         />
+        </div>
       </div>
     </div>
   );
