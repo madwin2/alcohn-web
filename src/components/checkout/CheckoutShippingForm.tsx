@@ -30,6 +30,8 @@ const emptyForm = (): ShippingFormData => ({
   provincia: '',
   localidad: '',
   domicilio: '',
+  piso: '',
+  depto: '',
   codigoPostal: '',
   codigoSucursal: '',
 });
@@ -306,9 +308,42 @@ const CheckoutShippingForm = forwardRef<CheckoutShippingFormHandle, CheckoutShip
                     placeholder="Ej: Av. Colón 1234"
                     required
                   />
+                  <p className="mt-1.5 text-xs text-neutral-500">
+                    Si no completás piso y depto abajo, podés incluirlos acá en la misma línea
+                    (Correo Argentino los toma en este campo).
+                  </p>
                   {errors.domicilio && (
                     <p className="mt-1 text-xs text-red-600">{errors.domicilio}</p>
                   )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+                      Piso <span className="normal-case tracking-normal text-neutral-400">(opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.piso}
+                      onChange={(e) => setForm((f) => ({ ...f, piso: e.target.value }))}
+                      className={inputClass('piso')}
+                      placeholder="Ej: 3"
+                      inputMode="text"
+                      autoComplete="address-line2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">
+                      Depto <span className="normal-case tracking-normal text-neutral-400">(opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.depto}
+                      onChange={(e) => setForm((f) => ({ ...f, depto: e.target.value }))}
+                      className={inputClass('depto')}
+                      placeholder="Ej: B"
+                      autoComplete="address-line3"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-neutral-600 font-medium mb-2">

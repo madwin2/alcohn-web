@@ -148,3 +148,17 @@ export function buildSucursalDomicilio(calle: string, numero: string): string {
   if (!n || n === '0') return c;
   return `${c} ${n}`.trim();
 }
+
+/** Une calle/número con piso y depto para Correo Argentino (una sola línea en DB). */
+export function buildDomicilioCompleto(
+  calleNumero: string,
+  piso?: string,
+  depto?: string
+): string {
+  let line = calleNumero.trim();
+  const p = piso?.trim();
+  const d = depto?.trim();
+  if (p) line += `, Piso ${p}`;
+  if (d) line += `, Dpto ${d}`;
+  return line;
+}

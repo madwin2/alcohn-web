@@ -111,6 +111,8 @@ export async function createCheckoutIntent(input: {
       provincia: string;
       localidad: string;
       domicilio: string;
+      piso?: string;
+      depto?: string;
       codigoPostal: string;
       codigoSucursal: string;
     };

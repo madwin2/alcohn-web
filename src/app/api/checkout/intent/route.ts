@@ -80,6 +80,8 @@ function parseShippingForm(raw: unknown): ShippingFormData | null {
     provincia: typeof o.provincia === 'string' ? o.provincia : '',
     localidad: typeof o.localidad === 'string' ? o.localidad : '',
     domicilio: typeof o.domicilio === 'string' ? o.domicilio : '',
+    piso: typeof o.piso === 'string' ? o.piso : '',
+    depto: typeof o.depto === 'string' ? o.depto : '',
     codigoPostal: typeof o.codigoPostal === 'string' ? o.codigoPostal : '',
     codigoSucursal: typeof o.codigoSucursal === 'string' ? o.codigoSucursal : '',
   };

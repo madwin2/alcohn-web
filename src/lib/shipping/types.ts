@@ -42,7 +42,12 @@ export interface ShippingFormData {
   telefono: string;
   provincia: string;
   localidad: string;
+  /** Calle y número (sin piso/depto). */
   domicilio: string;
+  /** Opcional; se concatena en `domicilio` al persistir. */
+  piso: string;
+  /** Opcional; se concatena en `domicilio` al persistir. */
+  depto: string;
   codigoPostal: string;
   codigoSucursal: string;
 }

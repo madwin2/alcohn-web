@@ -4,11 +4,14 @@ import {
   getBranchesFor,
 } from './catalog';
 import {
+  buildDomicilioCompleto,
   normalizePhone,
   snapAddress,
   snapLocality,
   snapProvince,
 } from './normalize';
+
+const DOMICILIO_MAX_LENGTH = 255;
 
 export function validateShippingForm(
   metodo: ShippingMetodoUi,
@@ -44,11 +47,15 @@ export function validateShippingForm(
 
   if (metodo === 'domicilio') {
     if (!form.localidad.trim()) errors.localidad = 'La localidad es obligatoria';
-    const dom = form.domicilio.trim();
-    if (!dom) {
+    const calle = form.domicilio.trim();
+    if (!calle) {
       errors.domicilio = 'La dirección es obligatoria';
-    } else if (!/\d+\s*$/.test(dom)) {
-      errors.domicilio = 'Incluí el número de calle al final (ej: Av. Colón 1234)';
+    } else if (!/\d/.test(calle)) {
+      errors.domicilio = 'Incluí el número de calle (ej: Av. Colón 1234)';
+    }
+    const domicilioCompleto = buildDomicilioCompleto(calle, form.piso, form.depto);
+    if (domicilioCompleto.length > DOMICILIO_MAX_LENGTH) {
+      errors.domicilio = `La dirección completa no puede superar ${DOMICILIO_MAX_LENGTH} caracteres`;
     }
     if (!form.codigoPostal.trim()) {
       errors.codigoPostal = 'El código postal es obligatorio';
@@ -93,7 +100,7 @@ export function resolveShippingSnap(
     return {
       provincia,
       localidad: form.localidad.trim(),
-      domicilio: form.domicilio.trim(),
+      domicilio: buildDomicilioCompleto(form.domicilio, form.piso, form.depto),
       codigoSucursal: null,
     };
   }
