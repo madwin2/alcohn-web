@@ -1277,6 +1277,40 @@ main,
 }
 
 /* Design System Tokens */
+.about-hero__cue-line {
+  position: relative;
+  width: 1px;
+  height: 44px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.about-hero__cue-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -45%;
+  width: 100%;
+  height: 45%;
+  background: rgba(255, 255, 255, 0.9);
+  animation: about-hero-cue 1.9s ease-in-out infinite;
+}
+
+@keyframes about-hero-cue {
+  0% {
+    top: -45%;
+  }
+  100% {
+    top: 115%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-hero__cue-line::after {
+    animation: none;
+  }
+}
+
 @layer utilities {
   /* Typography */
   .text-label {

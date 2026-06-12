@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
+import AboutHeroSection from '@/components/AboutHeroSection';
 import AlcohnTeamSection from '@/components/AlcohnTeamSection';
 import AlcohnValuesSection from '@/components/AlcohnValuesSection';
-import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import StoryPhraseStrip from '@/components/StoryPhraseStrip';
 import WhyChooseDifferentiatorsSection from '@/components/WhyChooseDifferentiatorsSection';
@@ -21,48 +22,38 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 
 export default function SobreAlcohnPage() {
   return (
-    <div className="atelier-page min-h-screen py-10 md:py-16">
+    <div className="atelier-page min-h-screen pb-10 md:pb-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-        <PageIntro
-          label="Sobre Alcohn"
-          title="Diseño industrial aplicado al oficio"
-          description="Alcohn une bronce, CNC y criterio de diseño para fabricar herramientas de marca para marroquineros, carpinteros, cuchilleros, gastronómicos y emprendimientos artesanales."
-          primaryCta={{
-            label: 'Diseñar sello',
-            href: '/buy?mode=custom',
-          }}
-          secondaryCta={{
-            label: 'Ver casos reales',
-            href: '/casos-reales',
-            variant: 'secondary',
-          }}
-          hideHighlightsOnMobile
-          highlights={[
-            'Fabricación en Mar del Plata',
-            'Piezas de bronce con terminación precisa',
-            'Tecnología CNC al servicio de marcas reales',
-          ]}
-        />
+      <AboutHeroSection />
 
+      <div className="container mx-auto px-4 md:px-8 max-w-7xl pt-6 md:pt-8">
         <section className="mb-20 technical-sheet">
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
-            <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-10">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.44fr_0.56fr]">
+            <div className="relative min-h-[240px] border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] md:min-h-[320px] lg:min-h-0">
+              <Image
+                src="/images/nosotros/mecanizado-cnc-precision.webp"
+                alt="Mecanizado CNC de precisión en el taller Alcohn"
+                fill
+                sizes="(min-width: 1024px) 44vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+            <div className="p-6 md:p-10 lg:p-12">
               <p className="craft-label mb-4">Historia</p>
-              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950">
+              <h2 className="mb-5 text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-neutral-950">
                 Un sello no es un pedazo de bronce
               </h2>
-            </div>
-            <div className="p-6 md:p-10 space-y-5 text-sm md:text-base leading-relaxed text-neutral-700">
-              <p>
-                Alcohn nació en Mar del Plata como un taller de diseño industrial con una misión clara: unir la precisión de la tecnología CNC con el alma artesanal de los oficios tradicionales.
-              </p>
-              <p>
-                Cada sello está pensado para sentirse como una pieza de joyería industrial: una herramienta duradera, clara y lista para llevar la identidad de una marca al producto final.
-              </p>
+              <div className="space-y-5 text-sm md:text-base leading-relaxed text-neutral-700">
+                <p>
+                  Alcohn nació en Mar del Plata como un taller de diseño industrial con una misión clara: unir la precisión de la tecnología CNC con el alma artesanal de los oficios tradicionales.
+                </p>
+                <p>
+                  Cada sello está pensado para sentirse como una pieza de joyería industrial: una herramienta duradera, clara y lista para llevar la identidad de una marca al producto final.
+                </p>
+              </div>
             </div>
           </div>
         </section>
