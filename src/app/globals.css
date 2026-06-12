@@ -489,6 +489,17 @@ main,
     scroll-snap-align: start;
   }
 
+  .values-mobile-row {
+    gap: 0.75rem;
+    padding: 1rem 1rem 0.35rem;
+    scroll-padding-inline: 1rem;
+  }
+
+  .values-mobile-row .value-card-mobile {
+    flex: 0 0 min(84vw, 20.5rem);
+    scroll-snap-align: center;
+  }
+
   .mobile-snap-row--scroll .mobile-snap-card.cliente-gallery-thumb {
     flex: 0 0 38%;
     width: 38%;

@@ -46,24 +46,24 @@ export const teamMembers: TeamMember[] = [
     name: '',
     role: 'Dirección y diseño',
     bio: 'Visión de producto, criterio estético y relación con cada marca.',
-    image: null,
+    image: '/images/equipo/Juli%20M.jpeg',
   },
   {
     name: '',
     role: 'Producción y CNC',
     bio: 'Mecanizado, control de calidad y terminación de cada pieza.',
-    image: null,
+    image: '/images/equipo/Fede.jpeg',
   },
   {
     name: '',
     role: 'Operaciones',
     bio: 'Logística, plazos y que cada pedido salga en tiempo y forma.',
-    image: null,
+    image: '/images/equipo/Cachi.jpeg',
   },
   {
     name: '',
     role: 'Atención al cliente',
     bio: 'Asesoramiento, seguimiento y resolución en cada consulta.',
-    image: null,
+    image: '/images/equipo/Juli%20B.jpeg',
   },
 ];

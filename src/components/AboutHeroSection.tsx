@@ -9,8 +9,7 @@ import { prefersReducedMotion } from '@/lib/motion';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-// Imagen provisoria: se reemplaza por la foto definitiva del hero.
-const HERO_IMAGE = '/images/hero/sello-bronce-hero-taller-alcohn.jpeg';
+const HERO_IMAGE = '/images/sobre%20alcohn/hero.jpeg';
 
 export default function AboutHeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -135,7 +134,7 @@ export default function AboutHeroSection() {
       <div className="about-hero__media absolute inset-0 will-change-[clip-path,transform]">
         <Image
           src={HERO_IMAGE}
-          alt="Taller Alcohn en Mar del Plata, fabricación de sellos de bronce"
+          alt="Oficio y diseño industrial en el taller Alcohn"
           fill
           priority
           sizes="100vw"

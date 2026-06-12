@@ -13,20 +13,20 @@ const values = [
   {
     title: 'Calidad',
     copy: 'Creemos que una herramienta profesional debe sentirse como una. Por eso cuidamos cada detalle de fabricación, desde la precisión del mecanizado hasta la profundidad del grabado, la terminación final y la durabilidad de cada pieza.',
-    image: '/images/producto/sello-bronce-galeria-01.webp',
+    image: '/images/sobre%20alcohn/calidad-card.jpeg',
     alt: 'Detalle de sello de bronce con terminación precisa',
   },
   {
     title: 'Diseño',
     copy: 'El diseño atraviesa todo lo que hacemos. Está en la forma del sello, en cómo adaptamos cada marca, en el packaging, en la fotografía, en la página web, en nuestro espacio de trabajo y en cada punto de contacto con el cliente. Para nosotros, diseñar es pensar con criterio, cuidar los detalles y construir una experiencia coherente, estética y profesional.',
-    image: '/images/scroll/tote-packaging-marca-producto.png',
-    alt: 'Packaging y presentación de producto con marca aplicada',
+    image: '/images/sobre%20alcohn/diseno.png',
+    alt: 'Diseño y presentación de marca en productos Alcohn',
   },
   {
     title: 'Tecnología',
     copy: 'Usamos tecnología para transformar ideas en herramientas reales, precisas y duraderas. El mecanizado CNC nos permite trabajar con detalle, repetibilidad y control, pero siempre con una mirada humana y profesional sobre cada proyecto.',
-    image: '/images/nosotros/mecanizado-cnc-precision.webp',
-    alt: 'Mecanizado CNC de precisión en taller Alcohn',
+    image: '/images/sobre%20alcohn/TECNOLOGIA.jpeg',
+    alt: 'Tecnología CNC en el taller Alcohn',
   },
   {
     title: 'Oficio',
@@ -130,10 +130,31 @@ function ValueCard({
     return (
       <article
         data-value-panel
-        className="mobile-snap-card group flex w-[min(88vw,22rem)] flex-col overflow-hidden border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] md:min-w-0"
+        className="value-card-mobile mobile-snap-card group flex flex-col overflow-hidden border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] shadow-[0_10px_28px_rgba(17,16,14,0.05)]"
       >
-        <ValueImage src={value.image} alt={value.alt} variant="mobile" />
-        <ValueCopy index={index} title={value.title} copy={value.copy} className="!p-5" />
+        <div className="relative aspect-[5/4] w-full overflow-hidden">
+          <img
+            src={value.image}
+            alt={value.alt}
+            className="value-panel__img h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div data-value-content className="flex flex-col p-5">
+          <div className="mb-3 flex items-center gap-3">
+            <p data-value-index className="craft-label text-[var(--alcohn-bronze-dark)]">
+              {String(index + 1).padStart(2, '0')}
+            </p>
+            <div
+              data-value-line
+              className="h-px flex-1 origin-left bg-[var(--alcohn-bronze)]/45"
+              aria-hidden="true"
+            />
+          </div>
+          <h3 className="text-xl font-semibold tracking-tight text-neutral-950">{value.title}</h3>
+          <p className="mt-3 text-[13.5px] leading-relaxed text-neutral-700">{value.copy}</p>
+        </div>
       </article>
     );
   }
@@ -194,6 +215,8 @@ export default function AlcohnValuesSection() {
         });
       }
 
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
       panels.forEach((panel) => {
         const imageWrap = panel.querySelector<HTMLElement>('[data-value-image]');
         const image = panel.querySelector<HTMLElement>('.value-panel__img');
@@ -201,6 +224,7 @@ export default function AlcohnValuesSection() {
         const line = panel.querySelector<HTMLElement>('[data-value-line]');
         const indexEl = panel.querySelector<HTMLElement>('[data-value-index]');
 
+        if (isMobile) return;
         if (imageWrap) gsap.set(imageWrap, { clipPath: 'inset(0 100% 0 0)' });
         if (image) gsap.set(image, { scale: 1.12 });
         if (content) gsap.set(content, { y: 32, opacity: 0 });
@@ -269,7 +293,7 @@ export default function AlcohnValuesSection() {
 
         <MobileCarousel
           className="relative z-10 md:hidden"
-          rowClassName="gap-4 px-4 py-5"
+          rowClassName="values-mobile-row gap-3 py-4"
           hint="Deslizá para conocer cada valor"
         >
           {values.map((value, index) => (
