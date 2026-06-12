@@ -16,7 +16,7 @@ export interface TeamMember {
 
 export const whyChooseReasons: WhyChooseReason[] = [
   {
-    title: 'Líderes en la industria nacional',
+    title: 'Líderes en la Industria Nacional',
     copy: 'Fabricamos en nuestro taller de Mar del Plata y acompañamos a marcas, talleres y emprendedores de todo el país. Más de 6.000 sellos entregados, clientes conformes y marcas reconocidas respaldan una forma de trabajar basada en diseño, precisión y compromiso.',
     image: '/images/hero/sello-bronce-hero-taller-alcohn.jpeg',
     alt: 'Taller Alcohn en Mar del Plata, fabricación de sellos de bronce',
@@ -24,8 +24,8 @@ export const whyChooseReasons: WhyChooseReason[] = [
   {
     title: 'Experiencia comprobada',
     copy: 'Desde 2019 fabricamos sellos personalizados para cuero, madera, papel, packaging, alimentos y otros materiales. Esa experiencia nos permite saber qué funciona en cada superficie, cómo adaptar cada diseño y qué necesita cada cliente para lograr una marca clara, duradera y profesional.',
-    image: '/images/inicio/billetera-cuero-marca-taller.webp',
-    alt: 'Sello de bronce aplicado en cuero en un taller artesanal',
+    image: '/images/sobre%20alcohn/experiencia.jpeg',
+    alt: 'Experiencia en fabricación de sellos personalizados para distintos materiales',
   },
   {
     title: 'Atención personalizada',
@@ -36,8 +36,8 @@ export const whyChooseReasons: WhyChooseReason[] = [
   {
     title: 'Sellos de calidad profesional',
     copy: 'Fabricamos sellos de bronce con mecanizado CNC, profundidad de grabado de hasta 3 mm y detalles finos de alta precisión. Cada pieza está pensada para lograr marcas definidas, soportar el uso diario en taller y diferenciarse de los sellos genéricos del mercado.',
-    image: '/images/nosotros/mecanizado-cnc-precision.webp',
-    alt: 'Mecanizado CNC de precisión en un sello de bronce Alcohn',
+    image: '/images/sobre%20alcohn/sellos%20calidad%20profesional.jpeg',
+    alt: 'Sellos de bronce de calidad profesional fabricados en Alcohn',
   },
 ];
 
