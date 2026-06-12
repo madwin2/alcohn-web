@@ -84,8 +84,8 @@ const craftStoryImages = [
   {
     label: 'Valor Agregado',
     title: 'Piezas con Identidad',
-    image: '/images/scroll/tote-packaging-marca-producto.png',
-    alt: 'Bolsa de tela con marca aplicada',
+    image: '/images/sobre%20alcohn/piezas%20con%20identidad.jpeg',
+    alt: 'Bolsa de tela con parche de cuero y marca aplicada',
   },
 ];
 

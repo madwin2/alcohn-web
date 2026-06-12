@@ -10,7 +10,7 @@ import { STANDARD_STAMP_PRICE_FROM_ARS } from '../src/lib/catalog';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const SITE_URL = 'https://alcohnsellos.com';
+const SITE_URL = 'https://www.alcohnsellos.com';
 const BRAND = 'Alcohn';
 const GOOGLE_CATEGORY = 'Herramientas y ferretería > Herramientas > Sellos y punzones';
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const SITE_URL = 'https://alcohnsellos.com';
+export const SITE_URL = 'https://www.alcohnsellos.com';
 export const SITE_NAME = 'Alcohn';
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
 
