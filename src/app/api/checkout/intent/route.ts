@@ -24,7 +24,11 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { isSupabaseConfigured, getSupabaseAdmin } from '@/lib/supabase/admin';
 import { upsertClienteServer } from '@/lib/supabase/upsertClienteServer';
-import { parseCartItemsFromBody } from '@/lib/supabase/cartItems';
+import {
+  applyTransferPricesToCartItems,
+  parseCartItemsFromBody,
+} from '@/lib/supabase/cartItems';
+import { getCotizadorCatalog } from '@/lib/cotizador';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
 import { saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
@@ -114,12 +118,17 @@ export async function POST(req: Request) {
   }
   const metodoPago = metodoRaw as MetodoPago;
 
-  const items = parseCartItemsFromBody(body.items);
+  let items = parseCartItemsFromBody(body.items);
   if (!items) {
     return NextResponse.json(
       { error: 'El carrito está vacío o tiene ítems con formato inválido' },
       { status: 400 }
     );
+  }
+
+  if (metodoPago === 'Transferencia') {
+    const catalog = await getCotizadorCatalog();
+    items = applyTransferPricesToCartItems(items, catalog);
   }
 
   const c = body.cliente;

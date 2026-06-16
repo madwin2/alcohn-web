@@ -104,6 +104,32 @@ function mockupKindsForMaterial(material: WizardMaterial): MockupUploadKind[] {
   }
 }
 
+export type WizardMedidasCotizacionJson = {
+  /** Etiqueta legible (Pequeño / Mediano / Grande o medida en mm). */
+  size: string;
+  /** Medida real de fabricación, p. ej. `40×38mm` o `3×2,3CM`. */
+  medidaExacta: string;
+  approximateSizeKey?: 'pequeño' | 'medio' | 'grande';
+  precio?: number;
+  precio_transferencia?: number;
+  customSize?: { width: number; height: number };
+  tipo?: 'catalogo' | 'manual';
+};
+
+export async function syncWizardMedidasCotizacion(
+  mockupId: string,
+  medidas: WizardMedidasCotizacionJson
+): Promise<void> {
+  if (!medidas.medidaExacta.trim()) return;
+  try {
+    await patchMockupSolicitud(mockupId, {
+      medidas_cotizacion_json: medidas,
+    });
+  } catch (err) {
+    console.error('[wizard] medidas cotizacion', err);
+  }
+}
+
 export async function syncWizardMockupPreview(
   mockupId: string,
   material: WizardMaterial,

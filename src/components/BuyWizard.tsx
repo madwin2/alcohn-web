@@ -30,8 +30,10 @@ import {
   ensureMockupSolicitud,
   syncWizardLogos,
   syncWizardMockupPreview,
+  syncWizardMedidasCotizacion,
   markMockupPendingApproval,
   markCheckoutStarted,
+  type WizardMedidasCotizacionJson,
 } from '@/lib/wizardSupabaseSync';
 import { patchMockupSolicitud, uploadMockupImage } from '@/lib/supabase/mockupApiClient';
 import {
@@ -1005,6 +1007,25 @@ export default function BuyWizard({
     return data.selectedSize || '';
   };
 
+  const buildMedidasCotizacionJson = (
+    overrides?: Partial<WizardMedidasCotizacionJson>
+  ): WizardMedidasCotizacionJson => ({
+    size: overrides?.size ?? getSizeDisplayText(),
+    medidaExacta: overrides?.medidaExacta ?? data.selectedSize ?? '',
+    approximateSizeKey: overrides?.approximateSizeKey ?? data.approximateSizeKey,
+    precio: overrides?.precio ?? data.selectedPrice,
+    precio_transferencia: overrides?.precio_transferencia ?? data.selectedTransferPrice,
+    customSize: overrides?.customSize ?? data.customSize,
+    tipo: overrides?.tipo ?? (data.customSize ? 'manual' : 'catalogo'),
+  });
+
+  const syncMedidasToMockup = (overrides?: Partial<WizardMedidasCotizacionJson>) => {
+    const mid = mockupSolicitudIdRef.current;
+    const payload = buildMedidasCotizacionJson(overrides);
+    if (!mid || !payload.medidaExacta.trim()) return;
+    void syncWizardMedidasCotizacion(mid, payload);
+  };
+
   // Leer parámetros de la URL al montar el componente
   useEffect(() => {
     const sizeParam = searchParams.get('size');
@@ -1628,6 +1649,15 @@ export default function BuyWizard({
       selectedTransferPrice: q.precio_transferencia_ars,
       approximateSizeKey: undefined,
     }));
+    syncMedidasToMockup({
+      medidaExacta: `${widthMm}x${heightMm}mm`,
+      size: `${widthMm}x${heightMm}mm`,
+      precio: q.precio_link_ars,
+      precio_transferencia: q.precio_transferencia_ars,
+      approximateSizeKey: undefined,
+      customSize: { width: widthMm, height: heightMm },
+      tipo: 'catalogo',
+    });
   };
 
   const handleRequestManualPreview = async () => {
@@ -1666,7 +1696,10 @@ export default function BuyWizard({
   };
 
   const buildWizardTransferCartItems = () => {
-    const variantSize = data.selectedSize || getSizeDisplayText();
+    const variantSize = data.selectedSize;
+    if (!variantSize) {
+      throw new Error('Elegí una medida antes de confirmar.');
+    }
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
     const price = data.selectedTransferPrice ?? 0;
@@ -1690,9 +1723,13 @@ export default function BuyWizard({
     if (!data.nombre?.trim() || !data.whatsapp?.trim()) {
       throw new Error('Completá nombre y WhatsApp en el paso de contacto.');
     }
+    if (!data.selectedSize?.trim()) {
+      throw new Error('Elegí una medida antes de confirmar.');
+    }
     if (!data.selectedTransferPrice || data.selectedTransferPrice <= 0) {
       throw new Error('Elegí una medida con precio antes de confirmar.');
     }
+    syncMedidasToMockup();
     const session = peekWizardSupabaseSession();
     return createCheckoutIntent({
       metodo_pago: 'Transferencia',
@@ -1714,7 +1751,8 @@ export default function BuyWizard({
     total: number,
     unitPrice: number
   ) => {
-    const variantSize = data.selectedSize || getSizeDisplayText();
+    const variantSize = data.selectedSize ?? '';
+    if (!variantSize) return;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${ordenId}`;
     savePurchaseSnapshot({
@@ -1818,6 +1856,7 @@ export default function BuyWizard({
   /** Lleva al checkout el sello configurado en el wizard (precio tarjeta = selectedPrice). */
   const handleAddWizardToCheckout = () => {
     if (!data.selectedPrice || !data.material || checkoutNavigateBusy) return;
+    if (!data.selectedSize?.trim()) return;
     setCheckoutNavigateBusy(true);
     if (data.nombre?.trim() && data.whatsapp?.trim()) {
       saveCheckoutPrefill({
@@ -1827,7 +1866,7 @@ export default function BuyWizard({
       });
     }
     saveCheckoutShipping(shippingMethod, shippingCost);
-    const variantSize = data.selectedSize || getSizeDisplayText();
+    const variantSize = data.selectedSize;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
     const cartLine = {
@@ -1840,6 +1879,7 @@ export default function BuyWizard({
       image: wizardCartImageUrl(data),
       designSlug,
     };
+    syncMedidasToMockup();
     addItem(cartLine);
     const mid = mockupSolicitudIdRef.current;
     if (mid) {
@@ -2319,6 +2359,17 @@ export default function BuyWizard({
                   approximateSizeKey: approx,
                   customSize: undefined,
                 });
+                syncMedidasToMockup({
+                  medidaExacta: option.size,
+                  size: approx
+                    ? ({ pequeño: 'Pequeño', medio: 'Mediano', grande: 'Grande' } as const)[approx]
+                    : option.size,
+                  approximateSizeKey: approx,
+                  precio: option.price,
+                  precio_transferencia: option.transferPrice,
+                  customSize: undefined,
+                  tipo: 'catalogo',
+                });
 
                 if (!data.sizeOptions?.length) {
                   const dim = parseSizeMm(option.size);
@@ -2330,6 +2381,11 @@ export default function BuyWizard({
                         selectedTransferPrice: q.precio_transferencia_ars,
                         selectedPrice: q.precio_link_ars,
                       }));
+                      syncMedidasToMockup({
+                        medidaExacta: option.size,
+                        precio: q.precio_link_ars,
+                        precio_transferencia: q.precio_transferencia_ars,
+                      });
                     });
                   }
                 }

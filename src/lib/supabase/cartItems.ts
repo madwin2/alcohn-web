@@ -1,6 +1,35 @@
 import type { CartItem } from '@/lib/cart';
+import { cotizarRectangular } from '@/lib/cotizador/quote';
+import type { CotizadorCatalog } from '@/lib/cotizador/types';
+import { isNonSelloCartLine, parseVariantSizeToCm } from '@/lib/supabase/sellosFromCart';
 
 const MAX_IMAGE_LEN = 2048;
+
+function isAccessoryCartLine(item: CartItem): boolean {
+  const collection = item.collection?.toLowerCase() ?? '';
+  const size = item.variantSize.toLowerCase();
+  return collection === 'accesorios' || size === 'único' || size === 'unico';
+}
+
+/** Reemplaza `price` por `precio_transferencia_ars` según la medida del ítem (sellos). */
+export function applyTransferPricesToCartItems(
+  items: CartItem[],
+  catalog: CotizadorCatalog | null
+): CartItem[] {
+  if (!catalog) return items;
+
+  return items.map((item) => {
+    if (isNonSelloCartLine(item) || isAccessoryCartLine(item)) return item;
+
+    const dims = parseVariantSizeToCm(item.variantSize);
+    if (dims.ancho_real == null || dims.largo_real == null) return item;
+
+    const quote = cotizarRectangular(catalog, dims.ancho_real, dims.largo_real);
+    if (!quote) return item;
+
+    return { ...item, price: quote.precio_transferencia_ars };
+  });
+}
 
 /** Evita data URLs enormes en JSONB y normaliza precio/cantidad. */
 export function sanitizeCartItemsForDb(items: CartItem[]): CartItem[] {
