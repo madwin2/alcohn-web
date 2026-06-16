@@ -21,7 +21,7 @@ function getEndpoints(env: OpenpayEnv) {
 
   if (env === 'production') {
     return {
-      authBase: authOverride || 'https://auth.geopagos.com',
+      authBase: authOverride || 'https://auth.prd.geopagos.io',
       checkoutApiBase: checkoutOverride || 'https://api.openpayargentina.com.ar',
     };
   }

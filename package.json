@@ -11,7 +11,8 @@
     "lint": "next lint",
     "images:optimize": "node scripts/optimize-images.mjs",
     "seo:assets": "node scripts/generate-seo-assets.mjs",
-    "feed:merchant": "tsx scripts/generate-merchant-feed.ts"
+    "feed:merchant": "tsx scripts/generate-merchant-feed.ts",
+    "feed:pinterest": "tsx scripts/generate-pinterest-feed.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
