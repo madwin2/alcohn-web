@@ -75,6 +75,22 @@ export function trackMetaEvent(
   runWhenReady(() => trackNow(eventName, params));
 }
 
+export function trackMetaCustomEvent(
+  eventName: string,
+  params: Record<string, unknown> = {}
+): void {
+  if (!META_PIXEL_ID) return;
+
+  runWhenReady(() => {
+    sendPixelBeacon(eventName, params);
+    if (!isFbqReady()) return;
+    window.fbq!('trackCustom', eventName, {
+      ...pageContext(),
+      ...params,
+    });
+  });
+}
+
 export function trackMetaInitiateCheckout(params: {
   value: number;
   contentIds: string[];

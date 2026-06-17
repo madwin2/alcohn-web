@@ -23,6 +23,7 @@ import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
+import { trackWizardStep, WIZARD_STEPS } from '@/lib/analytics/wizardStep';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
@@ -952,6 +953,7 @@ export default function BuyWizard({
   const webSessionIdRef = useRef('');
   const clienteIdRef = useRef<string | null>(null);
   const mockupSolicitudIdRef = useRef<string | null>(null);
+  const lastTrackedWizardStepRef = useRef<number | null>(null);
 
   useEffect(() => {
     webSessionIdRef.current = getOrCreateWebSessionId();
@@ -1086,14 +1088,28 @@ export default function BuyWizard({
     }
   }, [searchParams]);
 
-  const steps = [
-    { label: 'Contacto', key: 'contact' },
-    { label: 'Material', key: 'material' },
-    { label: 'Logo', key: 'logo' },
-    { label: 'Vista previa', key: 'preview' },
-    { label: 'Medida', key: 'size' },
-    { label: 'Pago', key: 'payment' },
-  ];
+  const steps = [...WIZARD_STEPS];
+
+  useEffect(() => {
+    if (lastTrackedWizardStepRef.current === step) return;
+    lastTrackedWizardStepRef.current = step;
+
+    const stepDef = WIZARD_STEPS[step];
+    if (!stepDef) return;
+
+    const mode =
+      searchParams.get('mode') ??
+      (searchParams.get('product') ? 'product' : 'custom');
+
+    trackWizardStep({
+      stepIndex: step,
+      stepKey: stepDef.key,
+      stepLabel: stepDef.label,
+      mode,
+      mockupSolicitudId: mockupSolicitudIdRef.current,
+      webSessionId: webSessionIdRef.current,
+    });
+  }, [step, searchParams]);
 
   useEffect(() => {
     if (!data.isAnalyzing && !data.isOptimizing) {
