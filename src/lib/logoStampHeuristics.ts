@@ -2,6 +2,12 @@ import sharp from 'sharp';
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+const getMedian = (values: number[]): number => {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+};
+
 const isNearWhite = (r: number, g: number, b: number) => r >= 245 && g >= 245 && b >= 245;
 
 const luminance = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
@@ -85,9 +91,13 @@ export async function analyzeLogoStampHeuristics(buffer: Buffer): Promise<LogoSt
   let grayscaleForeground = 0;
   let edgeOpaque = 0;
   let edgeDarkOpaque = 0;
+  let edgeLightOpaque = 0;
   let lightOpaque = 0;
   let darkOpaque = 0;
   let opaqueContent = 0;
+  const borderR: number[] = [];
+  const borderG: number[] = [];
+  const borderB: number[] = [];
   const hueBins = new Array<number>(24).fill(0);
 
   for (let y = 0; y < sh; y += step) {
@@ -119,7 +129,11 @@ export async function analyzeLogoStampHeuristics(buffer: Buffer): Promise<LogoSt
         if (isDarkTone(r, g, b)) darkOpaque += 1;
         if (isEdge) {
           edgeOpaque += 1;
+          borderR.push(r);
+          borderG.push(g);
+          borderB.push(b);
           if (isDarkTone(r, g, b)) edgeDarkOpaque += 1;
+          if (isLightTone(r, g, b)) edgeLightOpaque += 1;
         }
       }
 
@@ -147,10 +161,70 @@ export async function analyzeLogoStampHeuristics(buffer: Buffer): Promise<LogoSt
   const grayscaleShare = grayscaleForeground / Math.max(1, foreground);
   const colorful = foreground - grayscaleForeground;
   const dominantHueShare = colorful <= 0 ? 0 : Math.max(...hueBins) / colorful;
+  const bgR = getMedian(borderR);
+  const bgG = getMedian(borderG);
+  const bgB = getMedian(borderB);
+  const bgLum = luminance(bgR, bgG, bgB);
+  const bgMax = Math.max(bgR, bgG, bgB);
+  const bgMin = Math.min(bgR, bgG, bgB);
+  const bgSat = bgMax === 0 ? 0 : (bgMax - bgMin) / bgMax;
+  const bgDistanceThreshold = bgLum > 190 || bgLum < 65 ? 58 : 46;
+  let edgeBgLike = 0;
+  let bgMaskForeground = 0;
+  let bgMaskGrayscale = 0;
+  let bgMaskMinX = sw;
+  let bgMaskMinY = sh;
+  let bgMaskMaxX = -1;
+  let bgMaskMaxY = -1;
+  const bgMaskHueBins = new Array<number>(24).fill(0);
 
-  const hasTransparentBackground = edgeTransparentRatio >= 0.58 || transparentRatio >= 0.24;
+  for (let y = 0; y < sh; y += step) {
+    for (let x = 0; x < sw; x += step) {
+      const idx = (y * sw + x) * 4;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+      const a = data[idx + 3];
+      if (a < 20) continue;
+
+      const isEdge = x <= step || y <= step || x >= sw - step - 1 || y >= sh - step - 1;
+      const dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+      if (isEdge && dist <= bgDistanceThreshold) edgeBgLike += 1;
+      if (dist <= bgDistanceThreshold) continue;
+
+      bgMaskForeground += 1;
+      if (x < bgMaskMinX) bgMaskMinX = x;
+      if (x > bgMaskMaxX) bgMaskMaxX = x;
+      if (y < bgMaskMinY) bgMaskMinY = y;
+      if (y > bgMaskMaxY) bgMaskMaxY = y;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      if (sat < 0.16) {
+        bgMaskGrayscale += 1;
+      } else {
+        const bin = clamp(Math.floor(rgbToHue(r, g, b) / 15), 0, bgMaskHueBins.length - 1);
+        bgMaskHueBins[bin] += 1;
+      }
+    }
+  }
+
+  const hasTransparentBackground =
+    edgeTransparentRatio >= 0.58 ||
+    transparentRatio >= 0.24 ||
+    (edgeTransparentRatio >= 0.45 && transparentRatio >= 0.14);
   const hasWhiteBackground =
     (edgeWhiteRatio >= 0.6 && whiteRatio >= 0.45) || (whiteRatio >= 0.75 && transparentRatio < 0.2);
+  const edgeBgLikeRatio = edgeBgLike / Math.max(1, edgeOpaque);
+  const edgeLightRatio = edgeLightOpaque / Math.max(1, edgeOpaque);
+  const hasLightPlainBackground =
+    !hasTransparentBackground &&
+    !hasWhiteBackground &&
+    edgeOpaque > 20 &&
+    edgeLightRatio >= 0.58 &&
+    edgeBgLikeRatio >= 0.58 &&
+    bgLum > 190 &&
+    bgSat < 0.24;
   const edgeDarkRatio = edgeDarkOpaque / Math.max(1, edgeOpaque);
   const tonePixels = lightOpaque + darkOpaque;
   const toneShare = tonePixels / Math.max(1, opaqueContent);
@@ -159,33 +233,71 @@ export async function analyzeLogoStampHeuristics(buffer: Buffer): Promise<LogoSt
     !hasWhiteBackground &&
     edgeDarkRatio >= 0.55 &&
     edgeOpaque > 20;
+  const lightShare = lightOpaque / Math.max(1, opaqueContent);
   const isInvertedMonochrome =
     hasDarkBackground &&
     tonePixels > 40 &&
     toneShare >= 0.72 &&
-    lightOpaque > darkOpaque * 1.8 &&
-    lightOpaque > 30;
+    lightOpaque > 30 &&
+    lightShare >= 0.015;
   const isMonochrome =
     (foreground > 25 && (grayscaleShare >= 0.86 || dominantHueShare >= 0.9)) ||
     (isInvertedMonochrome && toneShare >= 0.78);
+  const bgMaskColorful = bgMaskForeground - bgMaskGrayscale;
+  const bgMaskDominantHueShare =
+    bgMaskColorful <= 0 ? 0 : Math.max(...bgMaskHueBins) / bgMaskColorful;
+  const bgMaskGrayscaleShare = bgMaskGrayscale / Math.max(1, bgMaskForeground);
+  const bgMaskForegroundRatio = bgMaskForeground / Math.max(1, total);
+  const bgMaskBBoxArea =
+    bgMaskMaxX >= bgMaskMinX && bgMaskMaxY >= bgMaskMinY
+      ? ((bgMaskMaxX - bgMaskMinX + 1) * (bgMaskMaxY - bgMaskMinY + 1)) / Math.max(1, sw * sh)
+      : 0;
+  const isFlatLocalLogo =
+    (bgMaskForeground > 25 &&
+      bgMaskForegroundRatio <= 0.46 &&
+      (bgMaskGrayscaleShare >= 0.64 || bgMaskDominantHueShare >= 0.58)) ||
+    (hasTransparentBackground &&
+      foreground > 25 &&
+      foregroundRatio <= 0.5 &&
+      (grayscaleShare >= 0.64 || dominantHueShare >= 0.58));
   const hasPlainBackground =
-    hasTransparentBackground || hasWhiteBackground || (hasDarkBackground && isInvertedMonochrome);
+    hasTransparentBackground ||
+    hasWhiteBackground ||
+    hasLightPlainBackground ||
+    (hasDarkBackground && (isInvertedMonochrome || isFlatLocalLogo));
+  const darkForegroundLooksLikeScene =
+    hasDarkBackground &&
+    !hasTransparentBackground &&
+    (bgMaskForegroundRatio > 0.34 || bgMaskBBoxArea > 0.78) &&
+    !(bgMaskForegroundRatio <= 0.52 && bgMaskGrayscaleShare >= 0.86);
 
   const likelyComplexImage =
-    foregroundRatio > 0.22 && grayscaleShare < 0.72 && colorful > 40;
+    darkForegroundLooksLikeScene ||
+    (foregroundRatio > 0.22 &&
+      grayscaleShare < 0.72 &&
+      colorful > 40 &&
+      !(hasPlainBackground && isFlatLocalLogo && !darkForegroundLooksLikeScene));
   const likelyPhotoOrScene =
     likelyComplexImage ||
-    (foregroundRatio > 0.35 && grayscaleShare < 0.55) ||
+    ((foregroundRatio > 0.35 || bgMaskForegroundRatio > 0.5) &&
+      grayscaleShare < 0.55 &&
+      !(hasPlainBackground && isFlatLocalLogo && !darkForegroundLooksLikeScene)) ||
     (!hasPlainBackground && foregroundRatio > 0.12 && !isInvertedMonochrome);
 
   const approvedForStamp =
-    hasPlainBackground && isMonochrome && !likelyPhotoOrScene;
+    hasPlainBackground && (isMonochrome || isFlatLocalLogo) && !likelyPhotoOrScene;
 
   const details = [
     hasPlainBackground
-      ? `Fondo OK (${hasTransparentBackground ? 'transparente' : hasDarkBackground ? 'oscuro' : 'blanco'})`
+      ? `Fondo OK (${hasTransparentBackground ? 'transparente' : hasDarkBackground ? 'oscuro' : hasLightPlainBackground ? 'claro' : 'blanco'})`
       : 'Fondo no válido',
-    isInvertedMonochrome ? 'Invertido (blanco/negro)' : isMonochrome ? 'Monocromático' : 'Varios colores',
+    isInvertedMonochrome
+      ? 'Invertido (blanco/negro)'
+      : isMonochrome
+        ? 'Monocromático'
+        : isFlatLocalLogo
+          ? 'Color plano'
+          : 'Varios colores',
     likelyPhotoOrScene ? 'Imagen compleja/foto' : 'Diseño tipo logo',
   ].join(' · ');
 
@@ -210,13 +322,15 @@ export function mergeVisionAnalysisWithHeuristics(
 ): Record<string, unknown> {
   const out = { ...analysis };
 
-  if (heuristics.isInvertedMonochrome && !heuristics.likelyPhotoOrScene) {
+  if (heuristics.approvedForStamp && !heuristics.likelyPhotoOrScene) {
     out.isOptimal = true;
     out.needsOptimization = false;
     out.isComplex = false;
     out.hasPlainBackground = true;
     out.reason =
-      'Logo en blanco sobre fondo oscuro. Se invierte automáticamente sin IA para evitar deformaciones.';
+      heuristics.isInvertedMonochrome
+        ? 'Logo en blanco sobre fondo oscuro. Se prepara automáticamente sin IA para evitar deformaciones.'
+        : 'Logo simple con fondo limpio. Se prepara automáticamente sin IA para evitar deformaciones.';
   } else if (!heuristics.approvedForStamp || heuristics.likelyPhotoOrScene) {
     out.isOptimal = false;
     out.needsOptimization = true;

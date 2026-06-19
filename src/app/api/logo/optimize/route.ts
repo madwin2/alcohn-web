@@ -9,17 +9,11 @@ export const maxDuration = 120;
 
 /**
  * Optimiza el logo para sello.
- * El wizard envía forceAi=true → solo OpenAI gpt-image (sin filtros Sharp basura).
+ * Primero intenta una máscara determinística con Sharp; OpenAI queda como fallback
+ * para fotos, fondos complejos o diseños ambiguos.
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { success: false, error: 'OPENAI_API_KEY no está configurada en las variables de entorno' },
-        { status: 500 },
-      );
-    }
-
     const formData = await request.formData();
     const file = formData.get('logo') as File;
     const forceAi =
@@ -48,9 +42,12 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const uploadedBuffer = Buffer.from(arrayBuffer);
     const heuristics = await analyzeLogoStampHeuristics(uploadedBuffer);
+    const canUseDeterministicMask =
+      heuristics.approvedForStamp ||
+      (heuristics.hasDarkBackground && heuristics.isMonochrome && !heuristics.likelyComplexImage);
 
-    if (heuristics.isInvertedMonochrome) {
-      console.log('[logo/optimize] Logo invertido → preparación determinística (sin IA)');
+    if (canUseDeterministicMask) {
+      console.log('[logo/optimize] Logo apto → preparación determinística (sin IA)', heuristics.details);
       const prepared = await prepareLogoForStamp(uploadedBuffer);
       const optimizedLogo = `data:image/png;base64,${prepared.toString('base64')}`;
       let aspectRatio = 1;
@@ -64,10 +61,19 @@ export async function POST(request: NextRequest) {
         success: true,
         optimizedLogo,
         aspectRatio,
-        method: 'invert_deterministic',
+        method: heuristics.isInvertedMonochrome
+          ? 'deterministic_inverted_mask'
+          : 'deterministic_background_mask',
         description:
-          'Logo en blanco sobre fondo oscuro invertido y preparado sin IA para evitar deformaciones.',
+          'Logo preparado sin IA mediante máscara de fondo para evitar deformaciones del diseño.',
       });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { success: false, error: 'OPENAI_API_KEY no está configurada en las variables de entorno' },
+        { status: 500 },
+      );
     }
 
     console.log('[logo/optimize] OpenAI gpt-image (forceAi)');

@@ -29,6 +29,7 @@ async function analyzeForeground(buffer: Buffer): Promise<{
   width: number;
   height: number;
   useAlphaMask: boolean;
+  clearLightInterior: boolean;
   maskStrength: Float32Array;
 }> {
   const { data, width, height } = await getRgbaFromBuffer(buffer);
@@ -60,6 +61,9 @@ async function analyzeForeground(buffer: Buffer): Promise<{
   const avgBorderAlpha =
     borderA.length > 0 ? borderA.reduce((acc, v) => acc + v, 0) / borderA.length : 255;
   const useAlphaMask = avgBorderAlpha < 250;
+  let opaquePixels = 0;
+  let lightInteriorPixels = 0;
+  let nonLightInteriorPixels = 0;
 
   const maskStrength = new Float32Array(width * height);
 
@@ -70,6 +74,19 @@ async function analyzeForeground(buffer: Buffer): Promise<{
       const g = data[i + 1];
       const b = data[i + 2];
       const a = data[i + 3];
+
+      if (a > 80) {
+        opaquePixels += 1;
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const sat = max === 0 ? 0 : (max - min) / max;
+        if (isNearWhite(r, g, b) || (luminance > 232 && sat < 0.18)) {
+          lightInteriorPixels += 1;
+        } else {
+          nonLightInteriorPixels += 1;
+        }
+      }
 
       let fgStrength = 0;
       if (useAlphaMask) {
@@ -84,7 +101,12 @@ async function analyzeForeground(buffer: Buffer): Promise<{
     }
   }
 
-  return { width, height, useAlphaMask, maskStrength };
+  const clearLightInterior =
+    useAlphaMask &&
+    lightInteriorPixels / Math.max(1, opaquePixels) >= 0.22 &&
+    nonLightInteriorPixels > 80;
+
+  return { width, height, useAlphaMask, clearLightInterior, maskStrength };
 }
 
 const isNearWhite = (r: number, g: number, b: number) => r >= 245 && g >= 245 && b >= 245;
@@ -97,11 +119,20 @@ export async function convertToBlackFromMask(buffer: Buffer): Promise<Buffer> {
 
   for (let i = 0; i < width * height; i++) {
     const src = i * 4;
+    const r = data[src];
+    const g = data[src + 1];
+    const b = data[src + 2];
     const alphaSource = data[src + 3] / 255;
     const mask = analysis.maskStrength[i];
     let alpha: number;
     if (analysis.useAlphaMask) {
-      alpha = Math.round(alphaSource * 255);
+      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      const lightInteriorPx =
+        analysis.clearLightInterior && (isNearWhite(r, g, b) || (luminance > 232 && sat < 0.18));
+      alpha = lightInteriorPx ? 0 : Math.round(alphaSource * 255);
     } else {
       alpha = mask > 0.34 ? 255 : 0;
     }
@@ -113,6 +144,7 @@ export async function convertToBlackFromMask(buffer: Buffer): Promise<Buffer> {
   }
 
   return sharp(out, { raw: { width, height, channels: 4 } })
+    .trim({ threshold: 12 })
     .png({ compressionLevel: 9 })
     .toBuffer();
 }
@@ -198,6 +230,5 @@ export async function invertMonochromeLogoIfNeeded(
  * Normaliza y aísla el dibujo del logo para mockup/sello.
  */
 export async function prepareLogoForStamp(buffer: Buffer): Promise<Buffer> {
-  const { buffer: normalized } = await invertMonochromeLogoIfNeeded(buffer);
-  return optimizeLogoLikePipeline(normalized);
+  return convertToBlackFromMask(buffer);
 }
