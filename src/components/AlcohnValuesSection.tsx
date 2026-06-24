@@ -37,7 +37,7 @@ const values = [
   {
     title: 'Cercanía',
     copy: 'Acompañamos a cada cliente con claridad, compromiso y atención personalizada. Sabemos que detrás de cada sello hay una marca, un emprendimiento o un proyecto importante, por eso buscamos que el proceso sea simple, seguro y humano.',
-    image: '/images/nosotros/atencion.png',
+    image: '/images/sobre%20alcohn/cercania.jpeg',
     alt: 'Atención personalizada en el taller Alcohn',
   },
   {
