@@ -43,7 +43,7 @@ const values = [
   {
     title: 'Mejora continua',
     copy: 'Buscamos mejorar constantemente nuestros productos, procesos y formas de comunicar. Desde la fabricación hasta la atención, la aprobación del diseño, el packaging y la experiencia de compra, cada parte puede evolucionar para ser más clara, profesional y memorable.',
-    image: '/images/transforma/antes-despues-logo-sello-01.jpeg',
+    image: '/images/sobre%20alcohn/Mejora%20continua.jpg.jpeg',
     alt: 'Evolución de un logo transformado en sello de bronce',
   },
 ] as const;
