@@ -5,6 +5,7 @@ import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
 import PurchaseInclusions from './PurchaseInclusions';
 import MobileCarousel from './MobileCarousel';
+import { config } from '@/lib/config';
 
 interface ProductSheetProps {
   product: Product;
@@ -155,7 +156,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
             </ActionButton>
           </div>
           <p className="text-xs text-neutral-500">
-            Muestra y precio antes de fabricar. Pago con tarjeta o seña por transferencia.
+            Muestra y precio antes de fabricar. Pago con tarjeta o seña de ${config.seña.amount.toLocaleString('es-AR')} por transferencia.
           </p>
 
           <div className="atelier-panel p-4">

@@ -17,7 +17,7 @@ Responder lo que hoy responde el vendedor por WhatsApp.
 - ¿Cuánto sale el envío?
   - A domicilio $8000, a sucursal $5000 (ajustar)
 - ¿Cómo pago?
-  - Transferencia bancaria. Seña de $10.000 y resto cuando está listo.
+  - Transferencia bancaria. Seña de $30.000 y resto cuando está listo.
 - ¿Hacen factura?
   - Hacemos Factura C.
 - ¿Puedo pedir más de un sello?

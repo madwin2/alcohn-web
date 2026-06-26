@@ -4,6 +4,8 @@ export const CHECKOUT_PREFILL_STORAGE_KEY = 'alcohn_checkout_prefill';
 
 const MAX_AGE_MS = 48 * 60 * 60 * 1000;
 
+export type CheckoutMetodoPagoPrefill = 'Openpay' | 'Transferencia';
+
 export type CheckoutPrefillPayload = {
   nombre: string;
   whatsapp: string;
@@ -11,6 +13,7 @@ export type CheckoutPrefillPayload = {
   provincia: string;
   ciudad: string;
   notas: string;
+  metodoPago?: CheckoutMetodoPagoPrefill;
   ts: number;
 };
 
@@ -25,6 +28,11 @@ function parseStoredPrefill(raw: string | null): CheckoutPrefillPayload | null {
   if (typeof parsed.nombre !== 'string' || typeof parsed.whatsapp !== 'string') return null;
   const ts = typeof parsed.ts === 'number' ? parsed.ts : 0;
   if (!ts || Date.now() - ts > MAX_AGE_MS) return null;
+  const metodoPago =
+    parsed.metodoPago === 'Openpay' || parsed.metodoPago === 'Transferencia'
+      ? parsed.metodoPago
+      : undefined;
+
   return {
     nombre: parsed.nombre,
     whatsapp: parsed.whatsapp,
@@ -32,12 +40,14 @@ function parseStoredPrefill(raw: string | null): CheckoutPrefillPayload | null {
     provincia: typeof parsed.provincia === 'string' ? parsed.provincia : '',
     ciudad: typeof parsed.ciudad === 'string' ? parsed.ciudad : '',
     notas: typeof parsed.notas === 'string' ? parsed.notas : '',
+    metodoPago,
     ts,
   };
 }
 
 export function saveCheckoutPrefill(
-  partial: Partial<Omit<CheckoutPrefillPayload, 'ts'>> & Pick<CheckoutPrefillPayload, 'nombre' | 'whatsapp' | 'email'>
+  partial: Partial<Omit<CheckoutPrefillPayload, 'ts'>> &
+    Pick<CheckoutPrefillPayload, 'nombre' | 'whatsapp' | 'email'>
 ): void {
   if (typeof window === 'undefined') return;
   try {
@@ -48,6 +58,10 @@ export function saveCheckoutPrefill(
       provincia: (partial.provincia ?? '').trim(),
       ciudad: (partial.ciudad ?? '').trim(),
       notas: (partial.notas ?? '').trim(),
+      metodoPago:
+        partial.metodoPago === 'Openpay' || partial.metodoPago === 'Transferencia'
+          ? partial.metodoPago
+          : undefined,
       ts: Date.now(),
     };
     sessionStorage.setItem(CHECKOUT_PREFILL_STORAGE_KEY, JSON.stringify(payload));

@@ -12,7 +12,7 @@ Permitir cobrar sin intervención de vendedor.
 Estos pueden ir a un checkout directo.
 
 ### 2. Sellos personalizados
-- El usuario paga una seña (por ejemplo $10.000).
+- El usuario paga una seña (por ejemplo $30.000).
 - Se genera un pedido interno con los datos del logo.
 - El resto se abona cuando el sello está listo.
 

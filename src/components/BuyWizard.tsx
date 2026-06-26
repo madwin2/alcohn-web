@@ -10,21 +10,13 @@ import ContactStep from './buy/ContactStep';
 import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
 import { useCart } from '@/contexts/CartContext';
-import { generateCartItemId } from '@/lib/cart';
-import { sanitizeCartItemsForDb } from '@/lib/supabase/cartItems';
-import {
-  createCheckoutIntent,
-  uploadComprobante,
-} from '@/lib/supabase/mockupApiClient';
-import { clearWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
-import { saveCheckoutPrefill } from '@/lib/checkoutPrefill';
+import { saveCheckoutPrefill, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
 import { trackWizardStep, WIZARD_STEPS } from '@/lib/analytics/wizardStep';
-import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
   syncWizardContact,
@@ -924,10 +916,6 @@ export default function BuyWizard({
   const [manualPreviewRequested, setManualPreviewRequested] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
-  const [transferCheckoutError, setTransferCheckoutError] = useState<string | null>(null);
   const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
   const wizardPaymentTrackedRef = useRef(false);
   const [shippingMethod, setShippingMethod] = useState<ShippingMetodoUi>('retiro');
@@ -1711,86 +1699,46 @@ export default function BuyWizard({
     }
   };
 
-  const buildWizardTransferCartItems = () => {
-    const variantSize = data.selectedSize;
-    if (!variantSize) {
-      throw new Error('Elegí una medida antes de confirmar.');
+  /** Lleva al checkout el sello configurado en el wizard. */
+  const handleAddWizardToCheckout = (metodo: CheckoutMetodoPagoPrefill = 'Openpay') => {
+    const price =
+      metodo === 'Transferencia'
+        ? data.selectedTransferPrice ?? 0
+        : data.selectedPrice;
+    if (!price || !data.material || checkoutNavigateBusy) return;
+    if (!data.selectedSize?.trim()) return;
+    setCheckoutNavigateBusy(true);
+    if (data.nombre?.trim() && data.whatsapp?.trim()) {
+      saveCheckoutPrefill({
+        nombre: data.nombre.trim(),
+        whatsapp: data.whatsapp.trim(),
+        email: (data.email || '').trim(),
+        metodoPago: metodo,
+      });
     }
+    saveCheckoutShipping(shippingMethod, shippingCost);
+    const variantSize = data.selectedSize;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
-    const price = data.selectedTransferPrice ?? 0;
-    return sanitizeCartItemsForDb([
-      {
-        id: generateCartItemId(designSlug, variantSize),
-        title: `Sello personalizado (${materialLabel}, ${variantSize})`,
-        collection: 'Personalizado',
-        material: 'Bronce',
-        process: 'CNC',
-        variantSize,
-        price,
-        qty: 1,
-        image: wizardCartImageUrl(data),
-        designSlug,
-      },
-    ]);
-  };
-
-  const createWizardTransferOrder = async () => {
-    if (!data.nombre?.trim() || !data.whatsapp?.trim()) {
-      throw new Error('Completá nombre y WhatsApp en el paso de contacto.');
-    }
-    if (!data.selectedSize?.trim()) {
-      throw new Error('Elegí una medida antes de confirmar.');
-    }
-    if (!data.selectedTransferPrice || data.selectedTransferPrice <= 0) {
-      throw new Error('Elegí una medida con precio antes de confirmar.');
-    }
+    const cartLine = {
+      title: `Sello personalizado (${materialLabel}, ${variantSize})`,
+      collection: 'Personalizado',
+      material: 'Bronce',
+      process: 'CNC',
+      variantSize,
+      price,
+      image: wizardCartImageUrl(data),
+      designSlug,
+    };
     syncMedidasToMockup();
-    const session = peekWizardSupabaseSession();
-    return createCheckoutIntent({
-      metodo_pago: 'Transferencia',
-      cliente: {
-        nombre: data.nombre.trim(),
-        telefono: data.whatsapp.trim(),
-        email: data.email?.trim() || undefined,
-      },
-      cliente_id: session?.cliente_id,
-      mockup_solicitud_id: session?.mockup_solicitud_id,
-      items: buildWizardTransferCartItems(),
-      envio_costo: shippingCost > 0 ? shippingCost : 0,
-      envio_metodo: shippingMethod,
-    });
-  };
-
-  const persistWizardPurchaseSnapshot = (
-    ordenId: string,
-    total: number,
-    unitPrice: number
-  ) => {
-    const variantSize = data.selectedSize ?? '';
-    if (!variantSize) return;
-    const materialLabel = wizardUsoDisplayLabel(data);
-    const designSlug = `personalizado-${ordenId}`;
-    savePurchaseSnapshot({
-      orderId: ordenId,
-      value: total,
-      items: [
-        {
-          id: generateCartItemId(designSlug, variantSize),
-          title: `Sello personalizado (${materialLabel}, ${variantSize})`,
-          price: unitPrice,
-          qty: 1,
-        },
-      ],
-    });
-  };
-
-  const goToTransferConfirmation = (ordenId: string) => {
-    clearCart();
-    clearWizardSupabaseSession();
-    router.push(
-      `/checkout/transferencia/confirmacion?orden_id=${encodeURIComponent(ordenId)}`
-    );
+    addItem(cartLine);
+    const mid = mockupSolicitudIdRef.current;
+    if (mid) {
+      void markCheckoutStarted(mid, [cartLine]);
+    }
+    window.setTimeout(() => {
+      router.push('/checkout');
+    }, 0);
   };
 
   const handleRequestPreviewCorrection = async () => {
@@ -1867,43 +1815,6 @@ export default function BuyWizard({
     } finally {
       setIsRequestingCorrection(false);
     }
-  };
-
-  /** Lleva al checkout el sello configurado en el wizard (precio tarjeta = selectedPrice). */
-  const handleAddWizardToCheckout = () => {
-    if (!data.selectedPrice || !data.material || checkoutNavigateBusy) return;
-    if (!data.selectedSize?.trim()) return;
-    setCheckoutNavigateBusy(true);
-    if (data.nombre?.trim() && data.whatsapp?.trim()) {
-      saveCheckoutPrefill({
-        nombre: data.nombre.trim(),
-        whatsapp: data.whatsapp.trim(),
-        email: (data.email || '').trim(),
-      });
-    }
-    saveCheckoutShipping(shippingMethod, shippingCost);
-    const variantSize = data.selectedSize;
-    const materialLabel = wizardUsoDisplayLabel(data);
-    const designSlug = `personalizado-${Date.now()}`;
-    const cartLine = {
-      title: `Sello personalizado (${materialLabel}, ${variantSize})`,
-      collection: 'Personalizado',
-      material: 'Bronce',
-      process: 'CNC',
-      variantSize,
-      price: data.selectedPrice,
-      image: wizardCartImageUrl(data),
-      designSlug,
-    };
-    syncMedidasToMockup();
-    addItem(cartLine);
-    const mid = mockupSolicitudIdRef.current;
-    if (mid) {
-      void markCheckoutStarted(mid, [cartLine]);
-    }
-    window.setTimeout(() => {
-      router.push('/checkout');
-    }, 0);
   };
 
   return (
@@ -2875,71 +2786,6 @@ export default function BuyWizard({
           const materialDisplay = wizardUsoDisplayLabel(data);
           const clientLogo = data.logoOptimized || data.logoPreview;
           
-          const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              setReceiptFile(file);
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setReceiptPreview(reader.result as string);
-              };
-              reader.readAsDataURL(file);
-            }
-          };
-          
-          const handleSubmitReceipt = async () => {
-            if (!receiptFile) return;
-
-            setTransferCheckoutError(null);
-            setIsUploadingReceipt(true);
-            try {
-              const intent = await createWizardTransferOrder();
-              await uploadComprobante(intent.orden_id, receiptFile);
-              persistWizardPurchaseSnapshot(intent.orden_id, transferTotal, transferPrice);
-              goToTransferConfirmation(intent.orden_id);
-            } catch (error) {
-              console.error('Error confirmando pedido por transferencia:', error);
-              setTransferCheckoutError(
-                error instanceof Error
-                  ? error.message
-                  : 'No se pudo registrar el pedido. Intentá de nuevo.'
-              );
-            } finally {
-              setIsUploadingReceipt(false);
-            }
-          };
-
-          const handleTransferWhatsApp = async () => {
-            setTransferCheckoutError(null);
-            setIsUploadingReceipt(true);
-            try {
-              const intent = await createWizardTransferOrder();
-              persistWizardPurchaseSnapshot(intent.orden_id, transferTotal, transferPrice);
-              const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
-              const message = encodeURIComponent(
-                [
-                  'Hola, acabo de realizar una compra por transferencia.',
-                  `Número de pedido: ${intent.orden_id}`,
-                  data.nombre ? `Nombre: ${data.nombre}` : null,
-                  'Adjunto el comprobante de transferencia.',
-                ]
-                  .filter(Boolean)
-                  .join('\n')
-              );
-              window.open(`https://wa.me/${phone}?text=${message}`, '_blank', 'noopener,noreferrer');
-              goToTransferConfirmation(intent.orden_id);
-            } catch (error) {
-              console.error('Error registrando pedido por transferencia:', error);
-              setTransferCheckoutError(
-                error instanceof Error
-                  ? error.message
-                  : 'No se pudo registrar el pedido. Intentá de nuevo.'
-              );
-            } finally {
-              setIsUploadingReceipt(false);
-            }
-          };
-          
           return (
             <div className="min-h-0 flex-1 overflow-y-auto space-y-4 pb-6 md:space-y-6 md:pb-0">
               <div>
@@ -3131,7 +2977,7 @@ export default function BuyWizard({
                     </p>
                     <button
                       type="button"
-                      onClick={handleAddWizardToCheckout}
+                      onClick={() => handleAddWizardToCheckout('Openpay')}
                       disabled={checkoutNavigateBusy || !data.selectedPrice}
                       className="block w-full text-center px-4 py-3 text-sm leading-snug bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors disabled:opacity-50 disabled:pointer-events-none md:px-6 md:text-base"
                     >
@@ -3156,136 +3002,43 @@ export default function BuyWizard({
                   </button>
                 </div>
               ) : (
-                // Pago con transferencia
                 <div className="space-y-6">
-                  {/* Datos bancarios */}
-                  <div className="bg-white border border-[var(--alcohn-line)] p-6 space-y-4">
-                    <h3 className="font-semibold text-gray-900">Datos para transferencia</h3>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="text-gray-600 block mb-1">Banco:</span>
-                        <span className="text-gray-900 font-medium">{config.bank.name}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600 block mb-1">CBU:</span>
-                        <span className="text-gray-900 font-medium font-mono">{config.bank.cbu}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600 block mb-1">Alias:</span>
-                        <span className="text-gray-900 font-medium">{config.bank.alias}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600 block mb-1">Titular:</span>
-                        <span className="text-gray-900 font-medium">{config.bank.titular}</span>
-                      </div>
-                      <div className="pt-3 border-t border-gray-200">
-                        <span className="text-gray-600 block mb-1">Monto a transferir:</span>
-                        <span className="text-gray-900 font-bold text-lg">
-                          ${transferTotal.toLocaleString('es-AR')}
-                        </span>
-                        <span className="text-xs text-gray-500 block mt-1">
-                          Tarjeta / link: ${cardTotal.toLocaleString('es-AR')} — Transferencia: ${transferTotal.toLocaleString('es-AR')}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] p-4">
+                    <p className="text-sm text-gray-800">
+                      Pagá por transferencia y ahorrá{' '}
+                      <strong>${Math.max(0, cardTotal - transferTotal).toLocaleString('es-AR')}</strong>.
+                      Te llevamos al checkout para completar tus datos de envío; al confirmar verás
+                      los datos bancarios y podrás subir el comprobante.
+                    </p>
                   </div>
 
-                  {/* Carga de comprobante */}
-                  <div className="bg-white border border-[var(--alcohn-line)] p-6 space-y-4">
-                    <h3 className="font-semibold text-gray-900">Enviar comprobante</h3>
-                    <p className="text-sm text-gray-600">
-                      Subí el comprobante de transferencia o enviálo por WhatsApp.
-                    </p>
-                    
-                    {!receiptPreview ? (
-                      <div className="space-y-3">
-                        <div className="border border-dashed border-gray-300 p-8 text-center">
-                          <input
-                            type="file"
-                            id="receipt-upload"
-                            accept="image/*,.pdf"
-                            onChange={handleReceiptUpload}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="receipt-upload"
-                            className="cursor-pointer block"
-                          >
-                            <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <p className="text-sm font-medium text-gray-700">
-                              Click para subir comprobante
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              PNG, JPG, PDF hasta 5MB
-                            </p>
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 border-t border-gray-200"></div>
-                          <span className="text-xs text-gray-500">o</span>
-                          <div className="flex-1 border-t border-gray-200"></div>
-                        </div>
-                        
-                        <button
-                          type="button"
-                          onClick={handleTransferWhatsApp}
-                          disabled={isUploadingReceipt}
-                          className="inline-flex w-full min-h-[52px] items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white text-sm font-semibold uppercase tracking-wider hover:bg-green-700 transition-colors text-center disabled:opacity-50 disabled:pointer-events-none"
-                        >
-                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                          </svg>
-                          Enviar por WhatsApp
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-medium text-gray-900">Comprobante cargado</p>
-                            <button
-                              onClick={() => {
-                                setReceiptFile(null);
-                                setReceiptPreview(null);
-                              }}
-                              className="text-xs text-red-600 hover:text-red-700"
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                          {receiptPreview.startsWith('data:image') ? (
-                            <img
-                              src={receiptPreview}
-                              alt="Comprobante"
-                              className="w-full h-auto rounded border border-gray-200"
-                            />
-                          ) : (
-                            <div className="bg-gray-50 border border-gray-200 rounded p-4 text-center">
-                              <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-sm text-gray-600">{receiptFile?.name || 'Archivo PDF cargado'}</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <button
-                          onClick={handleSubmitReceipt}
-                          disabled={isUploadingReceipt}
-                          className="w-full px-6 py-3 bg-primary text-white font-semibold uppercase tracking-wider hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUploadingReceipt ? 'Registrando pedido…' : 'Confirmar pedido'}
-                        </button>
-                      </div>
-                    )}
-                    {transferCheckoutError && (
-                      <p className="text-sm text-red-600" role="alert">
-                        {transferCheckoutError}
+                  <div className="bg-white border border-[var(--alcohn-line)] p-6">
+                    <div className="mb-4 space-y-1">
+                      <p className="text-xs uppercase tracking-wider text-neutral-500">Total transferencia</p>
+                      <p className="text-2xl font-bold text-emerald-700">
+                        ${transferTotal.toLocaleString('es-AR')}
                       </p>
-                    )}
+                      <p className="text-xs text-neutral-500">
+                        Seña a transferir: ${config.seña.amount.toLocaleString('es-AR')}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddWizardToCheckout('Transferencia')}
+                      disabled={checkoutNavigateBusy || !transferPrice}
+                      className="block w-full text-center px-4 py-3 text-sm leading-snug bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors disabled:opacity-50 disabled:pointer-events-none md:px-6 md:text-base"
+                    >
+                      {checkoutNavigateBusy ? (
+                        'Preparando pedido…'
+                      ) : (
+                        <>
+                          <span className="md:hidden">Continuar al checkout (Transferencia)</span>
+                          <span className="hidden md:inline">
+                            Continuar al checkout y pagar por transferencia
+                          </span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   <button

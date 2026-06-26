@@ -9,7 +9,7 @@ import CartSummary from '@/components/cart/CartSummary';
 import ActionButton from '@/components/ActionButton';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import { config } from '@/lib/config';
-import { consumeCheckoutPrefill, cartLooksLikeWizardPersonalizado } from '@/lib/checkoutPrefill';
+import { consumeCheckoutPrefill, cartLooksLikeWizardPersonalizado, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { peekWizardSupabaseSession, clearWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import { createCheckoutIntent, uploadComprobante } from '@/lib/supabase/mockupApiClient';
 import { sanitizeCartItemsForDb } from '@/lib/supabase/cartItems';
@@ -52,6 +52,8 @@ export default function CheckoutPage() {
   } | null>(null);
 
   const [prefillFromWizard, setPrefillFromWizard] = useState(false);
+  const [metodoPagoElegido, setMetodoPagoElegido] = useState<CheckoutMetodoPagoPrefill | null>(null);
+  const [paymentMethodError, setPaymentMethodError] = useState<string | null>(null);
   const appliedCheckoutPrefillRef = useRef(false);
   const shippingFormRef = useRef<CheckoutShippingFormHandle>(null);
   const [shippingSectionError, setShippingSectionError] = useState<string | null>(null);
@@ -123,8 +125,17 @@ export default function CheckoutPage() {
       ciudad: p.ciudad || prev.ciudad,
       notas: p.notas || prev.notas,
     }));
+    if (p.metodoPago) {
+      setMetodoPagoElegido(p.metodoPago);
+    }
     setPrefillFromWizard(true);
   }, [hasCartContent, items, orderData]);
+
+  useEffect(() => {
+    if (step >= 2 && !shippingForm) {
+      setStep(1);
+    }
+  }, [step, shippingForm]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -153,15 +164,20 @@ export default function CheckoutPage() {
   };
 
   const handleShippingSubmit = (form: ShippingFormData) => {
-    setShippingForm({
+    const mergedShippingForm = {
       ...form,
       nombreCompleto: form.nombreCompleto || formData.nombre,
       telefono: form.telefono || formData.whatsapp,
       email: form.email || formData.email,
-    });
+    };
+    setShippingForm(mergedShippingForm);
     saveCheckoutShipping(shippingMetodo, shippingCost);
     setShippingSectionError(null);
-    setStep(2);
+    if (metodoPagoElegido === 'Transferencia') {
+      void handleCreateOrder(mergedShippingForm);
+    } else {
+      setStep(2);
+    }
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -173,16 +189,26 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!metodoPagoElegido) {
+      setPaymentMethodError('Elegí cómo querés pagar antes de continuar.');
+      return;
+    }
+
     if (!shippingFormRef.current?.trySubmit()) {
       setShippingSectionError(null);
       return;
     }
     setShippingSectionError(null);
+    setPaymentMethodError(null);
   };
 
-  const buildCheckoutIntentPayload = (metodo: 'Openpay' | 'Transferencia') => {
+  const buildCheckoutIntentPayload = (
+    metodo: 'Openpay' | 'Transferencia',
+    shippingOverride?: ShippingFormData | null
+  ) => {
     const wizardSession = peekWizardSupabaseSession();
     const cartItems = sanitizeCartItemsForDb(orderData?.items ?? items);
+    const envioForm = shippingOverride ?? shippingForm;
     return {
       metodo_pago: metodo,
       cliente: {
@@ -196,10 +222,10 @@ export default function CheckoutPage() {
       provincia: formData.provincia,
       ciudad: formData.ciudad,
       notas: formData.notas,
-      envio: shippingForm
+      envio: envioForm
         ? {
             metodo: shippingMetodo,
-            form: shippingForm,
+            form: envioForm,
           }
         : undefined,
       envio_costo: shippingCost > 0 ? shippingCost : 0,
@@ -242,6 +268,11 @@ export default function CheckoutPage() {
   };
 
   const handleOpenpayCheckout = async () => {
+    if (!shippingForm) {
+      setOpenpayError('Completá tus datos de envío antes de pagar.');
+      setStep(1);
+      return;
+    }
     setOpenpayError(null);
     setCheckoutError(null);
     setOpenpayLoading(true);
@@ -283,11 +314,19 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleCreateOrder = async () => {
+  const handleCreateOrder = async (shippingOverride?: ShippingFormData) => {
+    const envioForm = shippingOverride ?? shippingForm;
+    if (!envioForm) {
+      setCheckoutError('Completá tus datos de envío antes de pagar.');
+      setStep(1);
+      return;
+    }
     setCheckoutError(null);
     setCheckoutSaving(true);
     try {
-      const intent = await createCheckoutIntent(buildCheckoutIntentPayload('Transferencia'));
+      const intent = await createCheckoutIntent(
+        buildCheckoutIntentPayload('Transferencia', shippingOverride)
+      );
       setOrderId(intent.orden_id);
       setOrderData({
         items: [...items],
@@ -619,13 +658,82 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-neutral-200">
+                <div className="pt-10 mt-10 border-t border-neutral-200 space-y-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">
+                      Método de pago
+                    </h2>
+                    <p className="text-sm text-neutral-600 mb-4">
+                      Elegí cómo querés pagar. Confirmamos contacto y envío antes de mostrar el pago.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMetodoPagoElegido('Openpay');
+                          setPaymentMethodError(null);
+                        }}
+                        className={`technical-sheet p-4 text-left text-sm font-medium transition-colors hover:border-[var(--alcohn-bronze)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 ${
+                          metodoPagoElegido === 'Openpay'
+                            ? 'border-[var(--alcohn-bronze)] bg-white'
+                            : ''
+                        }`}
+                      >
+                        <span className="block font-semibold text-neutral-900 mb-1">Tarjeta (Openpay)</span>
+                        <span className="block text-xs text-neutral-600">
+                          Pago total · 3 cuotas sin interés
+                        </span>
+                        <span className="block mt-2 text-base font-bold text-neutral-900">
+                          ${orderTotalConEnvio.toLocaleString('es-AR')}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMetodoPagoElegido('Transferencia');
+                          setPaymentMethodError(null);
+                        }}
+                        className={`technical-sheet p-4 text-left text-sm font-medium transition-colors hover:border-[var(--alcohn-bronze)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 ${
+                          metodoPagoElegido === 'Transferencia'
+                            ? 'border-[var(--alcohn-bronze)] bg-white'
+                            : ''
+                        }`}
+                      >
+                        <span className="block font-semibold text-neutral-900 mb-1">Transferencia bancaria</span>
+                        <span className="block text-xs text-neutral-600">
+                          Seña ${config.seña.amount.toLocaleString('es-AR')} · resto al retirar
+                        </span>
+                        <span className="block mt-2 text-base font-bold text-emerald-700">
+                          ${orderTotalConEnvio.toLocaleString('es-AR')}
+                        </span>
+                      </button>
+                    </div>
+                    {paymentMethodError && (
+                      <p className="mt-3 text-sm text-red-600" role="alert">
+                        {paymentMethodError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-neutral-200 space-y-3">
+                  {checkoutError && (
+                    <p className="text-sm text-red-600" role="alert">
+                      {checkoutError}
+                    </p>
+                  )}
                   <button
                     type="submit"
-                    className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                    disabled={checkoutSaving}
+                    className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    Continuar al pago
+                    {checkoutSaving ? 'Registrando pedido…' : 'Continuar al pago'}
                   </button>
+                  {metodoPagoElegido === 'Transferencia' && (
+                    <p className="text-xs text-neutral-500 text-center">
+                      Al continuar registramos tu pedido y te mostramos los datos para transferir.
+                    </p>
+                  )}
                 </div>
               </form>
             ) : step === 2 ? (
@@ -662,6 +770,18 @@ export default function CheckoutPage() {
                           <strong>Envío:</strong> {SHIPPING_METODO_LABELS[shippingMetodo]}
                           {shippingCost > 0 && ` — $${shippingCost.toLocaleString('es-AR')}`}
                         </p>
+                        {shippingForm && shippingMetodo !== 'retiro' && (
+                          <p className="mt-1 text-neutral-700">
+                            {[
+                              shippingForm.domicilio,
+                              shippingForm.localidad,
+                              shippingForm.provincia,
+                              shippingForm.codigoPostal,
+                            ]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -712,27 +832,6 @@ export default function CheckoutPage() {
                       {openpayError}
                     </p>
                   )}
-                  <div className="relative py-2">
-                    <div className="absolute inset-0 flex items-center" aria-hidden>
-                      <span className="w-full border-t border-neutral-200" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase tracking-wider text-neutral-400">
-                      <span className="bg-white px-3">o</span>
-                    </div>
-                  </div>
-                  {checkoutError && (
-                    <p className="text-xs text-red-600 text-center" role="alert">
-                      {checkoutError}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleCreateOrder}
-                    disabled={checkoutSaving || openpayLoading}
-                    className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-                  >
-                    {checkoutSaving ? 'Registrando pedido…' : 'Realizar compra (seña por transferencia)'}
-                  </button>
                   <button
                     type="button"
                     onClick={() => setStep(1)}
@@ -924,7 +1023,7 @@ export default function CheckoutPage() {
                   </p>
                   <ul className="text-xs text-neutral-600 space-y-1">
                     <li>• Pago total con tarjeta (Openpay)</li>
-                    <li>• Pago total con transferencia</li>
+                    <li>• Seña ${config.seña.amount.toLocaleString('es-AR')} por transferencia (resto al retirar)</li>
                     <li>• Factura C disponible</li>
                   </ul>
                 </div>

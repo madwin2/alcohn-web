@@ -16,7 +16,7 @@ export const config = {
     days: 10, // Días hábiles de producción
   },
   seña: {
-    amount: 10000, // Seña inicial
+    amount: 30000, // Seña inicial
   },
   bank: {
     name: 'BBVA',

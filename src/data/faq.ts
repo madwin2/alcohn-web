@@ -1,3 +1,5 @@
+import { config } from '@/lib/config';
+
 export interface FAQ {
   question: string;
   answer: string;
@@ -67,7 +69,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿Cómo pago?',
     answer:
-      'Podés pagar online con tarjeta en el checkout de tu pedido, o por transferencia.',
+      `Podés pagar online con tarjeta en el checkout de tu pedido, o por transferencia bancaria (seña de $${config.seña.amount.toLocaleString('es-AR')} y el resto cuando el sello está listo).`,
   },
   {
     question: '¿Hacen factura?',
