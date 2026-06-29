@@ -4,9 +4,9 @@ import { trackEvent } from './client';
 import { trackMetaCustomEvent } from './metaPixel';
 
 export const WIZARD_STEP_KEYS = [
-  'contact',
   'material',
   'logo',
+  'contact',
   'preview',
   'size',
   'payment',
@@ -15,13 +15,21 @@ export const WIZARD_STEP_KEYS = [
 export type WizardStepKey = (typeof WIZARD_STEP_KEYS)[number];
 
 export const WIZARD_STEPS: ReadonlyArray<{ label: string; key: WizardStepKey }> = [
-  { label: 'Contacto', key: 'contact' },
   { label: 'Material', key: 'material' },
   { label: 'Logo', key: 'logo' },
+  { label: 'Contacto', key: 'contact' },
   { label: 'Vista previa', key: 'preview' },
   { label: 'Medida', key: 'size' },
   { label: 'Pago', key: 'payment' },
 ];
+
+export function getWizardStepIndex(key: WizardStepKey): number {
+  return WIZARD_STEP_KEYS.indexOf(key);
+}
+
+export function getWizardStepKey(index: number): WizardStepKey | undefined {
+  return WIZARD_STEP_KEYS[index];
+}
 
 export type TrackWizardStepParams = {
   stepIndex: number;

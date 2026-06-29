@@ -16,7 +16,7 @@ import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
-import { trackWizardStep, WIZARD_STEPS } from '@/lib/analytics/wizardStep';
+import { trackWizardStep, WIZARD_STEPS, getWizardStepIndex, type WizardStepKey } from '@/lib/analytics/wizardStep';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
   syncWizardContact,
@@ -907,7 +907,7 @@ export default function BuyWizard({
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addItem, clearCart } = useCart();
-  const [step, setStep] = useState(0); // Empezar en paso 0 (contacto)
+  const [step, setStep] = useState(0); // Paso 0 = material
   /** Mobile paso medida: tarjetas estándar vs formulario personalizado */
   const [mobileSizeMode, setMobileSizeMode] = useState<'standard' | 'custom'>('standard');
   const [data, setData] = useState<BuyWizardData>(() => (
@@ -1077,6 +1077,16 @@ export default function BuyWizard({
   }, [searchParams]);
 
   const steps = [...WIZARD_STEPS];
+  const currentStepKey = WIZARD_STEPS[step]?.key;
+
+  const goToStepKey = useCallback((key: WizardStepKey) => {
+    const idx = getWizardStepIndex(key);
+    if (idx >= 0) setStep(idx);
+  }, []);
+
+  const goToPreviousStep = useCallback(() => {
+    setStep((prev) => Math.max(0, prev - 1));
+  }, []);
 
   useEffect(() => {
     if (lastTrackedWizardStepRef.current === step) return;
@@ -1116,7 +1126,7 @@ export default function BuyWizard({
 
   // Medidas sugeridas + precios (catálogo Supabase vía /api/cotizador/tiers)
   useEffect(() => {
-    if (!data.logoFile || !data.material || step !== 4) return;
+    if (!data.logoFile || !data.material || currentStepKey !== 'size') return;
 
     let cancelled = false;
     const aspectRatio = data.logoAnalysis?.aspectRatio ?? 1;
@@ -1157,11 +1167,11 @@ export default function BuyWizard({
     return () => {
       cancelled = true;
     };
-  }, [data.logoFile, data.material, data.logoAnalysis?.aspectRatio, step]);
+  }, [data.logoFile, data.material, data.logoAnalysis?.aspectRatio, currentStepKey]);
 
   // Mobile / paso medida: preseleccionar la opción recomendada al entrar o al cargar tiers
   useEffect(() => {
-    if (step !== 4 || data.customSize) return;
+    if (currentStepKey !== 'size' || data.customSize) return;
 
     const options = buildWizardSizeTierOptions(data.sizeOptions);
     if (!options.length) return;
@@ -1180,15 +1190,15 @@ export default function BuyWizard({
       approximateSizeKey: tierToApproximateKey(tier),
       customSize: undefined,
     }));
-  }, [step, data.sizeOptions, data.customSize, data.selectedSize, data.selectedPrice]);
+  }, [currentStepKey, data.sizeOptions, data.customSize, data.selectedSize, data.selectedPrice]);
 
   useEffect(() => {
-    if (step !== 4) setMobileSizeMode('standard');
-  }, [step]);
+    if (currentStepKey !== 'size') setMobileSizeMode('standard');
+  }, [currentStepKey]);
 
   // Medición del bbox del dibujo para la comparación a escala (logos ya subidos antes del cambio)
   useEffect(() => {
-    if (step !== 4) return;
+    if (currentStepKey !== 'size') return;
     const logoUrl = data.logoOptimized || data.logoPreview;
     if (!logoUrl || data.logoAnalysis?.contentWidthPx) return;
 
@@ -1211,14 +1221,14 @@ export default function BuyWizard({
       cancelled = true;
     };
   }, [
-    step,
+    currentStepKey,
     data.logoPreview,
     data.logoOptimized,
     data.logoAnalysis?.contentWidthPx,
   ]);
 
   useEffect(() => {
-    if (step !== 5 || data.needsManualPreview || !data.selectedPrice) return;
+    if (currentStepKey !== 'payment' || data.needsManualPreview || !data.selectedPrice) return;
     if (wizardPaymentTrackedRef.current) return;
     wizardPaymentTrackedRef.current = true;
 
@@ -1229,14 +1239,14 @@ export default function BuyWizard({
       contentIds: [`wizard-${data.selectedSize || 'personalizado'}`],
       numItems: 1,
     });
-  }, [step, data.needsManualPreview, data.selectedPrice, data.selectedSize, shippingCost]);
+  }, [currentStepKey, data.needsManualPreview, data.selectedPrice, data.selectedSize, shippingCost]);
 
   // Generate preview when size is selected (solo para logos óptimos u optimizados)
   // Mockup serverless (Sharp + texturas en public/mockup-textures)
-  // Generar mockup solo cuando el usuario llegue al paso 4 (vista previa)
+  // Generar mockup solo cuando el usuario llegue al paso de vista previa
   useEffect(() => {
     if (
-      step === 3 && // Vista previa antes de elegir medida
+      currentStepKey === 'preview' &&
       !data.previewGenerated &&
       !data.needsManualPreview &&
       data.logoPreview &&
@@ -1353,19 +1363,65 @@ export default function BuyWizard({
 
       generateMockup();
     }
-  }, [step, data.previewGenerated, data.needsManualPreview, data.logoPreview, data.material, data.logoOptimized, data.logoAnalysis, data.customSize, data.isGeneratingMockup, data.selectedSize]);
+  }, [currentStepKey, data.previewGenerated, data.needsManualPreview, data.logoPreview, data.material, data.logoOptimized, data.logoAnalysis, data.customSize, data.isGeneratingMockup, data.selectedSize]);
+
+  const [isContactProcessing, setIsContactProcessing] = useState(false);
+
+  const contactProcessingMessage = data.isOptimizing
+    ? 'Optimizando tu logo para el sello de bronce…'
+    : data.isAnalyzing
+      ? 'Analizando tu logo…'
+      : 'Generando tu muestra…';
 
   const handleContactSubmit = async (nombre: string, whatsapp: string, email: string) => {
-    setData({ ...data, nombre, whatsapp, email });
+    const logoFile = data.logoFile;
+    const imageUrl = data.logoOriginal || data.logoPreview;
+    if (!logoFile || !imageUrl) {
+      setAnalysisError('Subí un logo antes de continuar.');
+      goToStepKey('logo');
+      return;
+    }
+
+    setIsContactProcessing(true);
+    setData((prev) => ({ ...prev, nombre, whatsapp, email }));
     saveCheckoutPrefill({ nombre, whatsapp, email });
-    const cid = await syncWizardContact(
-      nombre,
-      whatsapp,
-      email,
-      webSessionIdRef.current
-    );
-    if (cid) clienteIdRef.current = cid;
-    setStep(1);
+
+    try {
+      const cid = await syncWizardContact(
+        nombre,
+        whatsapp,
+        email,
+        webSessionIdRef.current
+      );
+      if (cid) clienteIdRef.current = cid;
+
+      const mid = mockupSolicitudIdRef.current;
+      if (mid && cid) {
+        try {
+          await patchMockupSolicitud(mid, {
+            cliente_id: cid,
+            nombre_muestra: nombre,
+            whatsapp,
+            email,
+          });
+        } catch (err) {
+          console.error('[wizard] patch mockup cliente', err);
+        }
+      } else if (data.material) {
+        const ensuredId = await ensureMockupSolicitud(cid, data.material, {
+          nombre,
+          whatsapp,
+          email,
+          webSessionId: webSessionIdRef.current,
+          mockupSolicitudId: mid,
+        });
+        if (ensuredId) mockupSolicitudIdRef.current = ensuredId;
+      }
+
+      await runLogoProcessing(logoFile, imageUrl);
+    } finally {
+      setIsContactProcessing(false);
+    }
   };
 
   const handleMaterialSelect = async (option: WizardMaterialOption) => {
@@ -1382,16 +1438,56 @@ export default function BuyWizard({
       mockupSolicitudId: mockupSolicitudIdRef.current,
     });
     if (mid) mockupSolicitudIdRef.current = mid;
-    setStep(2);
+    goToStepKey('logo');
   };
 
-  const processUploadedLogo = useCallback(async (file: File, imageUrl: string) => {
-    // Proporción del dibujo del logo (recorte de contenido), no del lienzo completo
+  const handleLogoUploaded = useCallback(async (file: File, imageUrl: string) => {
     const logoContentAspectRatio = await measureLogoContentAspectRatioFromDataUrl(imageUrl);
+    let materialForMockup: WizardMaterial | undefined;
 
-    // Guardar logo original
-    setData({
-      ...data,
+    setData((prev) => {
+      materialForMockup = prev.material;
+      return {
+        ...prev,
+        logoFile: file,
+        logoOriginal: imageUrl,
+        logoPreview: imageUrl,
+        logoOptimized: undefined,
+        logoOptimizationIsCosmetic: false,
+        logoAnalysis: { aspectRatio: logoContentAspectRatio },
+        sizeOptions: undefined,
+        previewGenerated: false,
+        mockupUrl: undefined,
+        thumbnailUrl: undefined,
+        isGeneratingMockup: false,
+        needsManualPreview: false,
+        isAnalyzing: false,
+        isOptimizing: false,
+      };
+    });
+    setAnalysisError(null);
+
+    let mid = mockupSolicitudIdRef.current;
+    if (!mid && materialForMockup) {
+      mid = await ensureMockupSolicitud(null, materialForMockup, {
+        webSessionId: webSessionIdRef.current,
+      });
+      if (mid) mockupSolicitudIdRef.current = mid;
+    }
+    if (mid) {
+      void syncWizardLogos(mid, imageUrl);
+    }
+
+    goToStepKey('contact');
+  }, [goToStepKey]);
+
+  const runLogoProcessing = useCallback(async (file: File, imageUrl: string) => {
+    const logoContentAspectRatio =
+      data.logoAnalysis?.aspectRatio ??
+      (await measureLogoContentAspectRatioFromDataUrl(imageUrl));
+
+    setData((prev) => ({
+      ...prev,
       logoFile: file,
       logoOriginal: imageUrl,
       logoPreview: imageUrl,
@@ -1399,18 +1495,15 @@ export default function BuyWizard({
       logoOptimizationIsCosmetic: false,
       isAnalyzing: true,
       isOptimizing: false,
-    });
+    }));
     setAnalysisError(null);
 
     try {
-      // Paso 1: Analizar el logo con OpenAI (fallback = proporción del contenido del logo)
       const analysis = await analyzeLogoWithAI(imageUrl, logoContentAspectRatio);
 
       let finalLogoUrl = imageUrl;
 
-      // Paso 2: Si no está óptimo, optimizarlo
       let optimizedAspectRatio = analysis.aspectRatio;
-      // Si la API devolvió ~cuadrado pero el archivo no lo es, confiar en la medición local
       if (Math.abs(logoContentAspectRatio - 1) > 0.08 && Math.abs(optimizedAspectRatio - 1) < 0.02) {
         optimizedAspectRatio = logoContentAspectRatio;
       }
@@ -1444,15 +1537,13 @@ export default function BuyWizard({
       const optimizationFailed =
         shouldOptimizeWithAI && finalLogoUrl === imageUrl;
 
-      // Medición real del dibujo (recorte alpha / fondo): Python si está, si no Sharp trim
       const measured = await measureLogoOnServer(finalLogoUrl);
       if (measured != null) {
         optimizedAspectRatio = measured.aspectRatio;
       }
 
-      // Actualizar datos con el análisis y logo final
-      const newData = {
-        ...data,
+      setData((prev) => ({
+        ...prev,
         logoFile: file,
         logoOriginal: imageUrl,
         logoPreview: finalLogoUrl,
@@ -1464,7 +1555,6 @@ export default function BuyWizard({
           contentWidthPx: measured?.contentWidthPx || undefined,
           contentHeightPx: measured?.contentHeightPx || undefined,
         },
-        // Nuevo logo → recalcular medidas y volver a generar mockup
         sizeOptions: undefined,
         previewGenerated: false,
         mockupUrl: undefined,
@@ -1473,15 +1563,14 @@ export default function BuyWizard({
         needsManualPreview: optimizationFailed && (analysis.isComplex || !analysis.hasPlainBackground),
         isAnalyzing: false,
         isOptimizing: false,
-      };
-      setData(newData);
+      }));
 
       const mid = mockupSolicitudIdRef.current;
       if (mid) {
         void syncWizardLogos(mid, imageUrl, finalLogoUrl !== imageUrl ? finalLogoUrl : undefined);
       }
 
-      setStep(3); // Vista previa (mockup antes de medida y precio)
+      goToStepKey('preview');
     } catch (error: unknown) {
       console.error('Error procesando logo:', error);
       const msg = error instanceof Error ? error.message : 'Error al procesar el logo';
@@ -1506,8 +1595,9 @@ export default function BuyWizard({
         thumbnailUrl: undefined,
         isGeneratingMockup: false,
       }));
+      goToStepKey('preview');
     }
-  }, [data]);
+  }, [data.logoAnalysis?.aspectRatio, goToStepKey]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1543,7 +1633,7 @@ export default function BuyWizard({
     const pending = pendingLogoUpload;
     setPendingLogoUpload(null);
     setPendingLogoAspectRatio(1);
-    await processUploadedLogo(pending.file, pending.imageUrl);
+    await handleLogoUploaded(pending.file, pending.imageUrl);
   };
 
   const handleApplyLogoCrop = async () => {
@@ -1568,7 +1658,7 @@ export default function BuyWizard({
         : pendingLogoUpload.file;
       setPendingLogoUpload(null);
       setPendingLogoAspectRatio(1);
-      await processUploadedLogo(logoFile, croppedImageUrl);
+      await handleLogoUploaded(logoFile, croppedImageUrl);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'No se pudo recortar el logo.';
       setAnalysisError(msg);
@@ -1632,7 +1722,7 @@ export default function BuyWizard({
       approximateSizeKey: undefined,
     };
     setData(newData);
-    setStep(5);
+    goToStepKey('payment');
   };
 
   const applyCotizacionMm = async (widthMm: number, heightMm: number) => {
@@ -1835,18 +1925,8 @@ export default function BuyWizard({
           </div>
         </div>
 
-        {/* Step 0: Contact Information */}
-        {step === 0 && (
-          <ContactStep
-            nombre={data.nombre || ''}
-            whatsapp={data.whatsapp || ''}
-            email={data.email || ''}
-            onSubmit={handleContactSubmit}
-          />
-        )}
-
-        {/* Step 1: Material Selection */}
-        {step === 1 && (
+        {/* Material */}
+        {currentStepKey === 'material' && (
           <div className="h-full overflow-hidden md:overflow-y-auto space-y-3 md:space-y-6">
             <div>
               <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
@@ -1881,8 +1961,8 @@ export default function BuyWizard({
           </div>
         )}
 
-        {/* Step 2: Logo Upload */}
-        {step === 2 && (
+        {/* Logo */}
+        {currentStepKey === 'logo' && (
           <div className="h-full overflow-hidden md:overflow-y-auto space-y-4 md:space-y-6">
             <div>
               <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
@@ -1899,11 +1979,11 @@ export default function BuyWizard({
                 accept="image/png,image/jpeg,image/jpg,image/svg+xml"
                 onChange={handleLogoUpload}
                 className="hidden"
-                disabled={data.isAnalyzing || data.isOptimizing}
+                disabled={isApplyingLogoCrop}
               />
               <label
                 htmlFor="logo-upload"
-                className={`block ${data.isAnalyzing || data.isOptimizing ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
+                className={`block ${isApplyingLogoCrop ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
               >
                 {data.logoPreview ? (
                   <div className="space-y-4">
@@ -1915,22 +1995,10 @@ export default function BuyWizard({
                         className="object-contain"
                         unoptimized
                       />
-                      {(data.isAnalyzing || data.isOptimizing) && (
-                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
-                            <p className="text-xs text-gray-600">
-                              {data.isAnalyzing ? 'Analizando...' : 'Optimizando...'}
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                    {!data.isAnalyzing && !data.isOptimizing && (
-                      <p className="text-sm text-gray-600">
-                        Click para cambiar el logo
-                      </p>
-                    )}
+                    <p className="text-sm text-gray-600">
+                      Click para cambiar el logo
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -2041,168 +2109,19 @@ export default function BuyWizard({
               </div>
             )}
 
-            {/* Estado de análisis */}
-            {(data.isAnalyzing || data.isOptimizing) && (
-              <div
-                className={`rounded-lg border p-4 ${
-                  data.isOptimizing ? 'border-purple-200 bg-purple-50' : 'border-blue-200 bg-blue-50'
-                }`}
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p
-                    className={`text-sm font-medium ${
-                      data.isOptimizing ? 'text-purple-800' : 'text-blue-800'
-                    }`}
-                  >
-                    {data.isAnalyzing
-                      ? 'Analizando tu logo...'
-                      : 'Optimizando para el sello de bronce...'}
-                  </p>
-                  <span
-                    className={`text-xs font-semibold tabular-nums ${
-                      data.isOptimizing ? 'text-purple-700' : 'text-blue-700'
-                    }`}
-                  >
-                    {analysisProgress}%
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-white/80">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${
-                      data.isOptimizing ? 'bg-purple-600' : 'bg-blue-600'
-                    }`}
-                    style={{ width: `${Math.max(8, analysisProgress)}%` }}
-                  />
-                </div>
-                <p
-                  className={`mt-2 text-xs ${
-                    data.isOptimizing ? 'text-purple-700' : 'text-blue-700'
-                  }`}
-                >
-                  {data.isAnalyzing
-                    ? 'Revisamos fondo, detalle y proporción para el grabado.'
-                    : 'Ajustamos el archivo para que la muestra y el sello queden legibles.'}
+            {data.logoPreview && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p className="text-sm font-medium text-blue-900">Logo listo</p>
+                <p className="mt-1 text-xs text-blue-800">
+                  En el siguiente paso pedimos tus datos y generamos la muestra digital con IA.
                 </p>
               </div>
             )}
 
-            {/* Resultado del análisis */}
-            {data.logoAnalysis && !data.isAnalyzing && !data.isOptimizing && (
-              <div className={`border p-4 ${
-                data.logoAnalysis.isOptimal || hasCosmeticOptimization
-                  ? 'bg-green-50 border-green-200'
-                  : data.logoAnalysis.needsOptimization && hasVisibleOptimization
-                  ? 'bg-purple-50 border-purple-200'
-                  : 'bg-yellow-50 border-yellow-200'
-              }`}>
-                <div className="flex items-start space-x-3">
-                  {data.logoAnalysis.isOptimal || hasCosmeticOptimization ? (
-                    <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : hasVisibleOptimization ? (
-                    <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  )}
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${
-                      data.logoAnalysis.isOptimal || hasCosmeticOptimization
-                        ? 'text-green-800'
-                        : hasVisibleOptimization
-                        ? 'text-purple-800'
-                        : 'text-yellow-800'
-                    }`}>
-                      {data.logoAnalysis.isOptimal
-                        ? 'Logo óptimo para sello de bronce'
-                        : hasCosmeticOptimization
-                        ? 'Logo listo para generar la muestra'
-                        : hasVisibleOptimization
-                        ? 'Logo optimizado exitosamente'
-                        : 'Logo requiere optimización manual'}
-                    </p>
-                    {data.logoAnalysis.reason && (
-                      <p className={`text-xs mt-1 ${
-                        data.logoAnalysis.isOptimal || hasCosmeticOptimization
-                          ? 'text-green-700'
-                          : hasVisibleOptimization
-                          ? 'text-purple-700'
-                          : 'text-yellow-700'
-                      }`}>
-                        {data.logoAnalysis.reason}
-                      </p>
-                    )}
-                    {hasVisibleOptimization && (
-                      <p className="text-xs text-purple-700 mt-1">
-                        Se ha generado una versión optimizada de tu logo. Puedes continuar con el proceso.
-                      </p>
-                    )}
-                    {hasCosmeticOptimization && (
-                      <p className="text-xs text-green-700 mt-1">
-                        No mostramos comparación porque el diseño se mantuvo igual; solo ajustamos el archivo para la muestra.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error en el análisis */}
-            {analysisError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <svg className="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-red-800">Error al procesar el logo</p>
-                    <p className="text-xs text-red-700 mt-1">{analysisError}</p>
-                    <p className="text-xs text-red-700 mt-1">
-                      Las medidas sugeridas usan la proporción de tu imagen; podés continuar con la vista previa.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Comparación logo original vs optimizado */}
-            {data.logoOriginal && hasVisibleOptimization && !data.isAnalyzing && !data.isOptimizing && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-900 mb-3">Comparación:</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-600 mb-2">Original</p>
-                    <div className="relative w-full aspect-square bg-gray-50 rounded border border-gray-200">
-                      <Image
-                        src={data.logoOriginal}
-                        alt="Logo original"
-                        fill
-                        className="object-contain p-2"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-2">Optimizado</p>
-                    <div className="relative w-full aspect-square bg-white rounded border-2 border-purple-300">
-                      <Image
-                        src={data.logoOptimized!}
-                        alt="Logo optimizado"
-                        fill
-                        className="object-contain p-2"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {data.logoPreview && !data.isAnalyzing && !data.isOptimizing && (
+            {data.logoPreview && (
               <button
-                onClick={() => setStep(3)}
+                type="button"
+                onClick={() => goToStepKey('contact')}
                 className="sticky bottom-0 z-20 inline-flex w-full min-h-[52px] items-center justify-center px-6 py-3 bg-primary text-white rounded-md text-sm font-semibold uppercase tracking-wider shadow-[0_-8px_24px_rgba(17,16,14,0.18)] hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 Continuar
@@ -2211,8 +2130,20 @@ export default function BuyWizard({
           </div>
         )}
 
-        {/* Step 4: Size Selection */}
-        {step === 4 && (
+        {/* Contacto */}
+        {currentStepKey === 'contact' && (
+          <ContactStep
+            nombre={data.nombre || ''}
+            whatsapp={data.whatsapp || ''}
+            email={data.email || ''}
+            onSubmit={handleContactSubmit}
+            isProcessing={isContactProcessing || data.isAnalyzing || data.isOptimizing}
+            processingMessage={contactProcessingMessage}
+          />
+        )}
+
+        {/* Medida */}
+        {currentStepKey === 'size' && (
           <div className="flex min-h-0 flex-1 flex-col md:block">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto md:space-y-6 md:overflow-visible">
             <div>
@@ -2510,7 +2441,7 @@ export default function BuyWizard({
                 <div className="flex items-center justify-between gap-3 border-t border-[var(--alcohn-line)]/80 px-3 py-2.5">
                   <button
                     type="button"
-                    onClick={() => setStep(step - 1)}
+                    onClick={goToPreviousStep}
                     className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-[var(--alcohn-line)] bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-neutral-400"
                   >
                     ← Atrás
@@ -2537,9 +2468,15 @@ export default function BuyWizard({
           </div>
         )}
 
-        {/* Step 3: Request Manual Preview (for complex logos) or Auto Preview (for simple logos) */}
-        {step === 3 && (
+        {/* Vista previa */}
+        {currentStepKey === 'preview' && (
           <>
+            {analysisError && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-800">Aviso al procesar el logo</p>
+                <p className="mt-1 text-xs text-red-700">{analysisError}</p>
+              </div>
+            )}
             {data.needsManualPreview ? (
               // Logo complejo: Solicitar muestra manual
               <div className="space-y-6 text-center">
@@ -2776,8 +2713,8 @@ export default function BuyWizard({
           </>
         )}
 
-        {/* Step 5: Payment (solo para logos simples con vista previa automática) */}
-        {step === 5 && !data.needsManualPreview && (() => {
+        {/* Pago */}
+        {currentStepKey === 'payment' && !data.needsManualPreview && (() => {
           const transferPrice = data.selectedTransferPrice ?? 0;
           const cardPrice = data.selectedPrice || 0;
           const cardTotal = cardPrice + shippingCost;
@@ -3054,30 +2991,34 @@ export default function BuyWizard({
         })()}
 
         {/* Navigation */}
-        {step > 1 && step < 5 && !pendingLogoUpload && (
+        {currentStepKey &&
+          currentStepKey !== 'material' &&
+          currentStepKey !== 'payment' &&
+          !(currentStepKey === 'contact' && (isContactProcessing || data.isAnalyzing || data.isOptimizing)) &&
+          !pendingLogoUpload && (
           <div
             className={`z-20 mt-3 shrink-0 border-t border-gray-200 bg-[var(--alcohn-surface)] pt-3 flex items-center justify-between gap-3 md:mt-4 ${
-              step === 4 ? 'hidden md:flex' : ''
+              currentStepKey === 'size' ? 'hidden md:flex' : ''
             }`}
           >
             <button
-              onClick={() => setStep(step - 1)}
+              onClick={goToPreviousStep}
               className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-[var(--alcohn-line)] rounded-md hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               ← Atrás
             </button>
-            {step === 3 &&
+            {currentStepKey === 'preview' &&
               !data.needsManualPreview &&
               (data.previewGenerated || data.logoPreview) &&
               !data.isGeneratingMockup && (
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => goToStepKey('size')}
                   className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white bg-primary border border-primary rounded-md hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                   Continuar
                 </button>
               )}
-            {step === 4 && data.selectedSize && data.selectedPrice && (
+            {currentStepKey === 'size' && data.selectedSize && data.selectedPrice && (
               <button
                 onClick={() =>
                   handleSizeSelect(

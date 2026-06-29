@@ -7,9 +7,18 @@ interface ContactStepProps {
   whatsapp: string;
   email: string;
   onSubmit: (nombre: string, whatsapp: string, email: string) => void;
+  isProcessing?: boolean;
+  processingMessage?: string;
 }
 
-export default function ContactStep({ nombre: initialNombre, whatsapp: initialWhatsapp, email: initialEmail, onSubmit }: ContactStepProps) {
+export default function ContactStep({
+  nombre: initialNombre,
+  whatsapp: initialWhatsapp,
+  email: initialEmail,
+  onSubmit,
+  isProcessing = false,
+  processingMessage = 'Optimizando tu logo… Generando tu muestra…',
+}: ContactStepProps) {
   const [nombre, setNombre] = useState(initialNombre);
   const [whatsapp, setWhatsapp] = useState(initialWhatsapp);
   const [email, setEmail] = useState(initialEmail);
@@ -55,16 +64,37 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
     onSubmit(nombre.trim(), whatsapp.trim(), email.trim());
   };
 
+  if (isProcessing) {
+    return (
+      <div className="flex min-h-[280px] flex-col items-center justify-center space-y-5 px-2 py-8 text-center md:min-h-[360px] md:py-12">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[var(--alcohn-line)] border-t-[var(--alcohn-bronze)]" />
+        <div className="max-w-md space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900 md:text-2xl">
+            Preparando tu muestra
+          </h2>
+          <p className="text-sm leading-relaxed text-gray-600 md:text-base">
+            {processingMessage}
+          </p>
+        </div>
+        <p className="text-xs text-gray-500">
+          Esto puede tardar unos segundos. No cierres esta pantalla.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 md:space-y-6">
       <div>
         <h2 className="mb-2 text-lg font-semibold text-gray-900 md:text-2xl">
-          Datos para guardar tu cotización
+          Dejanos tus datos y generamos tu muestra ahora
         </h2>
         <p className="text-sm leading-relaxed text-gray-600 md:text-base">
-          <span className="md:hidden">Completá estos 3 datos para seguir.</span>
+          <span className="md:hidden">
+            Con nombre, WhatsApp y email destrabás la vista previa de tu sello.
+          </span>
           <span className="hidden md:inline">
-            En 2 minutos ves medidas, muestra y precio. Guardamos estos datos para retomar el pedido y enviarte la muestra si hace falta revisión.
+            Ya elegiste material y subiste tu logo. Dejanos tus datos y en segundos generamos la muestra digital, medidas y precio.
           </span>
         </p>
       </div>
@@ -148,7 +178,7 @@ export default function ContactStep({ nombre: initialNombre, whatsapp: initialWh
           type="submit"
           className="sticky bottom-0 z-20 w-full min-h-[44px] px-6 py-3 bg-[var(--alcohn-ink)] text-white border border-[var(--alcohn-ink)] font-semibold uppercase tracking-wider hover:bg-[var(--alcohn-ink-soft)] hover:border-[var(--alcohn-bronze)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--alcohn-bronze)] focus:ring-offset-2"
         >
-          Continuar
+          Ver mi muestra
         </button>
       </form>
     </div>
