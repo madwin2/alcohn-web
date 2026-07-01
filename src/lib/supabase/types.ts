@@ -150,8 +150,6 @@ export interface MockupSolicitudUpdate {
   estado?: MockupEstado;
   cliente_id?: string | null;
   orden_id?: string | null;
-  nombre_muestra?: string | null;
-  whatsapp?: string | null;
   email?: string | null;
   archivo_base_url?: string | null;
   archivo_base_path?: string | null;

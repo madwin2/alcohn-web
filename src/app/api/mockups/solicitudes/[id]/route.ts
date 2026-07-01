@@ -6,8 +6,6 @@
  *
  * Campos que el wizard puede actualizar:
  *   - cliente_id          : enlazar a cliente cuando se complete el contacto
- *   - whatsapp            : teléfono cuando el contacto llega después del logo
- *   - nombre_muestra      : nombre visible en la app interna
  *   - email               : agregar email si llega después
  *   - estado              : 'procesando' | 'pendiente_aprobacion' | 'completado' | 'error'
  *   - archivo_base_url / archivo_base_path
@@ -26,7 +24,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/admin';
 import { normalizeEmail } from '@/lib/supabase/contact';
-import { normalizePhoneAR } from '@/lib/supabase/phone';
 import type {
   MockupEstado,
   MockupSolicitudUpdate,
@@ -45,8 +42,6 @@ const VALID_ESTADOS: ReadonlyArray<MockupEstado> = [
 interface PatchBody {
   cliente_id?: unknown;
   orden_id?: unknown;
-  nombre_muestra?: unknown;
-  whatsapp?: unknown;
   email?: unknown;
   estado?: unknown;
   archivo_base_url?: unknown;
@@ -196,16 +191,6 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
   const ordenId = asUuid(body.orden_id);
   if (ordenId !== undefined) update.orden_id = ordenId;
-
-  if ('nombre_muestra' in body) {
-    const n = asString(body.nombre_muestra);
-    if (n !== undefined) update.nombre_muestra = n;
-  }
-
-  if ('whatsapp' in body) {
-    const w = asString(body.whatsapp);
-    update.whatsapp = w === undefined ? undefined : w === null ? null : normalizePhoneAR(w);
-  }
 
   if ('email' in body) {
     const e = asString(body.email);

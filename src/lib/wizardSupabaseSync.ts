@@ -18,28 +18,11 @@ export async function syncWizardContact(
   nombre: string,
   whatsapp: string,
   email: string,
-  webSessionId: string,
-  mockupSolicitudId?: string | null
+  webSessionId: string
 ): Promise<string | null> {
   try {
     const { id } = await upsertCliente({ nombre, telefono: whatsapp, email });
-    saveWizardSupabaseSession({
-      web_session_id: webSessionId,
-      cliente_id: id,
-      mockup_solicitud_id: mockupSolicitudId ?? undefined,
-    });
-    if (mockupSolicitudId) {
-      try {
-        await patchMockupSolicitud(mockupSolicitudId, {
-          cliente_id: id,
-          whatsapp,
-          email,
-          nombre_muestra: nombre,
-        });
-      } catch (err) {
-        console.error('[wizard] patch mockup contacto', err);
-      }
-    }
+    saveWizardSupabaseSession({ web_session_id: webSessionId, cliente_id: id });
     return id;
   } catch (err) {
     console.error('[wizard] upsert cliente', err);
@@ -64,14 +47,9 @@ export async function ensureMockupSolicitud(
       cliente_id: clienteId ?? undefined,
       mockup_solicitud_id: opts.mockupSolicitudId,
     });
-    const patch: Record<string, unknown> = {};
-    if (clienteId) patch.cliente_id = clienteId;
-    if (opts.whatsapp?.trim()) patch.whatsapp = opts.whatsapp.trim();
-    if (opts.email?.trim()) patch.email = opts.email.trim();
-    if (opts.nombre?.trim()) patch.nombre_muestra = opts.nombre.trim();
-    if (Object.keys(patch).length > 0) {
+    if (clienteId) {
       try {
-        await patchMockupSolicitud(opts.mockupSolicitudId, patch);
+        await patchMockupSolicitud(opts.mockupSolicitudId, { cliente_id: clienteId });
       } catch (err) {
         console.error('[wizard] patch mockup cliente', err);
       }
