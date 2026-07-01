@@ -1385,35 +1385,24 @@ export default function BuyWizard({
     setIsContactProcessing(true);
     setData((prev) => ({ ...prev, nombre, whatsapp, email }));
     saveCheckoutPrefill({ nombre, whatsapp, email });
-
     try {
       const cid = await syncWizardContact(
         nombre,
         whatsapp,
         email,
-        webSessionIdRef.current
+        webSessionIdRef.current,
+        mockupSolicitudIdRef.current
       );
       if (cid) clienteIdRef.current = cid;
 
       const mid = mockupSolicitudIdRef.current;
-      if (mid && cid) {
-        try {
-          await patchMockupSolicitud(mid, {
-            cliente_id: cid,
-            nombre_muestra: nombre,
-            whatsapp,
-            email,
-          });
-        } catch (err) {
-          console.error('[wizard] patch mockup cliente', err);
-        }
-      } else if (data.material) {
+      if (!mid && data.material) {
         const ensuredId = await ensureMockupSolicitud(cid, data.material, {
           nombre,
           whatsapp,
           email,
           webSessionId: webSessionIdRef.current,
-          mockupSolicitudId: mid,
+          mockupSolicitudId: null,
         });
         if (ensuredId) mockupSolicitudIdRef.current = ensuredId;
       }
