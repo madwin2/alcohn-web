@@ -93,11 +93,7 @@ export default function AbecedariosPage() {
               />
               {/* videoSrc pendiente: pasar el .mp4 vertical cuando esté disponible para reemplazar la foto de fondo */}
 
-              <div className="space-y-2.5 border-y border-[var(--alcohn-line)] py-4 text-[13px] leading-relaxed text-neutral-700 md:hidden">
-                <p>
-                  Una herramienta modular para talleres que necesitan nombres, fechas, códigos, iniciales o
-                  series. Cada letra funciona como sello independiente y mantiene la precisión CNC de Alcohn.
-                </p>
+              <div className="border-y border-[var(--alcohn-line)] py-4 text-[13px] leading-relaxed text-neutral-700 md:hidden">
                 <p>
                   El Abecedario es un{' '}
                   <strong className="font-semibold text-neutral-950">sistema de letras intercambiables</strong>{' '}
