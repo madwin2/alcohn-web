@@ -193,7 +193,16 @@ export default function PurchaseInclusions({
         className={className}
         illustration={ABECEDARIO_KIT_ILLUSTRATION}
         copy="Cada set incluye todo lo necesario para componer y marcar textos: letras, soporte, caja contenedora y mango."
-        mobileCopy="Tu set llega completo: letras, soporte, caja contenedora y mango."
+        mobileCopy="Letras, soporte, caja, mango, muestra en cuero y guía."
+        mobileLabels={[
+          'Letras',
+          'Soporte',
+          'Caja',
+          'Mango',
+          'Muestra',
+          'Guía',
+        ]}
+        simpleMobile
       />
     );
   }

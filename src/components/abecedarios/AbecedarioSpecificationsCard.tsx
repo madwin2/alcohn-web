@@ -14,7 +14,7 @@ export default function AbecedarioSpecificationsCard({ className = '' }: Abeceda
   return (
     <dl className={`divide-y divide-[var(--alcohn-line)] border-y border-[var(--alcohn-line)] ${className}`}>
       {ABECEDARIO_SPECS.map((spec) => (
-        <div key={spec.label} className="flex items-baseline justify-between gap-4 py-2">
+        <div key={spec.label} className="flex items-baseline justify-between gap-3 py-1.5 md:gap-4 md:py-2">
           <dt className="craft-label text-[10px]">{spec.label}</dt>
           <dd className="text-right text-xs leading-relaxed text-neutral-800">{spec.value}</dd>
         </div>

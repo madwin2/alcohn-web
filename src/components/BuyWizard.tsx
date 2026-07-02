@@ -21,6 +21,7 @@ import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizard
 import {
   syncWizardContact,
   ensureMockupSolicitud,
+  syncWizardMockupContact,
   syncWizardLogos,
   syncWizardMockupPreview,
   syncWizardMedidasCotizacion,
@@ -1387,26 +1388,23 @@ export default function BuyWizard({
     saveCheckoutPrefill({ nombre, whatsapp, email });
 
     try {
+      const mid = mockupSolicitudIdRef.current;
       const cid = await syncWizardContact(
         nombre,
         whatsapp,
         email,
-        webSessionIdRef.current
+        webSessionIdRef.current,
+        mid
       );
       if (cid) clienteIdRef.current = cid;
 
-      const mid = mockupSolicitudIdRef.current;
-      if (mid && cid) {
-        try {
-          await patchMockupSolicitud(mid, {
-            cliente_id: cid,
-            nombre_muestra: nombre,
-            whatsapp,
-            email,
-          });
-        } catch (err) {
-          console.error('[wizard] patch mockup cliente', err);
-        }
+      if (mid) {
+        await syncWizardMockupContact(mid, {
+          clienteId: cid,
+          nombre,
+          whatsapp,
+          email,
+        });
       } else if (data.material) {
         const ensuredId = await ensureMockupSolicitud(cid, data.material, {
           nombre,

@@ -61,12 +61,85 @@ function SelectableCard({
           onSelect();
         }
       }}
-      className={`material-card cursor-pointer p-6 transition-all md:p-8 ${
+      className={`material-card cursor-pointer p-4 transition-all md:p-8 ${
         selected
           ? 'border-2 border-[var(--alcohn-ink)] bg-[var(--alcohn-paper)]'
           : 'border border-[var(--alcohn-line)] hover:border-[var(--alcohn-bronze)]'
       } ${className}`}
     >
+      {children}
+    </div>
+  );
+}
+
+function TipoOptionMobile({
+  selected,
+  onSelect,
+  eyebrow,
+  title,
+  bullets,
+  priceFrom,
+  footer,
+  recommended,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  eyebrow: string;
+  title: string;
+  bullets: string[];
+  priceFrom: number;
+  footer?: string;
+  recommended?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={`w-full border p-4 text-left transition-all ${
+        selected
+          ? 'border-2 border-[var(--alcohn-ink)] bg-[var(--alcohn-paper)]'
+          : 'border-[var(--alcohn-line)] bg-white hover:border-[var(--alcohn-bronze)]'
+      }`}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="mb-1 flex flex-wrap items-center gap-1.5">
+            <span className="craft-label text-[9px] leading-tight">{eyebrow}</span>
+            {recommended && (
+              <span className="border border-[var(--alcohn-bronze)] bg-white px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-[var(--alcohn-bronze)]">
+                Más elegido
+              </span>
+            )}
+          </div>
+          <span className="text-base font-semibold uppercase tracking-tight text-neutral-950">{title}</span>
+        </div>
+        <div className="shrink-0 text-right">
+          <span className="craft-label block text-[9px]">Desde</span>
+          <span className="text-sm font-bold leading-tight text-neutral-900">{formatArs(priceFrom)}</span>
+        </div>
+      </div>
+      <ul className="space-y-1.5">
+        {bullets.map((bullet) => (
+          <li key={bullet} className="flex items-start gap-1.5 text-[11px] leading-snug text-neutral-700">
+            <span className="mt-px shrink-0 text-[var(--alcohn-bronze)]">·</span>
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ul>
+      {footer && (
+        <p className="mt-3 border-t border-[var(--alcohn-line)] pt-2.5 text-[10px] leading-snug text-neutral-500">
+          {footer}
+        </p>
+      )}
+    </button>
+  );
+}
+
+function IncludesList({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-3 border-t border-[var(--alcohn-line)] pt-3 md:mb-6 md:pt-5">
+      <div className="craft-label mb-2 md:mb-3">Incluye</div>
       {children}
     </div>
   );
@@ -195,79 +268,114 @@ export default function AbecedarioConfigurator() {
   };
 
   return (
-    <section id="configurador" className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-8 md:pt-16">
-      <p className="craft-label mb-3">Configurador</p>
-      <h2 className="mb-8 text-3xl font-semibold tracking-tight text-neutral-950 md:mb-10 md:text-4xl">
+    <section id="configurador" className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-6 md:pt-16">
+      <p className="craft-label mb-2 md:mb-3">Configurador</p>
+      <h2 className="mb-2 text-2xl font-semibold tracking-tight text-neutral-950 md:mb-10 md:text-4xl">
         Elegí tu tipo de Abecedario
       </h2>
+      <p className="mb-4 text-[13px] leading-snug text-neutral-600 md:hidden">
+        Compará las dos opciones. Las dos quedan visibles: tocá la que mejor se adapte a tu taller.
+      </p>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:mb-10 md:grid-cols-2">
+      <div className="mb-4 flex flex-col gap-2 md:hidden">
+        <TipoOptionMobile
+          selected={tipo === 'completo'}
+          onSelect={() => setTipo('completo')}
+          eyebrow="Todo incluido"
+          title="Completo"
+          recommended
+          bullets={[
+            'Mayúsculas, minúsculas y números (A-Z, a-z, 0-9)',
+            'Caja organizadora, soporte de bronce y mango de uso manual',
+            'Cada letra es un sello independiente de bronce CNC',
+            'Ideal para nombres, fechas, códigos o series en cuero y madera',
+          ]}
+          footer="Un solo pedido con todo lo necesario para empezar a marcar desde el día uno."
+          priceFrom={ABECEDARIO_COMPLETO_PRECIO_DESDE}
+        />
+        <TipoOptionMobile
+          selected={tipo === 'personalizado'}
+          onSelect={() => setTipo('personalizado')}
+          eyebrow="Armá tu set"
+          title="Personalizado"
+          bullets={[
+            'Elegís mayúsculas, minúsculas, números o caracteres extra (Ñ, @, etc.)',
+            'Pagás solo las piezas que sumás — el presupuesto se arma en vivo',
+            'Podés empezar solo con números o un juego puntual',
+            'Caja y mango incluidos sin cargo en cualquier combinación',
+          ]}
+          footer="Ideal si ya sabés qué juegos necesitás y querés optimizar el gasto."
+          priceFrom={PERSONALIZADO_MIN_PRECIO}
+        />
+      </div>
+
+      <div className="mb-6 hidden gap-4 md:mb-10 md:grid md:grid-cols-2">
         <SelectableCard selected={tipo === 'completo'} onSelect={() => setTipo('completo')} className="text-left">
-          <p className="craft-label mb-3">Abecedario de bronce estandarizados</p>
-          <h3 className="mb-4 text-2xl font-semibold tracking-tight text-neutral-950">COMPLETO</h3>
-          <p className="mb-6 text-sm leading-relaxed text-neutral-600">{abecedarioCompleto.description}</p>
-          <div className="mb-6 border-t border-[var(--alcohn-line)] pt-5">
-            <div className="craft-label mb-3">Incluye</div>
-            <ul className="space-y-1.5">
+          <p className="craft-label mb-2 md:mb-3">Abecedario de bronce estandarizados</p>
+          <h3 className="mb-2 text-xl font-semibold tracking-tight text-neutral-950 md:mb-4 md:text-2xl">COMPLETO</h3>
+          <p className="mb-3 text-[13px] leading-snug text-neutral-600 md:mb-6 md:text-sm md:leading-relaxed">
+            {abecedarioCompleto.description}
+          </p>
+          <IncludesList>
+            <ul className="space-y-1 md:space-y-1.5">
               {abecedarioCompleto.includes.map((item) => (
-                <li key={item} className="flex items-start text-sm text-neutral-700">
+                <li key={item} className="flex items-start text-[13px] text-neutral-700 md:text-sm">
                   <span className="mr-2 text-[var(--alcohn-bronze)]">·</span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
-          </div>
-          <p className="text-lg text-neutral-900">
+          </IncludesList>
+          <p className="text-base text-neutral-900 md:text-lg">
             <span className="craft-label mr-2">Desde</span>
             {formatArs(ABECEDARIO_COMPLETO_PRECIO_DESDE)}
           </p>
         </SelectableCard>
 
         <SelectableCard selected={tipo === 'personalizado'} onSelect={() => setTipo('personalizado')} className="text-left">
-          <p className="craft-label mb-3">Abecedario de bronce personalizados</p>
-          <h3 className="mb-4 text-2xl font-semibold tracking-tight text-neutral-950">PERSONALIZADO</h3>
-          <p className="mb-6 text-sm leading-relaxed text-neutral-600">
+          <p className="craft-label mb-2 md:mb-3">Abecedario de bronce personalizados</p>
+          <h3 className="mb-2 text-xl font-semibold tracking-tight text-neutral-950 md:mb-4 md:text-2xl">PERSONALIZADO</h3>
+          <p className="mb-3 text-[13px] leading-snug text-neutral-600 md:mb-6 md:text-sm md:leading-relaxed">
             Elegí y personalizá tu Abecedario en base a lo que necesitás. Sumá los juegos de mayúscula,
             minúscula, números o caracteres extra que necesites.
           </p>
-          <div className="mb-6 border-t border-[var(--alcohn-line)] pt-5">
-            <div className="craft-label mb-3">Incluye</div>
-            <ul className="space-y-1.5">
-              <li className="flex items-center justify-between text-sm text-neutral-700">
+          <IncludesList>
+            <ul className="space-y-1 md:space-y-1.5">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Abecedario en Mayúscula</span>
                 <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.mayuscula)}</span>
               </li>
-              <li className="flex items-center justify-between text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Abecedario en Minúscula</span>
                 <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.minuscula)}</span>
               </li>
-              <li className="flex items-center justify-between text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Números (0 al 9)</span>
                 <span className="text-neutral-500">{formatArs(ABECEDARIO_PRECIOS_DESDE.numero)}</span>
               </li>
-              <li className="flex items-center justify-between text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Caracteres extra</span>
                 <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.extra)}</span>
               </li>
-              <li className="flex items-center justify-between text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Soporte de Bronce</span>
                 <span className="text-neutral-500">{formatArs(ABECEDARIO_PRECIOS_DESDE.soporte)}</span>
               </li>
-              <li className="flex items-center justify-between gap-3 text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:gap-3 md:text-sm">
                 <span>Caja contenedora</span>
                 <span className="shrink-0 border border-[var(--alcohn-bronze)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--alcohn-bronze)]">
                   Incluida sin cargo
                 </span>
               </li>
-              <li className="flex items-center justify-between gap-3 text-sm text-neutral-700">
+              <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:gap-3 md:text-sm">
                 <span>Mango de madera</span>
                 <span className="shrink-0 border border-[var(--alcohn-bronze)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--alcohn-bronze)]">
                   Incluido sin cargo
                 </span>
               </li>
             </ul>
-          </div>
-          <p className="text-lg text-neutral-900">
+          </IncludesList>
+          <p className="text-base text-neutral-900 md:text-lg">
             <span className="craft-label mr-2">Desde</span>
             {formatArs(PERSONALIZADO_MIN_PRECIO)}
           </p>
@@ -276,9 +384,9 @@ export default function AbecedarioConfigurator() {
 
       <div className="technical-sheet overflow-hidden">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.46fr_0.54fr]">
-          <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-8">
+          <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-4 md:p-8">
             <p className="craft-label mb-4">Muestra en cuero</p>
-            <div className="material-frame relative aspect-[7/5] overflow-hidden bg-neutral-900">
+            <div className="material-frame relative aspect-[3/2] overflow-hidden bg-neutral-900 md:aspect-[7/5]">
               {mockupUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -298,13 +406,13 @@ export default function AbecedarioConfigurator() {
                 </div>
               )}
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+            <p className="mt-3 hidden text-xs leading-relaxed text-neutral-500 md:block">
               Vista previa generada según tu selección de caracteres, tamaño y fuente. El resultado final en
               bronce puede variar levemente.
             </p>
           </div>
 
-          <div className="p-6 md:p-8">
+          <div className="p-4 md:p-8">
             {tipo === 'completo' ? (
               <div className="flex h-full flex-col">
                 <div>
@@ -407,7 +515,7 @@ export default function AbecedarioConfigurator() {
                   </div>
                 </div>
 
-                <div className="mt-6 border-t border-[var(--alcohn-line)] pt-5">
+                <div className="mt-5 hidden border-t border-[var(--alcohn-line)] pt-4 md:block md:mt-6 md:pt-5">
                   <p className="craft-label mb-3">Presupuesto</p>
                   <dl className="space-y-1.5">
                     {presupuesto.lineas

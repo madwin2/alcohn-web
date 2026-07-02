@@ -9,6 +9,10 @@ import {
   getStandardStampsByCollection,
   standardStampDesigns,
 } from '@/data/standardStamps';
+import {
+  ABECEDARIO_COMPLETO_PRECIO_DESDE,
+  ABECEDARIO_PRECIOS_DESDE,
+} from '@/lib/abecedarioConfigurator';
 
 export type CollectionType = CollectionFilter;
 
@@ -57,7 +61,7 @@ export const abecedarios: Abecedario[] = [
     title: 'Abecedario Completo',
     description:
       'Conjunto completo de letras individuales de bronce (A-Z) y números (0-9) para marcar textos personalizados. Cada letra es un sello independiente, permitiendo máxima flexibilidad en la composición.',
-    price: { desde: 517500 },
+    price: { desde: ABECEDARIO_COMPLETO_PRECIO_DESDE },
     images: ['/images/abecedario/abecedario.webp'],
     includes: [
       'Abecedario Mayúsculas',
@@ -73,7 +77,7 @@ export const abecedarios: Abecedario[] = [
     title: 'Abecedario - Solo Números',
     description:
       'Conjunto de números (0-9) individuales de bronce para marcar fechas, códigos y números de serie. Ideal para productos que requieren numeración secuencial.',
-    price: { desde: 125350 },
+    price: { desde: ABECEDARIO_PRECIOS_DESDE.numero },
     images: ['/images/abecedario/abecedario.webp'],
     includes: ['Números 0-9', 'Caja organizadora', 'Guía de uso'],
   },

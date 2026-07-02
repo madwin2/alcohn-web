@@ -34,6 +34,10 @@ interface PurchaseInclusionsKitExplorerProps {
   illustration?: KitIllustration;
   copy?: string;
   mobileCopy?: string;
+  /** Mobile: imagen + lista simple en lugar del carrusel con fichas KIT. */
+  simpleMobile?: boolean;
+  /** Etiquetas cortas para la grilla mobile (misma longitud que items). */
+  mobileLabels?: string[];
 }
 
 export default function PurchaseInclusionsKitExplorer({
@@ -42,6 +46,8 @@ export default function PurchaseInclusionsKitExplorer({
   illustration = SELLO_KIT_ILLUSTRATION,
   copy = 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.',
   mobileCopy = 'Tu compra llega lista para usar: sello, accesorios y guía rápida.',
+  simpleMobile = false,
+  mobileLabels,
 }: PurchaseInclusionsKitExplorerProps) {
   const [activeOverlay, setActiveOverlay] = useState<number | null>(null);
   const shortCopy = (text: string) => {
@@ -50,19 +56,30 @@ export default function PurchaseInclusionsKitExplorer({
     return `${trimmed.slice(0, 81)}...`;
   };
 
+  const labelForItem = (item: { title: string }, index: number) =>
+    mobileLabels?.[index] ?? item.title.replace(' de bronce', '').replace(' de madera', '');
+
   return (
     <section className={`technical-sheet blueprint-sheet overflow-hidden ${className}`}>
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
-        <div className="relative border-b border-[var(--alcohn-line)] p-6 md:p-8 lg:border-b-0 lg:border-r lg:p-10">
-          <p className="craft-label mb-5">Ficha de compra / Alcohn</p>
-          <h2 className="text-3xl font-semibold tracking-tight text-neutral-950 md:text-4xl">
+        <div
+          className={`relative border-b border-[var(--alcohn-line)] p-4 md:p-8 lg:border-b-0 lg:border-r lg:p-10 ${
+            simpleMobile ? 'md:p-8' : ''
+          }`}
+        >
+          <p className="craft-label mb-2 md:mb-5">Ficha de compra / Alcohn</p>
+          <h2
+            className={`font-semibold tracking-tight text-neutral-950 ${
+              simpleMobile ? 'text-xl md:text-4xl' : 'text-2xl md:text-4xl'
+            }`}
+          >
             Qué incluye tu compra
           </h2>
-          <p className="mt-5 text-sm leading-relaxed text-neutral-700">
+          <p className="mt-2 text-xs leading-snug text-neutral-600 md:mt-5 md:text-sm md:leading-relaxed md:text-neutral-700">
             <span className="md:hidden">{mobileCopy}</span>
             <span className="hidden md:inline">{copy}</span>
           </p>
-          <div className="mt-8 grid grid-cols-2 gap-3 text-[10px] font-semibold uppercase text-neutral-500">
+          <div className="mt-5 hidden grid-cols-2 gap-3 text-[10px] font-semibold uppercase text-neutral-500 md:grid">
             <span className="border border-dashed border-[var(--alcohn-line)] bg-white/60 px-3 py-2">
               Bronce CNC
             </span>
@@ -70,6 +87,36 @@ export default function PurchaseInclusionsKitExplorer({
               Listo para taller
             </span>
           </div>
+
+          {simpleMobile && (
+            <div className="mt-3 md:hidden">
+              <div className="grid grid-cols-[minmax(0,34%)_1fr] gap-2.5">
+                <div className="material-frame relative min-h-[148px] overflow-hidden bg-white">
+                  <Image
+                    src={illustration.baseSrc}
+                    alt={illustration.alt}
+                    width={illustration.width}
+                    height={illustration.height}
+                    className="h-full w-full object-contain object-center mix-blend-multiply p-1.5"
+                    sizes="120px"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {items.map((item, index) => (
+                    <div
+                      key={`${item.title}-${index}-tile`}
+                      className="flex min-h-[44px] items-center justify-center border border-[var(--alcohn-line)] bg-white px-2 py-2 text-center"
+                    >
+                      <span className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-neutral-800">
+                        {labelForItem(item, index)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="relative mx-auto mt-8 hidden w-full max-w-[280px] md:block">
             <Image
               src={illustration.baseSrc}
@@ -94,9 +141,11 @@ export default function PurchaseInclusionsKitExplorer({
           <p className="mt-4 hidden text-center text-[10px] font-semibold uppercase text-neutral-400 md:block">
             Pasá el cursor sobre cada ítem para ver la pieza
           </p>
-          <p className="mt-4 text-center text-[10px] font-semibold uppercase text-neutral-400 md:hidden">
-            Deslizá para ver todo lo incluido
-          </p>
+          {!simpleMobile && (
+            <p className="mt-4 text-center text-[10px] font-semibold uppercase text-neutral-400 md:hidden">
+              Deslizá para ver todo lo incluido
+            </p>
+          )}
           <svg
             aria-hidden
             className="blueprint-annotation pointer-events-none absolute right-6 top-6 hidden h-24 w-24 text-neutral-950/60 md:block"
@@ -121,6 +170,7 @@ export default function PurchaseInclusionsKitExplorer({
           </svg>
         </div>
 
+        {!simpleMobile && (
         <div className="md:hidden">
           <MobileCarousel hint="Deslizá incluido">
             {items.map((item, index) => (
@@ -142,8 +192,15 @@ export default function PurchaseInclusionsKitExplorer({
             ))}
           </MobileCarousel>
         </div>
+        )}
 
-        <div className="hidden grid-cols-1 sm:grid sm:grid-cols-2">
+        <div
+          className={
+            simpleMobile
+              ? 'hidden md:grid md:grid-cols-2'
+              : 'hidden grid-cols-1 sm:grid sm:grid-cols-2'
+          }
+        >
           {items.map((item, index) => {
             const hasOverlay = illustration.overlays[index] != null;
             return (

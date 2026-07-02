@@ -18,6 +18,8 @@ interface PageIntroProps {
   highlights?: string[];
   hideHighlightsOnMobile?: boolean;
   titleOnlyOnMobile?: boolean;
+  /** Mobile: título + texto + CTA en un solo bloque compacto (sin columna derecha separada). */
+  compactMobile?: boolean;
   priceFrom?: number;
   className?: string;
 }
@@ -32,32 +34,86 @@ export default function PageIntro({
   highlights = [],
   hideHighlightsOnMobile = false,
   titleOnlyOnMobile = false,
+  compactMobile = false,
   priceFrom,
   className = '',
 }: PageIntroProps) {
   const hideMobileExtras = titleOnlyOnMobile || hideHighlightsOnMobile;
+  const mobileMargin = compactMobile ? 'mb-4' : titleOnlyOnMobile ? 'mb-5' : 'mb-8';
 
   return (
     <section
-      className={`technical-sheet motion-reveal ${titleOnlyOnMobile ? 'mb-4 md:mb-16' : 'mb-8 md:mb-16'} ${className}`}
+      className={`technical-sheet motion-reveal ${mobileMargin} md:mb-16 ${className}`}
     >
       <div
         className={`relative z-10 grid grid-cols-1 lg:grid-cols-[0.46fr_0.54fr] border-[var(--alcohn-line)] ${
-          titleOnlyOnMobile ? 'md:border-b' : 'border-b'
+          titleOnlyOnMobile || compactMobile ? 'md:border-b' : 'border-b'
         }`}
       >
-        <div className={`p-4 md:p-10 lg:p-12 ${titleOnlyOnMobile ? 'pb-3 md:pb-10' : ''}`}>
-          <p className="craft-label mb-3 md:mb-4">{label}</p>
-          <h1 className="text-[1.75rem] leading-[1.08] md:text-6xl md:leading-[0.98] font-semibold tracking-tight text-neutral-950">
+        <div
+          className={`${compactMobile || titleOnlyOnMobile ? 'p-3 md:p-10 lg:p-12' : 'p-4 md:p-10 lg:p-12'} ${
+            titleOnlyOnMobile || compactMobile ? 'pb-3 md:pb-10' : ''
+          } ${compactMobile ? 'md:pb-10' : ''}`}
+        >
+          <p
+            className={`craft-label ${
+              compactMobile || titleOnlyOnMobile ? 'mb-1.5 md:mb-4' : 'mb-2 md:mb-4'
+            }`}
+          >
+            {label}
+          </p>
+          <h1
+            className={`font-semibold tracking-tight text-neutral-950 ${
+              compactMobile
+                ? 'text-lg leading-[1.15] md:text-6xl md:leading-[0.98]'
+                : titleOnlyOnMobile
+                  ? 'text-xl leading-[1.12] md:text-6xl md:leading-[0.98]'
+                  : 'text-[1.75rem] leading-[1.08] md:text-6xl md:leading-[0.98]'
+            }`}
+          >
             {title}
           </h1>
+
+          {compactMobile && (
+            <div className="mt-2.5 space-y-2.5 border-t border-[var(--alcohn-line)] pt-2.5 md:hidden">
+              <p className="text-[13px] leading-snug text-neutral-700">{description}</p>
+              {priceFrom != null && (
+                <PriceFrom amount={priceFrom} className="pt-2 border-t border-[var(--alcohn-line)]" />
+              )}
+              {(primaryCta || secondaryCta) && (
+                <div className="flex flex-col gap-2">
+                  {primaryCta && (
+                    <ActionButton
+                      href={primaryCta.href}
+                      variant={primaryCta.variant || 'primary'}
+                      className="w-full"
+                    >
+                      {primaryCta.label}
+                    </ActionButton>
+                  )}
+                  {secondaryCta && (
+                    <ActionButton
+                      href={secondaryCta.href}
+                      onClick={secondaryCta.onClick}
+                      variant={secondaryCta.variant || 'secondary'}
+                      className="w-full"
+                    >
+                      {secondaryCta.label}
+                    </ActionButton>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div
           className={`p-4 md:p-10 lg:p-12 border-[var(--alcohn-line)] flex-col justify-between gap-5 md:gap-8 ${
-            titleOnlyOnMobile
+            compactMobile
               ? 'hidden md:flex md:border-t-0 md:border-l'
-              : 'flex border-t lg:border-l lg:border-t-0'
+              : titleOnlyOnMobile
+                ? 'hidden md:flex md:border-t-0 md:border-l'
+                : 'flex border-t lg:border-l lg:border-t-0'
           }`}
         >
           <p className="text-sm md:text-base leading-relaxed text-neutral-700 max-w-2xl">

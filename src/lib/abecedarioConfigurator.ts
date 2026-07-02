@@ -33,20 +33,27 @@ export interface AbecedarioPrecios {
 /** Relación precio link de pago / transferencia usada en todo el sitio. */
 export const ABECEDARIO_LINK_FACTOR = 1.15;
 
+/**
+ * Los precios de lista de mayúscula, minúscula y números incluyen un soporte por juego.
+ * En personalizado el soporte se elige aparte, así que se descuenta de cada juego.
+ */
+export const ABECEDARIO_SOPORTE_POR_JUEGO_TRANSFERENCIA = 45000;
+
 function precioLink(transferencia: number): number {
   return Math.round(transferencia * ABECEDARIO_LINK_FACTOR);
 }
 
 /**
- * Precios por TRANSFERENCIA (valores reales de lista). Mayúsculas, minúsculas y
- * letras extra tienen dos escalas: hasta 6mm y de 7 a 10mm.
+ * Precios por TRANSFERENCIA para piezas del personalizado (sin soporte incluido).
+ * Mayúsculas, minúsculas y letras extra tienen dos escalas: hasta 6mm y de 7 a 10mm.
  */
 export function getAbecedarioPreciosTransferencia(tamanoMm: AbecedarioTamanoMm): AbecedarioPrecios {
   const tierGrande = tamanoMm >= 7;
+  const sinSoporte = ABECEDARIO_SOPORTE_POR_JUEGO_TRANSFERENCIA;
   return {
-    mayuscula: tierGrande ? 245000 : 237000,
-    minuscula: tierGrande ? 245000 : 237000,
-    numero: 109000,
+    mayuscula: (tierGrande ? 245000 : 237000) - sinSoporte,
+    minuscula: (tierGrande ? 245000 : 237000) - sinSoporte,
+    numero: 109000 - sinSoporte,
     extra: tierGrande ? 7300 : 6900,
     soporte: 45000,
   };

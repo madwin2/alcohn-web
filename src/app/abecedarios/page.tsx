@@ -30,7 +30,7 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 
 export default function AbecedariosPage() {
   return (
-    <div className="atelier-page min-h-screen py-10 md:py-16">
+    <div className="atelier-page min-h-screen py-6 md:py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
@@ -40,17 +40,18 @@ export default function AbecedariosPage() {
           label="Letras y números. Textos variables."
           title="Abecedario de bronce para marcar textos variables"
           description="Una herramienta modular para talleres que necesitan nombres, fechas, códigos, iniciales o series. Cada letra funciona como sello independiente y mantiene la precisión CNC de Alcohn."
+          titleOnlyOnMobile
           primaryCta={{
             label: 'Comprar abecedario',
             href: '#configurador',
           }}
         />
 
-        <SpecStrip />
+        <SpecStrip className="hidden md:block" />
 
         <section className="mb-10 md:mb-16">
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
-            <div className="flex flex-col gap-4">
+            <div className="order-2 flex flex-col gap-4 lg:order-1">
               <SpecChips
                 specs={[
                   { label: 'Colección', value: 'Abecedarios' },
@@ -59,7 +60,7 @@ export default function AbecedariosPage() {
                 ]}
               />
 
-              <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
+              <div className="hidden space-y-3 text-sm leading-relaxed text-neutral-700 md:block">
                 <p>
                   El Abecedario es un <strong className="font-semibold text-neutral-950">sistema de letras intercambiables</strong> diseñado para marcar textos personalizados con calor o presión. Incluye caracteres de bronce, junto con un soporte que permite armar palabras, iniciales o frases cortas.
                 </p>
@@ -71,7 +72,8 @@ export default function AbecedariosPage() {
 
               <AbecedarioSpecificationsCard />
 
-              <div className="material-frame relative flex-1 min-h-[220px] overflow-hidden">
+              {/* Imagen compacta en mobile; en desktop acompaña la columna de texto. */}
+              <div className="material-frame relative aspect-[5/3] min-h-0 overflow-hidden lg:aspect-auto lg:min-h-[220px] lg:flex-1">
                 <Image
                   src="/images/abecedario/abecedario.webp"
                   alt="Abecedario de bronce completo con letras y números"
@@ -83,15 +85,31 @@ export default function AbecedariosPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="order-1 flex flex-col gap-4 lg:order-2">
               <VideoShowcasePanel
                 posterSrc="/images/abecedario/abecedario.webp"
                 posterAlt="Abecedario de bronce en uso: letras armadas sobre soporte"
-                className="aspect-[3/4] max-h-[540px] w-full"
+                className="aspect-video w-full lg:aspect-[3/4] lg:max-h-[540px]"
               />
               {/* videoSrc pendiente: pasar el .mp4 vertical cuando esté disponible para reemplazar la foto de fondo */}
 
-              <div className="mt-auto flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-t border-[var(--alcohn-line)] pt-4">
+              <div className="space-y-2.5 border-y border-[var(--alcohn-line)] py-4 text-[13px] leading-relaxed text-neutral-700 md:hidden">
+                <p>
+                  Una herramienta modular para talleres que necesitan nombres, fechas, códigos, iniciales o
+                  series. Cada letra funciona como sello independiente y mantiene la precisión CNC de Alcohn.
+                </p>
+                <p>
+                  El Abecedario es un{' '}
+                  <strong className="font-semibold text-neutral-950">sistema de letras intercambiables</strong>{' '}
+                  diseñado para marcar textos personalizados con calor o presión. Ideal para una{' '}
+                  <strong className="font-semibold text-neutral-950">
+                    terminación duradera, prolija y profesional
+                  </strong>
+                  .
+                </p>
+              </div>
+
+              <div className="mt-auto flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pt-4">
                 <div>
                   <p className="craft-label mb-1">Desde</p>
                   <p className="text-2xl font-bold tracking-tight text-neutral-900 md:text-3xl">

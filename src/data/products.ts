@@ -52,7 +52,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '1.5mm - 2mm',
+      profundidad: '3mm',
       tiempoProduccion: '72hs habiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Cuero genuino y sintético',
@@ -156,7 +156,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '1.5mm - 2mm',
+      profundidad: '3mm',
       tiempoProduccion: '10-14 días hábiles',
       incluye: ['Abecedario completo (A-Z, 0-9)', 'Caja organizadora', 'Guía de uso'],
       uso: 'Cuero y madera',
@@ -182,7 +182,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '1.5mm - 2mm',
+      profundidad: '3mm',
       tiempoProduccion: '72hs habiles',
       incluye: ['Números 0-9', 'Caja organizadora', 'Guía de uso'],
       uso: 'Cuero y madera',
