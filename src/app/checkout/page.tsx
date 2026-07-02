@@ -67,6 +67,13 @@ export default function CheckoutPage() {
   const hasCartContent = items.length > 0 || orderData !== null;
   const currentItems = orderData?.items || items;
   const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
+  const isAbecedarioOrder =
+    currentItems.length > 0 &&
+    currentItems.every(
+      (item) =>
+        item.designSlug.toLowerCase().includes('abecedario') ||
+        item.collection.toLowerCase().includes('abecedario')
+    );
   const orderSubtotal = orderData?.subtotal ?? subtotal;
   const orderTotalConEnvio = orderSubtotal + shippingCost;
 
@@ -1012,9 +1019,17 @@ export default function CheckoutPage() {
                 />
 
                 <PurchaseInclusions
-                  variant={isPersonalizedOrder ? 'personalizado' : 'estandar'}
+                  variant={
+                    isAbecedarioOrder ? 'abecedario' : isPersonalizedOrder ? 'personalizado' : 'estandar'
+                  }
                   compact
-                  title={isPersonalizedOrder ? 'Incluido con tu sello' : 'Incluido en la compra'}
+                  title={
+                    isAbecedarioOrder
+                      ? 'Incluido con tu abecedario'
+                      : isPersonalizedOrder
+                        ? 'Incluido con tu sello'
+                        : 'Incluido en la compra'
+                  }
                 />
 
                 <div className="pt-4 border-t border-neutral-200">

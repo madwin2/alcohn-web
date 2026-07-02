@@ -22,10 +22,6 @@ export const ABECEDARIO_FONTS: AbecedarioFontOption[] = [
 export const ABECEDARIO_TAMANOS_MM = [3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type AbecedarioTamanoMm = (typeof ABECEDARIO_TAMANOS_MM)[number];
 
-/** Precios sin variación por tamaño. */
-export const ABECEDARIO_PRECIO_NUMEROS = 109000;
-export const ABECEDARIO_PRECIO_SOPORTE = 45000;
-
 export interface AbecedarioPrecios {
   mayuscula: number;
   minuscula: number;
@@ -34,24 +30,51 @@ export interface AbecedarioPrecios {
   soporte: number;
 }
 
-/** Mayúsculas, minúsculas y letras extra tienen dos escalas de precio: hasta 6mm y de 7 a 10mm. */
-export function getAbecedarioPrecios(tamanoMm: AbecedarioTamanoMm): AbecedarioPrecios {
+/** Relación precio link de pago / transferencia usada en todo el sitio. */
+export const ABECEDARIO_LINK_FACTOR = 1.15;
+
+function precioLink(transferencia: number): number {
+  return Math.round(transferencia * ABECEDARIO_LINK_FACTOR);
+}
+
+/**
+ * Precios por TRANSFERENCIA (valores reales de lista). Mayúsculas, minúsculas y
+ * letras extra tienen dos escalas: hasta 6mm y de 7 a 10mm.
+ */
+export function getAbecedarioPreciosTransferencia(tamanoMm: AbecedarioTamanoMm): AbecedarioPrecios {
   const tierGrande = tamanoMm >= 7;
   return {
     mayuscula: tierGrande ? 245000 : 237000,
     minuscula: tierGrande ? 245000 : 237000,
-    numero: ABECEDARIO_PRECIO_NUMEROS,
+    numero: 109000,
     extra: tierGrande ? 7300 : 6900,
-    soporte: ABECEDARIO_PRECIO_SOPORTE,
+    soporte: 45000,
+  };
+}
+
+/** Precios de link de pago (tarjeta/cuotas): transferencia + 15%. Son los que van al carrito. */
+export function getAbecedarioPrecios(tamanoMm: AbecedarioTamanoMm): AbecedarioPrecios {
+  const t = getAbecedarioPreciosTransferencia(tamanoMm);
+  return {
+    mayuscula: precioLink(t.mayuscula),
+    minuscula: precioLink(t.minuscula),
+    numero: precioLink(t.numero),
+    extra: precioLink(t.extra),
+    soporte: precioLink(t.soporte),
   };
 }
 
 /** Precios de referencia (escala más baja) para mostrar "desde" antes de elegir tamaño. */
 export const ABECEDARIO_PRECIOS_DESDE: AbecedarioPrecios = getAbecedarioPrecios(3);
 
-/** El set Completo también tiene dos escalas: hasta 6mm y de 7 a 10mm. */
-export function getAbecedarioCompletoPrecio(tamanoMm: AbecedarioTamanoMm): number {
+/** El set Completo también tiene dos escalas (transferencia): $450.000 hasta 6mm, $518.000 de 7 a 10mm. */
+export function getAbecedarioCompletoPrecioTransferencia(tamanoMm: AbecedarioTamanoMm): number {
   return tamanoMm >= 7 ? 518000 : 450000;
+}
+
+/** Precio de link de pago del set Completo. */
+export function getAbecedarioCompletoPrecio(tamanoMm: AbecedarioTamanoMm): number {
+  return precioLink(getAbecedarioCompletoPrecioTransferencia(tamanoMm));
 }
 
 export const ABECEDARIO_COMPLETO_PRECIO_DESDE = getAbecedarioCompletoPrecio(3);
@@ -141,9 +164,9 @@ export function calcularPresupuestoPersonalizado(state: AbecedarioPersonalizadoS
   return { lineas, total };
 }
 
-/** Alineado con la relación precio link / transferencia usada en el resto del sitio (~13% off). */
+/** Convierte un precio de link de pago al precio por transferencia. */
 export function precioTransferencia(precio: number): number {
-  return Math.round(precio / 1.15);
+  return Math.round(precio / ABECEDARIO_LINK_FACTOR);
 }
 
 export function clampQty(value: number, kind: keyof typeof ABECEDARIO_QTY_LIMITS): number {

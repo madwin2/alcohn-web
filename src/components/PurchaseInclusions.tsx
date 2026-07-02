@@ -1,13 +1,12 @@
 import Image from 'next/image';
 import ProductCompactCard from '@/components/sellos/ProductCompactCard';
 import PurchaseInclusionsKitExplorer, {
+  KIT_ILLUSTRATION_SRC,
   type KitIllustration,
 } from '@/components/PurchaseInclusionsKitExplorer';
 import MobileCarousel from '@/components/MobileCarousel';
 
 type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
-
-export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
 const ABECEDARIO_KIT_ILLUSTRATION: KitIllustration = {
   baseSrc: '/images/abecedario/que-incluye-base.png',

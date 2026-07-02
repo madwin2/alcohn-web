@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { KIT_ILLUSTRATION_SRC } from '@/components/PurchaseInclusions';
 import MobileCarousel from '@/components/MobileCarousel';
+
+export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
 export interface KitIllustration {
   baseSrc: string;

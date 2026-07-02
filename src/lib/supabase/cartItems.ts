@@ -11,15 +11,29 @@ function isAccessoryCartLine(item: CartItem): boolean {
   return collection === 'accesorios' || size === 'único' || size === 'unico';
 }
 
-/** Reemplaza `price` por `precio_transferencia_ars` según la medida del ítem (sellos). */
+function isAbecedarioCartLine(item: CartItem): boolean {
+  return (
+    item.designSlug.toLowerCase().includes('abecedario') ||
+    (item.collection?.toLowerCase() ?? '').includes('abecedario')
+  );
+}
+
+/**
+ * Reemplaza `price` por el precio de transferencia: sellos vía cotizador (según medida),
+ * abecedarios quitando el recargo del link de pago (÷1.15, mismo factor que la UI).
+ */
 export function applyTransferPricesToCartItems(
   items: CartItem[],
   catalog: CotizadorCatalog | null
 ): CartItem[] {
-  if (!catalog) return items;
-
   return items.map((item) => {
     if (isNonSelloCartLine(item) || isAccessoryCartLine(item)) return item;
+
+    if (isAbecedarioCartLine(item)) {
+      return { ...item, price: Math.round(item.price / 1.15) };
+    }
+
+    if (!catalog) return item;
 
     const dims = parseVariantSizeToCm(item.variantSize);
     if (dims.ancho_real == null || dims.largo_real == null) return item;

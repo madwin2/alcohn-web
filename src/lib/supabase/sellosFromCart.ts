@@ -42,6 +42,7 @@ function resolveItemType(item: CartItem): SelloItemType {
 }
 
 function resolveTipo(item: CartItem): SelloInsert['tipo'] {
+  if (resolveItemType(item) === 'ABECEDARIO') return 'ABC';
   const p = (item.process ?? '').toLowerCase();
   if (p.includes('alimento')) return 'Alimento';
   if (p.includes('lacre')) return 'Lacre';
