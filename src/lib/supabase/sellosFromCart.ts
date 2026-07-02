@@ -4,6 +4,7 @@
  */
 
 import type { CartItem } from '@/lib/cart';
+import { getAccessoryBySlug } from '@/data/accessories';
 import type { SelloInsert, SelloItemType } from './types';
 
 /** Parsea medidas tipo "30x30mm", "5x3 cm", "40x40" → cm. */
@@ -35,9 +36,31 @@ export function parseVariantSizeToCm(
 function resolveItemType(item: CartItem): SelloItemType {
   const slug = item.designSlug.toLowerCase();
   const collection = item.collection.toLowerCase();
+
   if (slug.includes('abecedario') || collection.includes('abecedario')) {
     return 'ABECEDARIO';
   }
+
+  const accessory = getAccessoryBySlug(slug);
+  if (accessory) {
+    switch (accessory.code) {
+      case 'soldador':
+        return 'SOLDADOR';
+      case 'mango_golpe':
+        return 'MANGO_GOLPE';
+      case 'base_remachadora':
+        return 'BASE_REMACHADORA';
+      default:
+        break;
+    }
+  }
+
+  if (collection.includes('accesorio')) {
+    if (slug.includes('calentador') || slug.includes('soldador')) return 'SOLDADOR';
+    if (slug.includes('mango')) return 'MANGO_GOLPE';
+    if (slug.includes('base') || slug.includes('remachadora')) return 'BASE_REMACHADORA';
+  }
+
   return 'SELLO';
 }
 

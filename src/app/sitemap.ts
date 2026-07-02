@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { accessories } from '@/data/accessories';
 import { stampUseCases } from '@/data/stampUseCases';
 import { standardDesigns } from '@/lib/catalog';
 import { SITE_URL } from '@/lib/seo';
@@ -40,5 +41,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
   }));
 
-  return [...staticEntries, ...useCaseEntries, ...standardEntries];
+  const accessoryEntries = accessories.map((accessory) => ({
+    url: `${SITE_URL}/accesorios/${accessory.slug}`,
+    lastModified: now,
+  }));
+
+  return [...staticEntries, ...useCaseEntries, ...standardEntries, ...accessoryEntries];
 }

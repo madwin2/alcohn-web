@@ -194,7 +194,10 @@ export default function ProductosPage() {
                 <PriceFrom amount={accessoryMinPrice} className="mt-4" size="sm" />
               </div>
 
-              <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">
+              <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)] flex flex-col gap-3 sm:flex-row">
+                <ActionButton href="/accesorios/calentador-electrico" variant="primary" className="w-full sm:w-auto">
+                  Ver calentador eléctrico
+                </ActionButton>
                 <ActionButton href="/accesorios" variant="secondary" className="w-full sm:w-auto">
                   Ver accesorios
                 </ActionButton>

@@ -44,7 +44,7 @@ export default function AccesoriosPage() {
           priceFrom={minPrice}
           highlights={[
             'Calentador eléctrico para uso frecuente',
-            'Mango de golpe para marcado en frío',
+            'Mango metálico para marcado por golpe',
             'Base de aluminio para remachadora',
           ]}
         />

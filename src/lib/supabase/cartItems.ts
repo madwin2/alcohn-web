@@ -27,7 +27,11 @@ export function applyTransferPricesToCartItems(
   catalog: CotizadorCatalog | null
 ): CartItem[] {
   return items.map((item) => {
-    if (isNonSelloCartLine(item) || isAccessoryCartLine(item)) return item;
+    if (isNonSelloCartLine(item)) return item;
+
+    if (isAccessoryCartLine(item)) {
+      return { ...item, price: Math.round(item.price / 1.15) };
+    }
 
     if (isAbecedarioCartLine(item)) {
       return { ...item, price: Math.round(item.price / 1.15) };

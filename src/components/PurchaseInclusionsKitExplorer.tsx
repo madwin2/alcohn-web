@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import MobileCarousel from '@/components/MobileCarousel';
+import VideoShowcasePanel from '@/components/abecedarios/VideoShowcasePanel';
 
 export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
@@ -28,6 +29,12 @@ const SELLO_KIT_ILLUSTRATION: KitIllustration = {
   alt: 'Ilustración del sello de bronce con mango, varilla y cabezal de marcado',
 };
 
+export interface PurchaseInclusionsVideoPanel {
+  posterSrc: string;
+  posterAlt: string;
+  videoSrc?: string;
+}
+
 interface PurchaseInclusionsKitExplorerProps {
   items: Array<{ title: string; copy: string }>;
   className?: string;
@@ -36,8 +43,12 @@ interface PurchaseInclusionsKitExplorerProps {
   mobileCopy?: string;
   /** Mobile: imagen + lista simple en lugar del carrusel con fichas KIT. */
   simpleMobile?: boolean;
+  /** Layout mobile cuando simpleMobile está activo. */
+  mobileLayout?: 'tiles' | 'list';
   /** Etiquetas cortas para la grilla mobile (misma longitud que items). */
   mobileLabels?: string[];
+  /** Panel de video vertical a la derecha en desktop. */
+  videoPanel?: PurchaseInclusionsVideoPanel;
 }
 
 export default function PurchaseInclusionsKitExplorer({
@@ -47,7 +58,9 @@ export default function PurchaseInclusionsKitExplorer({
   copy = 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.',
   mobileCopy = 'Tu compra llega lista para usar: sello, accesorios y guía rápida.',
   simpleMobile = false,
+  mobileLayout = 'tiles',
   mobileLabels,
+  videoPanel,
 }: PurchaseInclusionsKitExplorerProps) {
   const [activeOverlay, setActiveOverlay] = useState<number | null>(null);
   const shortCopy = (text: string) => {
@@ -59,9 +72,17 @@ export default function PurchaseInclusionsKitExplorer({
   const labelForItem = (item: { title: string }, index: number) =>
     mobileLabels?.[index] ?? item.title.replace(' de bronce', '').replace(' de madera', '');
 
+  const hasVideoPanel = Boolean(videoPanel);
+
   return (
     <section className={`technical-sheet blueprint-sheet overflow-hidden ${className}`}>
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
+      <div
+        className={`relative z-10 grid grid-cols-1 ${
+          hasVideoPanel
+            ? 'lg:grid-cols-[0.34fr_0.34fr_0.32fr]'
+            : 'lg:grid-cols-[0.36fr_0.64fr]'
+        }`}
+      >
         <div
           className={`relative border-b border-[var(--alcohn-line)] p-4 md:p-8 lg:border-b-0 lg:border-r lg:p-10 ${
             simpleMobile ? 'md:p-8' : ''
@@ -88,7 +109,7 @@ export default function PurchaseInclusionsKitExplorer({
             </span>
           </div>
 
-          {simpleMobile && (
+          {simpleMobile && mobileLayout === 'tiles' && (
             <div className="mt-3 md:hidden">
               <div className="grid grid-cols-[minmax(0,34%)_1fr] gap-2.5">
                 <div className="material-frame relative min-h-[148px] overflow-hidden bg-white">
@@ -113,6 +134,31 @@ export default function PurchaseInclusionsKitExplorer({
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {simpleMobile && mobileLayout === 'list' && (
+            <div className="mt-4 border-t border-[var(--alcohn-line)] pt-4 md:hidden">
+              <div className="grid grid-cols-[minmax(0,42%)_1fr] items-center gap-3">
+                <div className="material-frame relative aspect-[4/5] overflow-hidden bg-white">
+                  <Image
+                    src={illustration.baseSrc}
+                    alt={illustration.alt}
+                    width={illustration.width}
+                    height={illustration.height}
+                    className="h-full w-full object-contain object-center mix-blend-multiply p-2"
+                    sizes="140px"
+                  />
+                </div>
+                <ul className="space-y-1.5 text-[12px] leading-snug text-neutral-800">
+                  {items.map((item, index) => (
+                    <li key={`${item.title}-${index}-bullet`} className="flex gap-2">
+                      <span className="mt-[0.35rem] h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
+                      <span>{item.title}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           )}
@@ -196,9 +242,11 @@ export default function PurchaseInclusionsKitExplorer({
 
         <div
           className={
-            simpleMobile
-              ? 'hidden md:grid md:grid-cols-2'
-              : 'hidden grid-cols-1 sm:grid sm:grid-cols-2'
+            hasVideoPanel
+              ? 'hidden border-[var(--alcohn-line)] lg:block lg:border-r'
+              : simpleMobile
+                ? 'hidden md:grid md:grid-cols-2'
+                : 'hidden grid-cols-1 sm:grid sm:grid-cols-2'
           }
         >
           {items.map((item, index) => {
@@ -206,9 +254,9 @@ export default function PurchaseInclusionsKitExplorer({
             return (
             <article
               key={`${item.title}-${index}`}
-              className={`purchase-inclusion-cell border-b border-[var(--alcohn-line)] p-5 transition-colors sm:border-r sm:even:border-r-0 md:p-6 ${
-                activeOverlay === index ? 'bg-white/90' : ''
-              } ${hasOverlay ? 'cursor-default' : ''}`}
+              className={`purchase-inclusion-cell border-b border-[var(--alcohn-line)] p-5 transition-colors md:p-6 ${
+                hasVideoPanel ? 'last:border-b-0' : 'sm:border-r sm:even:border-r-0'
+              } ${activeOverlay === index ? 'bg-white/90' : ''} ${hasOverlay ? 'cursor-default' : ''}`}
               onMouseEnter={() => {
                 if (hasOverlay) setActiveOverlay(index);
               }}
@@ -237,6 +285,27 @@ export default function PurchaseInclusionsKitExplorer({
             );
           })}
         </div>
+
+        {hasVideoPanel && videoPanel ? (
+          <>
+            <div className="border-t border-[var(--alcohn-line)] p-4 lg:hidden">
+              <VideoShowcasePanel
+                posterSrc={videoPanel.posterSrc}
+                posterAlt={videoPanel.posterAlt}
+                videoSrc={videoPanel.videoSrc}
+                className="aspect-[3/4] w-full"
+              />
+            </div>
+            <div className="hidden min-h-[420px] lg:block">
+              <VideoShowcasePanel
+                posterSrc={videoPanel.posterSrc}
+                posterAlt={videoPanel.posterAlt}
+                videoSrc={videoPanel.videoSrc}
+                className="h-full min-h-[420px]"
+              />
+            </div>
+          </>
+        ) : null}
       </div>
     </section>
   );

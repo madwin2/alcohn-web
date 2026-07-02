@@ -3,6 +3,7 @@ import ProductCompactCard from '@/components/sellos/ProductCompactCard';
 import PurchaseInclusionsKitExplorer, {
   KIT_ILLUSTRATION_SRC,
   type KitIllustration,
+  type PurchaseInclusionsVideoPanel,
 } from '@/components/PurchaseInclusionsKitExplorer';
 import MobileCarousel from '@/components/MobileCarousel';
 
@@ -37,6 +38,17 @@ interface PurchaseInclusionsProps {
   copy?: string;
   /** Ilustración del kit (sello + mango). Activa en páginas de material. */
   showKitIllustration?: boolean;
+  /** Ilustración personalizada para accesorios u otros productos. */
+  kitIllustration?: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+  };
+  /** Panel de video vertical a la derecha (p. ej. calentador en uso). */
+  videoPanel?: PurchaseInclusionsVideoPanel;
+  /** Texto corto para mobile en la cabecera de “qué incluye”. */
+  mobileCopy?: string;
   /** Logo del cliente (esquina de la tarjeta compacta). */
   logoUrl?: string | null;
 }
@@ -176,10 +188,22 @@ export default function PurchaseInclusions({
   title = 'Qué incluye tu compra',
   copy,
   showKitIllustration = true,
+  kitIllustration,
+  videoPanel,
+  mobileCopy,
   logoUrl,
 }: PurchaseInclusionsProps) {
   const normalizedItems = inclusionItems ?? normalizeItems(variant, items);
   const usesFullKit = inclusionItems != null || variant === 'personalizado';
+  const customIllustration: KitIllustration | undefined = kitIllustration
+    ? {
+        baseSrc: kitIllustration.src,
+        overlays: {},
+        width: kitIllustration.width,
+        height: kitIllustration.height,
+        alt: kitIllustration.alt,
+      }
+    : undefined;
   const introCopy =
     copy ||
     (usesFullKit
@@ -207,11 +231,31 @@ export default function PurchaseInclusions({
     );
   }
 
+  if (!compact && showKitIllustration && customIllustration) {
+    const compactMobileCopy =
+      mobileCopy ?? `${normalizedItems.map((item) => item.title).join(', ')}.`;
+
+    return (
+      <PurchaseInclusionsKitExplorer
+        items={normalizedItems}
+        className={className}
+        illustration={customIllustration}
+        copy={copy ?? introCopy}
+        mobileCopy={compactMobileCopy}
+        simpleMobile
+        mobileLayout="list"
+        videoPanel={videoPanel}
+      />
+    );
+  }
+
   if (!compact && showKitIllustration && usesFullKit) {
     return (
       <PurchaseInclusionsKitExplorer
         items={normalizedItems}
         className={className}
+        copy={copy}
+        videoPanel={videoPanel}
       />
     );
   }
