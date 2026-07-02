@@ -57,13 +57,15 @@ export const abecedarios: Abecedario[] = [
     title: 'Abecedario Completo',
     description:
       'Conjunto completo de letras individuales de bronce (A-Z) y números (0-9) para marcar textos personalizados. Cada letra es un sello independiente, permitiendo máxima flexibilidad en la composición.',
-    price: { desde: 85000 },
+    price: { desde: 450000 },
     images: ['/images/abecedario/abecedario.webp'],
     includes: [
-      'Abecedario completo (A-Z)',
-      'Números (0-9)',
-      'Caja organizadora con separadores',
-      'Guía de uso y espaciado',
+      'Abecedario Mayúsculas',
+      'Abecedario Minúsculas',
+      'Números 0 al 9',
+      'Caja Organizadora',
+      'Soporte de Bronce',
+      'Mango de uso manual',
     ],
   },
   {
@@ -71,7 +73,7 @@ export const abecedarios: Abecedario[] = [
     title: 'Abecedario - Solo Números',
     description:
       'Conjunto de números (0-9) individuales de bronce para marcar fechas, códigos y números de serie. Ideal para productos que requieren numeración secuencial.',
-    price: { desde: 35000 },
+    price: { desde: 109000 },
     images: ['/images/abecedario/abecedario.webp'],
     includes: ['Números 0-9', 'Caja organizadora', 'Guía de uso'],
   },

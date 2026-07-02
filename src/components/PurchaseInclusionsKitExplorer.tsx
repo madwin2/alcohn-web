@@ -5,21 +5,42 @@ import Image from 'next/image';
 import { KIT_ILLUSTRATION_SRC } from '@/components/PurchaseInclusions';
 import MobileCarousel from '@/components/MobileCarousel';
 
-const KIT_OVERLAY_SRC: Record<number, string> = {
-  0: '/images/sello/kit-sello-pieza-01-cabezal.png',
-  1: '/images/sello/kit-sello-pieza-02-mango.png',
-  2: '/images/sello/kit-sello-pieza-03-varilla.png',
-  3: '/images/sello/kit-sello-pieza-04-accesorios.png',
+export interface KitIllustration {
+  baseSrc: string;
+  /** Imagen superpuesta por índice de ítem (mismo encuadre que baseSrc). */
+  overlays: Record<number, string>;
+  width: number;
+  height: number;
+  alt: string;
+}
+
+const SELLO_KIT_ILLUSTRATION: KitIllustration = {
+  baseSrc: KIT_ILLUSTRATION_SRC,
+  overlays: {
+    0: '/images/sello/kit-sello-pieza-01-cabezal.png',
+    1: '/images/sello/kit-sello-pieza-02-mango.png',
+    2: '/images/sello/kit-sello-pieza-03-varilla.png',
+    3: '/images/sello/kit-sello-pieza-04-accesorios.png',
+  },
+  width: 4502,
+  height: 2973,
+  alt: 'Ilustración del sello de bronce con mango, varilla y cabezal de marcado',
 };
 
 interface PurchaseInclusionsKitExplorerProps {
   items: Array<{ title: string; copy: string }>;
   className?: string;
+  illustration?: KitIllustration;
+  copy?: string;
+  mobileCopy?: string;
 }
 
 export default function PurchaseInclusionsKitExplorer({
   items,
   className = '',
+  illustration = SELLO_KIT_ILLUSTRATION,
+  copy = 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.',
+  mobileCopy = 'Tu compra llega lista para usar: sello, accesorios y guía rápida.',
 }: PurchaseInclusionsKitExplorerProps) {
   const [activeOverlay, setActiveOverlay] = useState<number | null>(null);
   const shortCopy = (text: string) => {
@@ -37,13 +58,8 @@ export default function PurchaseInclusionsKitExplorer({
             Qué incluye tu compra
           </h2>
           <p className="mt-5 text-sm leading-relaxed text-neutral-700">
-            <span className="md:hidden">
-              Tu compra llega lista para usar: sello, accesorios y guía rápida.
-            </span>
-            <span className="hidden md:inline">
-              Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el
-              material seleccionado.
-            </span>
+            <span className="md:hidden">{mobileCopy}</span>
+            <span className="hidden md:inline">{copy}</span>
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 text-[10px] font-semibold uppercase text-neutral-500">
             <span className="border border-dashed border-[var(--alcohn-line)] bg-white/60 px-3 py-2">
@@ -55,19 +71,19 @@ export default function PurchaseInclusionsKitExplorer({
           </div>
           <div className="relative mx-auto mt-8 hidden w-full max-w-[280px] md:block">
             <Image
-              src={KIT_ILLUSTRATION_SRC}
-              alt="Ilustración del sello de bronce con mango, varilla y cabezal de marcado"
-              width={4502}
-              height={2973}
+              src={illustration.baseSrc}
+              alt={illustration.alt}
+              width={illustration.width}
+              height={illustration.height}
               className="mx-auto h-auto w-full object-contain object-center mix-blend-multiply"
               sizes="(max-width: 1024px) 80vw, 280px"
             />
-            {activeOverlay !== null && KIT_OVERLAY_SRC[activeOverlay] ? (
+            {activeOverlay !== null && illustration.overlays[activeOverlay] ? (
               <Image
-                src={KIT_OVERLAY_SRC[activeOverlay]}
+                src={illustration.overlays[activeOverlay]}
                 alt=""
-                width={4502}
-                height={2973}
+                width={illustration.width}
+                height={illustration.height}
                 aria-hidden
                 className="pointer-events-none absolute inset-0 mx-auto h-full w-full object-contain object-center mix-blend-multiply transition-opacity duration-200"
                 sizes="(max-width: 1024px) 80vw, 280px"
@@ -127,25 +143,27 @@ export default function PurchaseInclusionsKitExplorer({
         </div>
 
         <div className="hidden grid-cols-1 sm:grid sm:grid-cols-2">
-          {items.map((item, index) => (
+          {items.map((item, index) => {
+            const hasOverlay = illustration.overlays[index] != null;
+            return (
             <article
               key={`${item.title}-${index}`}
               className={`purchase-inclusion-cell border-b border-[var(--alcohn-line)] p-5 transition-colors sm:border-r sm:even:border-r-0 md:p-6 ${
                 activeOverlay === index ? 'bg-white/90' : ''
-              } ${index < 4 ? 'cursor-default' : ''}`}
+              } ${hasOverlay ? 'cursor-default' : ''}`}
               onMouseEnter={() => {
-                if (index < 4) setActiveOverlay(index);
+                if (hasOverlay) setActiveOverlay(index);
               }}
               onMouseLeave={() => {
-                if (index < 4) setActiveOverlay(null);
+                if (hasOverlay) setActiveOverlay(null);
               }}
               onFocus={() => {
-                if (index < 4) setActiveOverlay(index);
+                if (hasOverlay) setActiveOverlay(index);
               }}
               onBlur={() => {
-                if (index < 4) setActiveOverlay(null);
+                if (hasOverlay) setActiveOverlay(null);
               }}
-              tabIndex={index < 4 ? 0 : undefined}
+              tabIndex={hasOverlay ? 0 : undefined}
             >
               <div className="mb-8 flex items-start justify-between gap-4">
                 <span className="flex h-9 w-9 items-center justify-center border border-[var(--alcohn-line-strong)] bg-white/80 text-xs font-semibold text-neutral-900">
@@ -158,7 +176,8 @@ export default function PurchaseInclusionsKitExplorer({
               <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{item.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-neutral-700">{item.copy}</p>
             </article>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

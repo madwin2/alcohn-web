@@ -1,12 +1,19 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import SectionHeader from '@/components/SectionHeader';
 import ActionButton from '@/components/ActionButton';
+import SpecChips from '@/components/SpecChips';
 import SpecStrip from '@/components/SpecStrip';
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import MobileCarousel from '@/components/MobileCarousel';
-import { abecedarios } from '@/lib/catalog';
+import PurchaseInclusions from '@/components/PurchaseInclusions';
+import AbecedarioConfigurator from '@/components/abecedarios/AbecedarioConfigurator';
+import AbecedarioSpecificationsCard from '@/components/abecedarios/AbecedarioSpecificationsCard';
+import VideoShowcasePanel from '@/components/abecedarios/VideoShowcasePanel';
+import {
+  ABECEDARIO_COMPLETO_PRECIO_DESDE,
+  ABECEDARIO_PRECIOS_DESDE,
+  formatArs,
+} from '@/lib/abecedarioConfigurator';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
@@ -22,12 +29,6 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 ]);
 
 export default function AbecedariosPage() {
-  const mainAbecedario = abecedarios[0];
-  const priceDisplay =
-    typeof mainAbecedario.price === 'number'
-      ? `$${mainAbecedario.price.toLocaleString('es-AR')}`
-      : `$${mainAbecedario.price.desde.toLocaleString('es-AR')}`;
-
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
       <script
@@ -36,139 +37,89 @@ export default function AbecedariosPage() {
       />
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
-          label="Letras y números"
-          title="Abecedarios de bronce para marcar textos variables"
+          label="Letras y números. Textos variables."
+          title="Abecedario de bronce para marcar textos variables"
           description="Una herramienta modular para talleres que necesitan nombres, fechas, códigos, iniciales o series. Cada letra funciona como sello independiente y mantiene la precisión CNC de Alcohn."
           primaryCta={{
             label: 'Comprar abecedario',
-            href: `/buy?mode=abecedario&product=${mainAbecedario.slug}`,
+            href: '#configurador',
           }}
-          secondaryCta={{
-            label: 'Ver sellos personalizados',
-            href: '/productos',
-            variant: 'secondary',
-          }}
-          highlights={[
-            'Textos que cambian sin fabricar un sello nuevo',
-            'Ideal para series, fechas y nombres',
-            'Caja organizadora y guía de uso',
-          ]}
         />
 
         <SpecStrip />
 
-        <section className="mb-10 md:mb-20">
-          <div className="material-frame relative aspect-[16/7] overflow-hidden">
-            <Image
-              src="/images/abecedario/abecedario.webp"
-              alt="Abecedario de bronce con letras y números"
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority
-            />
-          </div>
-        </section>
+        <section className="mb-10 md:mb-16">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
+            <div className="flex flex-col gap-4">
+              <SpecChips
+                specs={[
+                  { label: 'Colección', value: 'Abecedarios' },
+                  { label: 'Material', value: 'Bronce' },
+                  { label: 'Proceso', value: 'CNC' },
+                ]}
+              />
 
-        <section className="mb-10 md:mb-20 technical-sheet">
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[0.36fr_0.64fr]">
-            <div className="border-b lg:border-b-0 lg:border-r border-[var(--alcohn-line)] p-6 md:p-8">
-              <p className="craft-label mb-4">Qué es</p>
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-950">
-                Un sistema de marcado flexible
-              </h2>
+              <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
+                <p>
+                  El Abecedario es un <strong className="font-semibold text-neutral-950">sistema de letras intercambiables</strong> diseñado para marcar textos personalizados con calor o presión. Incluye caracteres de bronce, junto con un soporte que permite armar palabras, iniciales o frases cortas.
+                </p>
+                <p>
+                  Ideal para personalizar tus productos con una{' '}
+                  <strong className="font-semibold text-neutral-950">terminación duradera, prolija y profesional</strong>.
+                </p>
+              </div>
+
+              <AbecedarioSpecificationsCard />
+
+              <div className="material-frame relative flex-1 min-h-[220px] overflow-hidden">
+                <Image
+                  src="/images/abecedario/abecedario.webp"
+                  alt="Abecedario de bronce completo con letras y números"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+              </div>
             </div>
-            <div className="p-6 md:p-8 space-y-4 text-sm md:text-base leading-relaxed text-neutral-700">
-              <p>
-                A diferencia de un sello fijo con un texto grabado, el abecedario te permite componer cualquier texto combinando letras y números según necesites.
-              </p>
-              <p>
-                Es útil para productos con nombres, fechas, códigos o textos que cambian frecuentemente, manteniendo una marca consistente en cuero, madera y packaging.
-              </p>
-            </div>
-          </div>
-        </section>
 
-        <section className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-8 md:pt-16">
-          <SectionHeader title="Qué incluye" align="left" />
+            <div className="flex flex-col gap-4">
+              <VideoShowcasePanel
+                posterSrc="/images/abecedario/abecedario.webp"
+                posterAlt="Abecedario de bronce en uso: letras armadas sobre soporte"
+                className="aspect-[3/4] max-h-[540px] w-full"
+              />
+              {/* videoSrc pendiente: pasar el .mp4 vertical cuando esté disponible para reemplazar la foto de fondo */}
 
-          <MobileCarousel rowClassName="md:grid md:grid-cols-2 md:gap-8" hint="Deslizá opciones">
-            {abecedarios.slice(0, 2).map((abecedario, index) => {
-              const price =
-                typeof abecedario.price === 'number'
-                  ? `$${abecedario.price.toLocaleString('es-AR')}`
-                  : `$${abecedario.price.desde.toLocaleString('es-AR')}`;
-
-              return (
-                <article key={abecedario.slug} className="mobile-snap-card material-card p-6 md:min-w-0 md:p-8">
-                  <p className="craft-label mb-4">{String(index + 1).padStart(2, '0')}</p>
-                  <h3 className="text-2xl font-semibold text-neutral-900 mb-4 tracking-tight">
-                    {abecedario.title}
-                  </h3>
-                  <p className="text-sm text-neutral-600 leading-relaxed mb-6">
-                    {abecedario.description}
+              <div className="mt-auto flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-t border-[var(--alcohn-line)] pt-4">
+                <div>
+                  <p className="craft-label mb-1">Desde</p>
+                  <p className="text-2xl font-bold tracking-tight text-neutral-900 md:text-3xl">
+                    {formatArs(Math.min(ABECEDARIO_COMPLETO_PRECIO_DESDE, ABECEDARIO_PRECIOS_DESDE.numero))}
                   </p>
-
-                  <div className="mb-6 border-t border-[var(--alcohn-line)] pt-6">
-                    <div className="craft-label mb-3">Incluye</div>
-                    <ul className="space-y-2">
-                      {abecedario.includes.map((item) => (
-                        <li key={item} className="flex items-start text-sm text-neutral-700">
-                          <span className="mr-2 text-[var(--alcohn-bronze)]">·</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="pt-6 border-t border-[var(--alcohn-line)]">
-                    <p className="text-lg text-neutral-900 mb-4">
-                      <span className="craft-label mr-2">Desde</span>
-                      {price}
-                    </p>
-                    <ActionButton
-                      href={`/buy?mode=abecedario&product=${abecedario.slug}`}
-                      variant={index === 0 ? 'primary' : 'secondary'}
-                      className="w-full sm:w-auto"
-                    >
-                      Comprar {index === 0 ? 'abecedario' : 'números'}
-                    </ActionButton>
-                  </div>
-                </article>
-              );
-            })}
-          </MobileCarousel>
-        </section>
-
-        <section className="mb-10 md:mb-20 border-t border-[var(--alcohn-line)] pt-8 md:pt-16">
-          <SectionHeader title="Especificaciones" align="left" />
-          <div className="technical-sheet">
-            <dl className="relative z-10 divide-y divide-[var(--alcohn-line)]">
-              {[
-                ['Material', 'Bronce de alta calidad, mecanizado con precisión CNC'],
-                ['Profundidad', '1.5mm - 2mm para marcas consistentes'],
-                ['Uso', 'Cuero, madera, cerámica en crudo, lacre, alimentos, hielo y packaging'],
-                ['Producción', '10-14 días hábiles para abecedario completo, 7-10 días para números'],
-                ['Organización', 'Caja organizadora con separadores para acceso rápido a cada letra'],
-              ].map(([label, value]) => (
-                <div key={label} className="grid grid-cols-1 md:grid-cols-[0.28fr_0.72fr]">
-                  <dt className="craft-label border-b md:border-b-0 md:border-r border-[var(--alcohn-line)] p-5 md:p-6">
-                    {label}
-                  </dt>
-                  <dd className="p-5 md:p-6 text-sm leading-relaxed text-neutral-900">
-                    {value}
-                  </dd>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    Completo, personalizado por piezas o solo números.
+                  </p>
                 </div>
-              ))}
-            </dl>
+                <ActionButton href="#configurador" variant="primary">
+                  Elegir mi abecedario
+                </ActionButton>
+              </div>
+            </div>
           </div>
         </section>
+
+        <AbecedarioConfigurator />
+
+        <div className="mb-10 md:mb-20">
+          <PurchaseInclusions variant="abecedario" title="Qué incluye tu compra" />
+        </div>
 
         <SalesCtaBand
           title="Comprá un sistema de letras si tu marca necesita textos variables"
           copy="Si en cambio querés marcar siempre el mismo logo, el sello personalizado te va a dar mejor presencia y velocidad de uso."
           primaryLabel="Comprar abecedario"
-          primaryHref={`/buy?mode=abecedario&product=${mainAbecedario.slug}`}
+          primaryHref="#configurador"
           secondaryLabel="Diseñar sello con logo"
           secondaryHref="/buy?mode=custom"
           dark

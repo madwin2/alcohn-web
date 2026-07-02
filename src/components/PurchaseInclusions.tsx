@@ -1,11 +1,26 @@
 import Image from 'next/image';
 import ProductCompactCard from '@/components/sellos/ProductCompactCard';
-import PurchaseInclusionsKitExplorer from '@/components/PurchaseInclusionsKitExplorer';
+import PurchaseInclusionsKitExplorer, {
+  type KitIllustration,
+} from '@/components/PurchaseInclusionsKitExplorer';
 import MobileCarousel from '@/components/MobileCarousel';
 
 type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
 
 export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
+
+const ABECEDARIO_KIT_ILLUSTRATION: KitIllustration = {
+  baseSrc: '/images/abecedario/que-incluye-base.png',
+  overlays: {
+    0: '/images/abecedario/que-incluye-letras.png',
+    1: '/images/abecedario/que-incluye-soporte.png',
+    2: '/images/abecedario/que-incluye-caja.png',
+    3: '/images/abecedario/que-incluye-mango.png',
+  },
+  width: 4676,
+  height: 5843,
+  alt: 'Ilustración del set de abecedario: letras de bronce, soporte, caja contenedora y mango de madera',
+};
 
 export type InclusionItem = {
   title: string;
@@ -74,12 +89,24 @@ const defaultItems: Record<InclusionVariant, InclusionItem[]> = {
   ],
   abecedario: [
     {
-      title: 'Piezas de bronce',
-      copy: 'Letras o números individuales para componer textos, fechas o series.',
+      title: 'Letras de bronce',
+      copy: 'Letras o números individuales mecanizados en CNC para componer textos, fechas o series.',
     },
     {
-      title: 'Caja organizadora',
-      copy: 'Para mantener el set protegido y fácil de usar en el taller.',
+      title: 'Soporte de bronce',
+      copy: 'Permite armar y ajustar las palabras para marcar con presión pareja.',
+    },
+    {
+      title: 'Caja contenedora',
+      copy: 'Mantiene el set ordenado, protegido y fácil de usar en el taller.',
+    },
+    {
+      title: 'Mango de madera',
+      copy: 'Para usar el soporte de forma manual, con calor directo y buen control.',
+    },
+    {
+      title: 'Muestra Fisica en Cuero',
+      copy: 'Luego de hacerlo, marcamos un pedacito de cuero, para que veas el resultado final.',
     },
     {
       title: 'Guía rápida de uso',
@@ -159,6 +186,18 @@ export default function PurchaseInclusions({
     (usesFullKit
       ? 'Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado.'
       : 'El pedido deja claro qué recibís antes de avanzar al pago.');
+
+  if (!compact && showKitIllustration && variant === 'abecedario') {
+    return (
+      <PurchaseInclusionsKitExplorer
+        items={normalizedItems}
+        className={className}
+        illustration={ABECEDARIO_KIT_ILLUSTRATION}
+        copy="Cada set incluye todo lo necesario para componer y marcar textos: letras, soporte, caja contenedora y mango."
+        mobileCopy="Tu set llega completo: letras, soporte, caja contenedora y mango."
+      />
+    );
+  }
 
   if (!compact && showKitIllustration && usesFullKit) {
     return (
