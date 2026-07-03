@@ -175,10 +175,10 @@ export default function ProductosPage() {
           <div className="material-card p-3 flex flex-col">
             <div className="material-frame aspect-[8/3] relative overflow-hidden">
               <Image
-                src="/images/accesorios/calentador electrico/calentador-electrico.png"
-                alt="Calentador eléctrico para sellos de bronce"
+                src="/images/accesorios/accesorios banner.jpeg"
+                alt="Accesorios Alcohn: calentador eléctrico, mango de golpe y base de aluminio"
                 fill
-                className="object-cover"
+                className="object-cover object-center"
                 sizes="(max-width: 768px) 100vw, 100vw"
               />
             </div>
