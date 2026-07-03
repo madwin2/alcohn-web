@@ -25,9 +25,9 @@ import { randomUUID } from 'crypto';
 import { isSupabaseConfigured, getSupabaseAdmin } from '@/lib/supabase/admin';
 import { upsertClienteServer } from '@/lib/supabase/upsertClienteServer';
 import {
-  applyTransferPricesToCartItems,
   parseCartItemsFromBody,
 } from '@/lib/supabase/cartItems';
+import { computeCheckoutPricing } from '@/lib/checkout/pricing';
 import { getCotizadorCatalog } from '@/lib/cotizador';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
 import { saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
@@ -126,10 +126,9 @@ export async function POST(req: Request) {
     );
   }
 
-  if (metodoPago === 'Transferencia') {
-    const catalog = await getCotizadorCatalog();
-    items = applyTransferPricesToCartItems(items, catalog);
-  }
+  const catalog = await getCotizadorCatalog();
+  const pricing = computeCheckoutPricing(items, catalog);
+  items = metodoPago === 'Transferencia' ? pricing.transferItems : pricing.linkItems;
 
   const c = body.cliente;
   const hasClienteForm =

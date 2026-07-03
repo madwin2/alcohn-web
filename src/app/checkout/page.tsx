@@ -61,9 +61,22 @@ export default function CheckoutPage() {
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
+  const [checkoutPricing, setCheckoutPricing] = useState<{
+    openpaySubtotal: number;
+    transferSubtotal: number;
+  } | null>(null);
+  const [openpayLineItems, setOpenpayLineItems] = useState<
+    { id: string; title: string; price: number; qty: number }[] | null
+  >(null);
 
   const subtotal = getSubtotal();
-  const totalConEnvio = subtotal + shippingCost;
+  const openpaySubtotal = checkoutPricing?.openpaySubtotal ?? subtotal;
+  const transferSubtotal = checkoutPricing?.transferSubtotal ?? subtotal;
+  const openpayTotalConEnvio = openpaySubtotal + shippingCost;
+  const transferTotalConEnvio = transferSubtotal + shippingCost;
+  const totalConEnvio = openpayTotalConEnvio;
+  const displayTotalConEnvio =
+    metodoPagoElegido === 'Transferencia' ? transferTotalConEnvio : openpayTotalConEnvio;
   const hasCartContent = items.length > 0 || orderData !== null;
   const currentItems = orderData?.items || items;
   const isPersonalizedOrder = cartLooksLikeWizardPersonalizado(currentItems);
@@ -75,7 +88,10 @@ export default function CheckoutPage() {
         item.collection.toLowerCase().includes('abecedario')
     );
   const orderSubtotal = orderData?.subtotal ?? subtotal;
-  const orderTotalConEnvio = orderSubtotal + shippingCost;
+  const orderOpenpaySubtotal = checkoutPricing?.openpaySubtotal ?? orderSubtotal;
+  const orderTransferSubtotal = checkoutPricing?.transferSubtotal ?? orderSubtotal;
+  const orderOpenpayTotalConEnvio = orderOpenpaySubtotal + shippingCost;
+  const orderTransferTotalConEnvio = orderTransferSubtotal + shippingCost;
 
   useEffect(() => {
     fetch('/api/checkout/openpay')
@@ -117,6 +133,62 @@ export default function CheckoutPage() {
       cancelled = true;
     };
   }, [shippingMetodo, shippingMetodoChosen]);
+
+  useEffect(() => {
+    const cartItems = orderData?.items ?? items;
+    if (cartItems.length === 0) {
+      setCheckoutPricing(null);
+      setOpenpayLineItems(null);
+      return;
+    }
+
+    const payload = cartItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      collection: item.collection,
+      material: item.material,
+      process: item.process,
+      variantSize: item.variantSize,
+      price: item.price,
+      qty: item.qty,
+      image: item.image,
+      designSlug: item.designSlug,
+    }));
+
+    let cancelled = false;
+    fetch('/api/checkout/pricing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: payload }),
+    })
+      .then((r) => r.json())
+      .then(
+        (data: {
+          openpaySubtotal?: number;
+          transferSubtotal?: number;
+          linkLineItems?: { id: string; title: string; price: number; qty: number }[];
+        }) => {
+          if (cancelled) return;
+          if (
+            typeof data.openpaySubtotal === 'number' &&
+            typeof data.transferSubtotal === 'number'
+          ) {
+            setCheckoutPricing({
+              openpaySubtotal: data.openpaySubtotal,
+              transferSubtotal: data.transferSubtotal,
+            });
+            if (Array.isArray(data.linkLineItems)) {
+              setOpenpayLineItems(data.linkLineItems);
+            }
+          }
+        }
+      )
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items, orderData]);
 
   useEffect(() => {
     if (appliedCheckoutPrefillRef.current) return;
@@ -243,7 +315,15 @@ export default function CheckoutPage() {
   };
 
   const openpayItems = () => {
-    const base = (orderData?.items ?? items).map((item) => ({
+    const source =
+      openpayLineItems ??
+      (orderData?.items ?? items).map((item) => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        qty: item.qty,
+      }));
+    const base = source.map((item) => ({
       id: item.id,
       title: item.title,
       price: item.price,
@@ -266,7 +346,7 @@ export default function CheckoutPage() {
   ) => {
     savePurchaseSnapshot({
       orderId: ordenId,
-      value: cartItems.reduce((sum, item) => sum + item.price * item.qty, 0) + shippingCost,
+      value: openpaySubtotal + shippingCost,
       items: cartItems.map((item) => ({
         id: item.id,
         title: item.title,
@@ -463,7 +543,7 @@ export default function CheckoutPage() {
               <div className="flex flex-col min-w-0">
                 <span className="craft-label text-[10px]">{currentItems.length} {currentItems.length === 1 ? 'artículo' : 'artículos'}</span>
                 <span className="text-base font-semibold text-neutral-900">
-                  Total ${orderTotalConEnvio.toLocaleString('es-AR')}
+                  Total ${displayTotalConEnvio.toLocaleString('es-AR')}
                 </span>
               </div>
               <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-neutral-600">
@@ -488,7 +568,13 @@ export default function CheckoutPage() {
               <div className="border-t border-neutral-200 pt-3 space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-neutral-600">Subtotal</span>
-                  <span className="font-semibold text-neutral-900">${orderSubtotal.toLocaleString('es-AR')}</span>
+                  <span className="font-semibold text-neutral-900">
+                    $
+                    {(metodoPagoElegido === 'Transferencia'
+                      ? orderTransferSubtotal
+                      : orderOpenpaySubtotal
+                    ).toLocaleString('es-AR')}
+                  </span>
                 </div>
                 {shippingCost > 0 && (
                   <div className="flex justify-between">
@@ -713,7 +799,7 @@ export default function CheckoutPage() {
                           Pago total · 3 cuotas sin interés
                         </span>
                         <span className="block mt-2 text-base font-bold text-neutral-900">
-                          ${orderTotalConEnvio.toLocaleString('es-AR')}
+                          ${openpayTotalConEnvio.toLocaleString('es-AR')}
                         </span>
                       </button>
                       <button
@@ -733,8 +819,13 @@ export default function CheckoutPage() {
                           Seña ${config.seña.amount.toLocaleString('es-AR')} · resto al retirar
                         </span>
                         <span className="block mt-2 text-base font-bold text-emerald-700">
-                          ${orderTotalConEnvio.toLocaleString('es-AR')}
+                          ${transferTotalConEnvio.toLocaleString('es-AR')}
                         </span>
+                        {openpayTotalConEnvio > transferTotalConEnvio && (
+                          <span className="mt-2 block text-xs font-medium text-emerald-800">
+                            Ahorrá ${(openpayTotalConEnvio - transferTotalConEnvio).toLocaleString('es-AR')} vs. tarjeta
+                          </span>
+                        )}
                       </button>
                     </div>
                     {paymentMethodError && (
@@ -1035,7 +1126,11 @@ export default function CheckoutPage() {
                 </h2>
                 
                 <CartSummary
-                  subtotal={orderSubtotal}
+                  subtotal={
+                    metodoPagoElegido === 'Transferencia'
+                      ? orderTransferSubtotal
+                      : orderOpenpaySubtotal
+                  }
                   shippingCost={shippingCost}
                   shippingLabel={SHIPPING_METODO_LABELS[shippingMetodo]}
                 />
