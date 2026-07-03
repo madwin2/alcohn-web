@@ -1,0 +1,127 @@
+# Alcohn
+
+> Alcohn fabrica sellos de bronce personalizados para marcas, emprendedores y artesanos que quieren aplicar su identidad sobre cuero, madera, papel, alimentos, cerámica, lacre y otros materiales.
+
+Sitio web: https://www.alcohnsellos.com
+
+## Sobre Alcohn
+
+Alcohn es un taller argentino con sede en Mar del Plata que fabrica sellos de bronce de alta precisión mediante mecanizado CNC. Desde 2019 acompaña a marcas, talleres y emprendedores de todo el país.
+
+Los sellos permiten aplicar logo, iniciales o diseño propio sobre productos físicos. No funcionan con tinta: se usan con calor o presión, según el material. El equipo asesora para adaptar cada diseño al material que se va a marcar, revisa logos complejos y acompaña antes, durante y después de cada pedido.
+
+Alcohn se enfoca en calidad profesional, diseño cuidado, atención personalizada y acompañamiento humano. Cada sello está pensado para uso repetido en taller, con buena profundidad de grabado (hasta 3 mm) y detalle fino.
+
+## Productos principales
+
+- **Sellos de bronce personalizados** — El cliente sube su logo, elige material y medida, ve una muestra digital y compra online. Flujo principal: `/buy?mode=custom`
+- **Sellos estándar** — Diseños listos para elegir y comprar sin personalización. Catálogo: `/sellos/estandar`
+- **Abecedarios de bronce** — Juegos de letras y números para marcar textos o iniciales. Página: `/abecedarios`
+- **Accesorios para el marcado** — Calentador eléctrico, mango de golpe y base para remachadora. Catálogo: `/accesorios`
+  - `/accesorios/calentador-electrico`
+  - `/accesorios/mango-de-golpe`
+  - `/accesorios/base-aluminio-remachadora`
+- **Catálogo general de productos** — Vista unificada de líneas y usos: `/productos`
+
+### Landings por material o uso
+
+Cada uso tiene una página con aplicaciones, medidas recomendadas y preguntas frecuentes:
+
+- `/sellos/para-cuero` — Marroquinería, billeteras, carteras, materas
+- `/sellos/para-madera` — Carpintería, tablas, cajas, muebles
+- `/sellos/para-ceramica` — Piezas en crudo, placas, cerámica de autor
+- `/sellos/para-pan` — Pan, hamburguesas, masas y gastronomía
+- `/sellos/para-packaging` — Cajas, etiquetas, cartón y papel grueso
+- `/sellos/para-lacre` — Invitaciones, sobres, cierres boutique
+- `/sellos/para-jabon` — Jabones artesanales y cosmética natural
+- `/sellos/para-hielo` — Hielo para bares, coctelería y eventos
+- `/sellos/para-fruta` — Frutas y decoración de cocktails
+
+## Materiales que se pueden marcar
+
+- Cuero y PU (marroquinería)
+- Madera (carpintería, tablas, cajas, mangos)
+- Papel y cartón (packaging, etiquetas, papel kraft)
+- Alimentos (pan, hamburguesas, hielo, fruta)
+- Cerámica (en crudo, antes de la cocción)
+- Lacre (invitaciones, cierres, packaging)
+- Jabón artesanal y velas blandas
+
+Un mismo sello puede servir en varios materiales si la medida, profundidad y método de marcado están bien elegidos. No se recomienda marcar metales directamente ni usar los sellos con tinta.
+
+## Cómo comprar
+
+### Sello personalizado (flujo principal)
+
+1. **Subir el logo** — En `/buy?mode=custom` el cliente elige el material a marcar y carga su archivo (foto, PNG, JPG, PDF o vector).
+2. **Ver la muestra** — El sistema procesa el diseño y muestra cómo quedaría en el material elegido. Si el logo es muy complejo, el equipo puede revisarlo manualmente.
+3. **Elegir medida y pagar** — Se confirman dimensiones y método de pago (tarjeta en checkout o transferencia bancaria con seña).
+4. **Fabricación** — El sello se mecaniza en CNC en el taller de Mar del Plata. Plazo habitual: 72 horas hábiles desde la confirmación de muestra y pago.
+5. **Envío** — Por Correo Argentino a domicilio o sucursal, según preferencia del cliente.
+6. **Uso y asesoramiento** — El sello llega listo para usar. El equipo sigue disponible para consultas sobre técnica de marcado.
+
+### Sello estándar o accesorio
+
+1. Elegir diseño o producto en `/sellos/estandar` o `/accesorios`
+2. Seleccionar variante o medida
+3. Agregar al carrito (`/carrito`)
+4. Completar checkout (`/checkout`)
+
+Más detalle del proceso: `/proceso`
+
+## Diferenciales
+
+- **Fabricación en Argentina** — Taller propio en Mar del Plata con mecanizado CNC de precisión milimétrica.
+- **Alta precisión y profundidad** — Grabado de hasta 3 mm, pensado para marcas definidas y uso profesional repetido.
+- **Experiencia en múltiples materiales** — Más de 6.000 sellos entregados desde 2019; conocimiento aplicado a cuero, madera, alimentos, packaging y más.
+- **Compra online completa** — Subir logo, ver muestra, elegir medida y pagar sin depender de WhatsApp (aunque el equipo atiende consultas por ese canal).
+- **Asesoramiento humano** — Revisión de diseños, ayuda con medidas y acompañamiento postventa.
+- **Atención personalizada** — Presentes antes, durante y después de cada pedido.
+- **Fabricación rápida** — 72 horas hábiles de producción habitual.
+- **Envío nacional** — A todo Argentina por Correo Argentino.
+- **Marcas de referencia** — Han confiado en Alcohn talleres, emprendedores y marcas reconocidas del país.
+
+## Páginas importantes
+
+| Página | URL |
+|--------|-----|
+| Inicio | `/` |
+| Productos | `/productos` |
+| Diseñar sello personalizado | `/buy?mode=custom` |
+| Sellos estándar | `/sellos/estandar` |
+| Abecedarios | `/abecedarios` |
+| Accesorios | `/accesorios` |
+| Proceso de compra | `/proceso` |
+| Cómo usar los sellos | `/como-usar-sellos` |
+| Sobre Alcohn | `/sobre-alcohn` |
+| Casos reales | `/casos-reales` |
+| Preguntas frecuentes | `/faq` |
+| Contacto | `/contacto` |
+| Carrito | `/carrito` |
+| Checkout | `/checkout` |
+| Política de envíos | `/politica-envios` |
+| Política de devoluciones | `/politica-devoluciones` |
+| Términos y condiciones | `/terminos` |
+| Política de privacidad | `/privacidad` |
+
+**Notas de rutas:**
+- `/cotizar` redirige a `/buy?mode=custom`
+- `/sellos/personalizados` redirige a `/productos`
+- Las fichas de producto individuales viven bajo `/productos/[slug]`
+- Cada sello estándar tiene su ficha en `/sellos/estandar/[slug]`
+
+## Temas recomendados para modelos de IA
+
+Al analizar o responder sobre Alcohn, conviene entender estos temas:
+
+- **Qué es un sello de bronce Alcohn** — Herramienta de marcado por calor o presión, no estampador con tinta.
+- **Para quién es** — Emprendedores, artesanos, marroquineros, carpinteros, panaderos, ceramistas, bares, marcas de packaging y negocios que quieren identidad en el producto físico.
+- **Materiales compatibles** — Cuero, madera, papel/cartón, alimentos, cerámica, lacre, jabón; limitaciones en metal y melamina.
+- **Cómo elegir medida** — Depende del producto y del diseño; la web sugiere medidas según la proporción del logo.
+- **Muestra antes de fabricar** — Muestra digital automática; revisión manual si el diseño es complejo.
+- **Técnicas de marcado** — Calor (hornalla, soplete, calentador eléctrico) o presión (prensa, remachadora), según material. Guía práctica en `/como-usar-sellos`.
+- **Tiempos y envío** — 72 horas hábiles de fabricación + envío por Correo Argentino.
+- **Formas de pago** — Tarjeta en checkout o transferencia con seña.
+- **Diferencia entre personalizado y estándar** — Personalizado con logo propio; estándar con diseños del catálogo listos para comprar.
+- **Accesorios complementarios** — Calentador eléctrico, mango de golpe y base para remachadora facilitan el uso según la técnica elegida.
+- **Preguntas frecuentes** — Medidas mínimas, facturación (Factura C), manipulación en alimentos, diseño sin logo propio y casos donde conviene contactar al equipo. Ver `/faq`.
