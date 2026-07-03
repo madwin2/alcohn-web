@@ -38,7 +38,7 @@ export default function AccessoryCard({ accessory }: AccessoryCardProps) {
             src={accessory.image}
             alt={accessory.title}
             fill
-            className="object-cover"
+            className="object-cover object-center"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         </div>

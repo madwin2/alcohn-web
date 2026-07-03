@@ -62,7 +62,7 @@ export const accessories: Accessory[] = [
       'Calentador eléctrico para sellos de bronce. Alternativa práctica al calentado por hornalla o soplete, ideal para uso frecuente en taller.',
     heroDescription:
       'Calentador eléctrico para poder hacer marcas por calor, sin la necesidad de exponer el sello a fuego directo.',
-    image: '/images/accesorios/calentador electrico/calentador-electrico.png',
+    image: '/images/accesorios/calentador electrico/ChatGPT Image 4 jun 2026, 18_10_05.png',
     galleryImages: [
       '/images/accesorios/calentador electrico/calentador-electrico.png',
       '/images/accesorios/calentador electrico/ChatGPT Image 4 jun 2026, 18_10_05.png',
@@ -148,8 +148,16 @@ export const accessories: Accessory[] = [
       'Mango metálico para marcar por golpe. Complementa el mango a rosca que viene con cada sello cuando necesitás impacto directo sobre el material.',
     heroDescription:
       'El mango metálico es una herramienta que ayuda al marcado a través de golpe. Se recomienda utilizarlo en sellos hasta un máximo de 3×3 cm.',
-    image: '/images/accesorios/mango de golpe/mango-de-golpe.png',
-    galleryImages: ['/images/accesorios/mango de golpe/mango-de-golpe.png'],
+    image: '/images/accesorios/mango de golpe/mango-de-golpe-acero-rosca-encastre.png',
+    galleryImages: [
+      '/images/accesorios/mango de golpe/mango-de-golpe-de-acero-para-cuero.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-acero-rosca-encastre.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-acero-con-sello-bronce.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-acero-con-martillo.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-marcado-en-cuero.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-uso-con-martillo-cuero.png',
+      '/images/accesorios/mango de golpe/mango-de-golpe-estampado-cuero.png',
+    ],
     price: 25000,
     includes: ['Mango metálico', 'Encastre por rosca estándar Alcohn'],
     seoTitle: 'Mango metálico de golpe para sellos de bronce | Alcohn',
@@ -183,13 +191,13 @@ export const accessories: Accessory[] = [
     inclusionCopy:
       'Incluye el mango metálico listo para enroscar tu sello y marcar por golpe con mayor control.',
     inclusionIllustration: {
-      src: '/images/accesorios/mango de golpe/que incluye.jpeg',
+      src: '/images/accesorios/mango de golpe/mango-de-golpe-que-incluye.jpeg',
       alt: 'Ilustración del mango metálico con encastre por rosca',
       width: 1122,
       height: 1402,
     },
     videoSrc: '/videos/Manual/Cuero%20Golpe.mp4',
-    videoPoster: '/images/accesorios/mango de golpe/mango-de-golpe.png',
+    videoPoster: '/images/accesorios/mango de golpe/mango-de-golpe-de-acero-para-cuero.png',
     purchaseCtaLabel: 'Encargá tu mango de golpe',
     highlights: [
       'Diseño listo para comprar',
