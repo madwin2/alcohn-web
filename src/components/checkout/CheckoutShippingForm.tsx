@@ -166,12 +166,6 @@ const CheckoutShippingForm = forwardRef<CheckoutShippingFormHandle, CheckoutShip
           </div>
         )}
 
-        {embedded && (
-          <p className="text-sm text-neutral-600">
-            Envío: <strong>{SHIPPING_METODO_LABELS[metodo]}</strong>
-          </p>
-        )}
-
         {errors._form && (
           <p className="text-sm text-red-600" role="alert">
             {errors._form}
@@ -179,15 +173,30 @@ const CheckoutShippingForm = forwardRef<CheckoutShippingFormHandle, CheckoutShip
         )}
 
         {metodo === 'retiro' ? (
-          <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-4 py-4 text-sm text-neutral-700 space-y-2">
-            <p>
-              <strong>{RETIRO_OFICINA_LABEL}</strong>
-            </p>
-            <p>
-              Retirá tu pedido en nuestra oficina en Mar del Plata. Te contactaremos por WhatsApp
-              cuando esté listo para retirar.
-            </p>
-            <p className="text-xs text-neutral-500">No se cobra envío por este medio.</p>
+          <div className="space-y-3">
+            <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-4 py-4 text-sm text-neutral-700 space-y-2">
+              <p>
+                <strong>{RETIRO_OFICINA_LABEL}</strong>
+              </p>
+              <p>
+                Retirá tu pedido en nuestra oficina en Mar del Plata. Te contactaremos por WhatsApp
+                cuando esté listo para retirar.
+              </p>
+              <p className="text-xs text-neutral-500">No se cobra envío por este medio.</p>
+            </div>
+            {embedded && (
+              <div
+                className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+                role="note"
+              >
+                <p className="font-medium">¿Querés que te lo enviemos?</p>
+                <p className="mt-1 text-xs leading-relaxed text-amber-900">
+                  Elegí <strong>Envío a domicilio</strong> o{' '}
+                  <strong>Sucursal Correo Argentino</strong> en las opciones de arriba para cargar
+                  tu dirección o sucursal.
+                </p>
+              </div>
+            )}
           </div>
         ) : catalogLoading ? (
           <p className="text-sm text-neutral-600">Cargando catálogo de envíos…</p>

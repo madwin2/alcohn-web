@@ -61,6 +61,29 @@ export const SHIPPING_METODO_LABELS: Record<ShippingMetodoUi, string> = {
   retiro: RETIRO_OFICINA_LABEL,
 };
 
+/** Opciones del checkout: orden pensado para compradores online (domicilio primero). */
+export const SHIPPING_METODO_OPTIONS: {
+  id: ShippingMetodoUi;
+  label: string;
+  description: string;
+}[] = [
+  {
+    id: 'domicilio',
+    label: 'Envío a domicilio',
+    description: 'Correo Argentino a tu casa. Completá tu dirección abajo.',
+  },
+  {
+    id: 'sucursal',
+    label: 'Sucursal Correo Argentino',
+    description: 'Retirás en la sucursal que elijas. No llega a tu domicilio.',
+  },
+  {
+    id: 'retiro',
+    label: RETIRO_OFICINA_LABEL,
+    description: 'Retirás en nuestra oficina en Mar del Plata. Sin costo de envío.',
+  },
+];
+
 export function metodoToTipoEnvio(metodo: ShippingMetodoUi): TipoEnvioDb {
   if (metodo === 'domicilio') return 'Domicilio';
   if (metodo === 'sucursal') return 'Sucursal';

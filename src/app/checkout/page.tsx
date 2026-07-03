@@ -22,7 +22,7 @@ import {
   saveCheckoutShipping,
 } from '@/lib/shipping/storage';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
-import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
+import { SHIPPING_METODO_LABELS, SHIPPING_METODO_OPTIONS } from '@/lib/shipping/types';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 export default function CheckoutPage() {
@@ -57,7 +57,7 @@ export default function CheckoutPage() {
   const appliedCheckoutPrefillRef = useRef(false);
   const shippingFormRef = useRef<CheckoutShippingFormHandle>(null);
   const [shippingSectionError, setShippingSectionError] = useState<string | null>(null);
-  const [shippingMetodo, setShippingMetodo] = useState<ShippingMetodoUi>('retiro');
+  const [shippingMetodo, setShippingMetodo] = useState<ShippingMetodoUi>('domicilio');
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
@@ -91,7 +91,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const stored = peekCheckoutShipping();
-    if (stored) {
+    // No preseleccionar retiro: suele venir del wizard sin elección explícita del cliente.
+    if (stored && stored.metodo !== 'retiro') {
       setShippingMetodo(stored.metodo);
       setShippingCost(stored.costo);
       setShippingMetodoChosen(true);
@@ -99,6 +100,7 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (!shippingMetodoChosen) return;
     if (shippingMetodo === 'retiro') {
       setShippingCost(0);
       return;
@@ -114,7 +116,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [shippingMetodo]);
+  }, [shippingMetodo, shippingMetodoChosen]);
 
   useEffect(() => {
     if (appliedCheckoutPrefillRef.current) return;
@@ -598,60 +600,76 @@ export default function CheckoutPage() {
                     <h2 className="text-xl font-semibold text-neutral-900 mb-2 tracking-tight">
                       Datos de envío
                     </h2>
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <p className="text-sm text-neutral-600">
-                        {shippingMetodoChosen
-                          ? `Elegiste: ${SHIPPING_METODO_LABELS[shippingMetodo]}`
-                          : 'Elegí cómo querés recibir tu pedido.'}
-                      </p>
-                      {shippingMetodoChosen && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShippingMetodoChosen(false);
-                            setShippingSectionError(null);
-                          }}
-                          className="text-xs font-medium uppercase tracking-wider text-neutral-600 underline hover:text-neutral-900 transition-colors"
-                        >
-                          Cambiar
-                        </button>
-                      )}
-                    </div>
-                    {!shippingMetodoChosen && (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                        {(
-                          [
-                            ['domicilio', 'Domicilio'],
-                            ['sucursal', 'Sucursal'],
-                            ['retiro', SHIPPING_METODO_LABELS.retiro],
-                          ] as const
-                        ).map(([id, label]) => (
+                    <p className="text-sm text-neutral-600 mb-1">
+                      Elegí cómo querés recibir tu pedido.
+                    </p>
+                    <p className="text-xs text-neutral-500 mb-4">
+                      Si querés que te lo enviemos, elegí{' '}
+                      <strong className="font-medium text-neutral-700">Envío a domicilio</strong> o{' '}
+                      <strong className="font-medium text-neutral-700">Sucursal del Correo</strong>{' '}
+                      y completá los datos más abajo.
+                    </p>
+                    <div
+                      role="radiogroup"
+                      aria-label="Método de envío"
+                      className="grid grid-cols-1 gap-3 mb-6"
+                    >
+                      {SHIPPING_METODO_OPTIONS.map(({ id, label, description }) => {
+                        const selected = shippingMetodoChosen && shippingMetodo === id;
+                        return (
                           <button
                             key={id}
                             type="button"
+                            role="radio"
+                            aria-checked={selected}
                             onClick={() => {
+                              if (id !== shippingMetodo) {
+                                setShippingForm(null);
+                              }
                               setShippingMetodo(id);
                               setShippingMetodoChosen(true);
                               setShippingSectionError(null);
                             }}
-                            className={`technical-sheet p-4 text-left text-sm font-medium transition-colors hover:border-[var(--alcohn-bronze)] ${
-                              shippingMetodo === id
-                                ? 'border-[var(--alcohn-bronze)] bg-white'
+                            className={`technical-sheet p-4 text-left transition-colors hover:border-[var(--alcohn-bronze)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 ${
+                              selected
+                                ? 'border-[var(--alcohn-bronze)] bg-white ring-2 ring-[var(--alcohn-bronze)] ring-offset-1'
                                 : ''
                             }`}
                           >
-                            {label}
+                            <span className="flex items-start gap-3">
+                              <span
+                                aria-hidden="true"
+                                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                  selected
+                                    ? 'border-[var(--alcohn-bronze)] bg-[var(--alcohn-bronze)]'
+                                    : 'border-neutral-300 bg-white'
+                                }`}
+                              >
+                                {selected && (
+                                  <span className="h-2 w-2 rounded-full bg-white" />
+                                )}
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-semibold text-neutral-900">
+                                  {label}
+                                </span>
+                                <span className="mt-1 block text-xs leading-relaxed text-neutral-600">
+                                  {description}
+                                </span>
+                              </span>
+                            </span>
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                     {shippingSectionError && (
                       <p className="mb-4 text-sm text-red-600" role="alert">
                         {shippingSectionError}
                       </p>
                     )}
-                    {shippingMetodoChosen && (
+                    {shippingMetodoChosen ? (
                       <CheckoutShippingForm
+                        key={shippingMetodo}
                         ref={shippingFormRef}
                         embedded
                         showActions={false}
@@ -661,6 +679,10 @@ export default function CheckoutPage() {
                         email={formData.email}
                         onSubmit={handleShippingSubmit}
                       />
+                    ) : (
+                      <div className="border border-dashed border-neutral-300 bg-neutral-50 px-4 py-5 text-center text-sm text-neutral-600">
+                        Tocá una opción de envío para cargar los datos correspondientes.
+                      </div>
                     )}
                   </div>
                 </div>
