@@ -2,7 +2,7 @@
 
 > Alcohn fabrica sellos de bronce personalizados para marcas, emprendedores y artesanos que quieren aplicar su identidad sobre cuero, madera, papel, alimentos, cerámica, lacre y otros materiales.
 
-Sitio web: https://www.alcohnsellos.com
+Sitio web: [alcohnsellos.com](https://www.alcohnsellos.com)
 
 ## Sobre Alcohn
 
@@ -14,28 +14,28 @@ Alcohn se enfoca en calidad profesional, diseño cuidado, atención personalizad
 
 ## Productos principales
 
-- **Sellos de bronce personalizados** — El cliente sube su logo, elige material y medida, ve una muestra digital y compra online. Flujo principal: `/buy?mode=custom`
-- **Sellos estándar** — Diseños listos para elegir y comprar sin personalización. Catálogo: `/sellos/estandar`
-- **Abecedarios de bronce** — Juegos de letras y números para marcar textos o iniciales. Página: `/abecedarios`
-- **Accesorios para el marcado** — Calentador eléctrico, mango de golpe y base para remachadora. Catálogo: `/accesorios`
-  - `/accesorios/calentador-electrico`
-  - `/accesorios/mango-de-golpe`
-  - `/accesorios/base-aluminio-remachadora`
-- **Catálogo general de productos** — Vista unificada de líneas y usos: `/productos`
+- **Sellos de bronce personalizados** — El cliente sube su logo, elige material y medida, ve una muestra digital y compra online. Flujo principal: [`/buy?mode=custom`](https://www.alcohnsellos.com/buy?mode=custom)
+- **Sellos estándar** — Diseños listos para elegir y comprar sin personalización. Catálogo: [`/sellos/estandar`](https://www.alcohnsellos.com/sellos/estandar)
+- **Abecedarios de bronce** — Juegos de letras y números para marcar textos o iniciales. Página: [`/abecedarios`](https://www.alcohnsellos.com/abecedarios)
+- **Accesorios para el marcado** — Calentador eléctrico, mango de golpe y base para remachadora. Catálogo: [`/accesorios`](https://www.alcohnsellos.com/accesorios)
+  - [`/accesorios/calentador-electrico`](https://www.alcohnsellos.com/accesorios/calentador-electrico)
+  - [`/accesorios/mango-de-golpe`](https://www.alcohnsellos.com/accesorios/mango-de-golpe)
+  - [`/accesorios/base-aluminio-remachadora`](https://www.alcohnsellos.com/accesorios/base-aluminio-remachadora)
+- **Catálogo general de productos** — Vista unificada de líneas y usos: [`/productos`](https://www.alcohnsellos.com/productos)
 
 ### Landings por material o uso
 
 Cada uso tiene una página con aplicaciones, medidas recomendadas y preguntas frecuentes:
 
-- `/sellos/para-cuero` — Marroquinería, billeteras, carteras, materas
-- `/sellos/para-madera` — Carpintería, tablas, cajas, muebles
-- `/sellos/para-ceramica` — Piezas en crudo, placas, cerámica de autor
-- `/sellos/para-pan` — Pan, hamburguesas, masas y gastronomía
-- `/sellos/para-packaging` — Cajas, etiquetas, cartón y papel grueso
-- `/sellos/para-lacre` — Invitaciones, sobres, cierres boutique
-- `/sellos/para-jabon` — Jabones artesanales y cosmética natural
-- `/sellos/para-hielo` — Hielo para bares, coctelería y eventos
-- `/sellos/para-fruta` — Frutas y decoración de cocktails
+- [`/sellos/para-cuero`](https://www.alcohnsellos.com/sellos/para-cuero) — Marroquinería, billeteras, carteras, materas
+- [`/sellos/para-madera`](https://www.alcohnsellos.com/sellos/para-madera) — Carpintería, tablas, cajas, muebles
+- [`/sellos/para-ceramica`](https://www.alcohnsellos.com/sellos/para-ceramica) — Piezas en crudo, placas, cerámica de autor
+- [`/sellos/para-pan`](https://www.alcohnsellos.com/sellos/para-pan) — Pan, hamburguesas, masas y gastronomía
+- [`/sellos/para-packaging`](https://www.alcohnsellos.com/sellos/para-packaging) — Cajas, etiquetas, cartón y papel grueso
+- [`/sellos/para-lacre`](https://www.alcohnsellos.com/sellos/para-lacre) — Invitaciones, sobres, cierres boutique
+- [`/sellos/para-jabon`](https://www.alcohnsellos.com/sellos/para-jabon) — Jabones artesanales y cosmética natural
+- [`/sellos/para-hielo`](https://www.alcohnsellos.com/sellos/para-hielo) — Hielo para bares, coctelería y eventos
+- [`/sellos/para-fruta`](https://www.alcohnsellos.com/sellos/para-fruta) — Frutas y decoración de cocktails
 
 ## Materiales que se pueden marcar
 
@@ -53,7 +53,7 @@ Un mismo sello puede servir en varios materiales si la medida, profundidad y mé
 
 ### Sello personalizado (flujo principal)
 
-1. **Subir el logo** — En `/buy?mode=custom` el cliente elige el material a marcar y carga su archivo (foto, PNG, JPG, PDF o vector).
+1. **Subir el logo** — En [`/buy?mode=custom`](https://www.alcohnsellos.com/buy?mode=custom) el cliente elige el material a marcar y carga su archivo (foto, PNG, JPG, PDF o vector).
 2. **Ver la muestra** — El sistema procesa el diseño y muestra cómo quedaría en el material elegido. Si el logo es muy complejo, el equipo puede revisarlo manualmente.
 3. **Elegir medida y pagar** — Se confirman dimensiones y método de pago (tarjeta en checkout o transferencia bancaria con seña).
 4. **Fabricación** — El sello se mecaniza en CNC en el taller de Mar del Plata. Plazo habitual: 72 horas hábiles desde la confirmación de muestra y pago.
@@ -67,7 +67,7 @@ Un mismo sello puede servir en varios materiales si la medida, profundidad y mé
 3. Agregar al carrito (`/carrito`)
 4. Completar checkout (`/checkout`)
 
-Más detalle del proceso: `/proceso`
+Más detalle del proceso: [`/proceso`](https://www.alcohnsellos.com/proceso)
 
 ## Diferenciales
 
@@ -85,30 +85,30 @@ Más detalle del proceso: `/proceso`
 
 | Página | URL |
 |--------|-----|
-| Inicio | `/` |
-| Productos | `/productos` |
-| Diseñar sello personalizado | `/buy?mode=custom` |
-| Sellos estándar | `/sellos/estandar` |
-| Abecedarios | `/abecedarios` |
-| Accesorios | `/accesorios` |
-| Proceso de compra | `/proceso` |
-| Cómo usar los sellos | `/como-usar-sellos` |
-| Sobre Alcohn | `/sobre-alcohn` |
-| Casos reales | `/casos-reales` |
-| Preguntas frecuentes | `/faq` |
-| Contacto | `/contacto` |
-| Carrito | `/carrito` |
-| Checkout | `/checkout` |
-| Política de envíos | `/politica-envios` |
-| Política de devoluciones | `/politica-devoluciones` |
-| Términos y condiciones | `/terminos` |
-| Política de privacidad | `/privacidad` |
+| Inicio | [`/`](https://www.alcohnsellos.com/) |
+| Productos | [`/productos`](https://www.alcohnsellos.com/productos) |
+| Diseñar sello personalizado | [`/buy?mode=custom`](https://www.alcohnsellos.com/buy?mode=custom) |
+| Sellos estándar | [`/sellos/estandar`](https://www.alcohnsellos.com/sellos/estandar) |
+| Abecedarios | [`/abecedarios`](https://www.alcohnsellos.com/abecedarios) |
+| Accesorios | [`/accesorios`](https://www.alcohnsellos.com/accesorios) |
+| Proceso de compra | [`/proceso`](https://www.alcohnsellos.com/proceso) |
+| Cómo usar los sellos | [`/como-usar-sellos`](https://www.alcohnsellos.com/como-usar-sellos) |
+| Sobre Alcohn | [`/sobre-alcohn`](https://www.alcohnsellos.com/sobre-alcohn) |
+| Casos reales | [`/casos-reales`](https://www.alcohnsellos.com/casos-reales) |
+| Preguntas frecuentes | [`/faq`](https://www.alcohnsellos.com/faq) |
+| Contacto | [`/contacto`](https://www.alcohnsellos.com/contacto) |
+| Carrito | [`/carrito`](https://www.alcohnsellos.com/carrito) |
+| Checkout | [`/checkout`](https://www.alcohnsellos.com/checkout) |
+| Política de envíos | [`/politica-envios`](https://www.alcohnsellos.com/politica-envios) |
+| Política de devoluciones | [`/politica-devoluciones`](https://www.alcohnsellos.com/politica-devoluciones) |
+| Términos y condiciones | [`/terminos`](https://www.alcohnsellos.com/terminos) |
+| Política de privacidad | [`/privacidad`](https://www.alcohnsellos.com/privacidad) |
 
 **Notas de rutas:**
-- `/cotizar` redirige a `/buy?mode=custom`
-- `/sellos/personalizados` redirige a `/productos`
-- Las fichas de producto individuales viven bajo `/productos/[slug]`
-- Cada sello estándar tiene su ficha en `/sellos/estandar/[slug]`
+- [`/cotizar`](https://www.alcohnsellos.com/cotizar) redirige a [`/buy?mode=custom`](https://www.alcohnsellos.com/buy?mode=custom)
+- [`/sellos/personalizados`](https://www.alcohnsellos.com/sellos/personalizados) redirige a [`/productos`](https://www.alcohnsellos.com/productos)
+- Las fichas de producto individuales viven bajo [`/productos/[slug]`](https://www.alcohnsellos.com/productos)
+- Cada sello estándar tiene su ficha en [`/sellos/estandar/[slug]`](https://www.alcohnsellos.com/sellos/estandar)
 
 ## Temas recomendados para modelos de IA
 
@@ -119,9 +119,9 @@ Al analizar o responder sobre Alcohn, conviene entender estos temas:
 - **Materiales compatibles** — Cuero, madera, papel/cartón, alimentos, cerámica, lacre, jabón; limitaciones en metal y melamina.
 - **Cómo elegir medida** — Depende del producto y del diseño; la web sugiere medidas según la proporción del logo.
 - **Muestra antes de fabricar** — Muestra digital automática; revisión manual si el diseño es complejo.
-- **Técnicas de marcado** — Calor (hornalla, soplete, calentador eléctrico) o presión (prensa, remachadora), según material. Guía práctica en `/como-usar-sellos`.
+- **Técnicas de marcado** — Calor (hornalla, soplete, calentador eléctrico) o presión (prensa, remachadora), según material. Guía práctica en [`/como-usar-sellos`](https://www.alcohnsellos.com/como-usar-sellos).
 - **Tiempos y envío** — 72 horas hábiles de fabricación + envío por Correo Argentino.
 - **Formas de pago** — Tarjeta en checkout o transferencia con seña.
 - **Diferencia entre personalizado y estándar** — Personalizado con logo propio; estándar con diseños del catálogo listos para comprar.
 - **Accesorios complementarios** — Calentador eléctrico, mango de golpe y base para remachadora facilitan el uso según la técnica elegida.
-- **Preguntas frecuentes** — Medidas mínimas, facturación (Factura C), manipulación en alimentos, diseño sin logo propio y casos donde conviene contactar al equipo. Ver `/faq`.
+- **Preguntas frecuentes** — Medidas mínimas, facturación (Factura C), manipulación en alimentos, diseño sin logo propio y casos donde conviene contactar al equipo. Ver [`/faq`](https://www.alcohnsellos.com/faq).

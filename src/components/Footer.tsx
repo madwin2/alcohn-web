@@ -65,10 +65,11 @@ function FooterLegalLinks({ linkClass }: { linkClass: string }) {
 function PaymentMethods({ className = '' }: { className?: string }) {
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
         Medios de pago
       </span>
       <span
+        role="img"
         aria-label="Visa"
         title="Visa"
         className="inline-flex h-6 items-center justify-center rounded-sm bg-neutral-100 px-2 text-[10px] font-bold tracking-wide text-neutral-700"
@@ -94,6 +95,7 @@ function PaymentMethods({ className = '' }: { className?: string }) {
         </svg>
       </span>
       <span
+        role="img"
         aria-label="Mastercard"
         title="Mastercard"
         className="inline-flex h-6 items-center justify-center rounded-sm bg-neutral-100 px-2"
@@ -179,7 +181,7 @@ export default function Footer() {
             </a>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">
+            <h4 className="text-xs uppercase tracking-wider text-neutral-400 font-medium mb-4">
               Productos
             </h4>
             <ul className="space-y-2">
@@ -206,7 +208,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">
+            <h4 className="text-xs uppercase tracking-wider text-neutral-400 font-medium mb-4">
               Información
             </h4>
             <ul className="space-y-2">
@@ -253,7 +255,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-4">
+            <h4 className="text-xs uppercase tracking-wider text-neutral-400 font-medium mb-4">
               Comprar
             </h4>
             <ul className="space-y-2">
@@ -271,7 +273,7 @@ export default function Footer() {
           </div>
         </div>
         <Divider className="mt-5 md:mt-12 pt-4 md:pt-8 border-neutral-800" />
-        <div className="flex flex-col items-center gap-3 text-center text-xs md:text-sm text-neutral-500 md:flex-row md:justify-between md:gap-4 md:text-left">
+        <div className="flex flex-col items-center gap-3 text-center text-xs md:text-sm text-neutral-400 md:flex-row md:justify-between md:gap-4 md:text-left">
           <p>© {new Date().getFullYear()} Alcohn. Todos los derechos reservados.</p>
           <PaymentMethods />
         </div>

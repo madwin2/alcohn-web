@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
 interface AutoImageCarouselProps {
@@ -8,6 +9,7 @@ interface AutoImageCarouselProps {
   priority?: boolean;
   showCaption?: boolean;
   imageClassName?: string;
+  sizes?: string;
 }
 
 export default function AutoImageCarousel({
@@ -16,6 +18,7 @@ export default function AutoImageCarousel({
   priority = false,
   showCaption = false,
   imageClassName = '',
+  sizes = '100vw',
 }: AutoImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(priority);
@@ -56,14 +59,14 @@ export default function AutoImageCarousel({
   }, [images.length, interval, isVisible]);
 
   const imageContent = isVisible && currentImage?.src ? (
-    <img
+    <Image
       key={currentImage.id}
       src={currentImage.src}
       alt={currentImage.alt}
-      className={`h-full w-full object-cover transition-transform duration-[1800ms] ease-out ${imageClassName}`}
-      loading={priority && currentIndex === 0 ? 'eager' : 'lazy'}
-      decoding="async"
-      fetchPriority={priority && currentIndex === 0 ? 'high' : 'auto'}
+      fill
+      sizes={sizes}
+      className={`object-cover transition-transform duration-[1800ms] ease-out ${imageClassName}`}
+      priority={priority && currentIndex === 0}
     />
   ) : (
     <div

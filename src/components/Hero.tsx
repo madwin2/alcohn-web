@@ -69,12 +69,13 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
           images={[
             {
               id: 1,
-              src: '/images/hero/sello-bronce-hero-taller-alcohn.jpeg',
+              src: '/images/hero/sello-bronce-hero-taller-alcohn.webp',
               alt: 'Taller artesanal con sello de bronce personalizado Alcohn',
             },
           ]}
           priority
           imageClassName="hero-bg-image"
+          sizes="100vw"
         />
       </div>
 
