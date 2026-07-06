@@ -20,9 +20,11 @@ import { getStampUsageGuideBySlug } from '@/data/stampUsageGuides';
 import { getProductCarouselImages } from '@/lib/stampProductCarousel';
 import {
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
   buildProductJsonLd,
   createPageMetadata,
 } from '@/lib/seo';
+import { getAggregateRating, toProductReviewInputs } from '@/data/testimonials';
 import { getStampPriceFrom } from '@/data/stampUseCases';
 
 type PageParams = {
@@ -86,13 +88,17 @@ export default function SelloUseCasePage({ params }: PageParams) {
       { name: 'Material de uso', value: useCase.material },
       { name: 'Oficio', value: useCase.oficio },
     ],
+    aggregateRating: getAggregateRating(),
+    reviews: toProductReviewInputs(),
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: 'Inicio', path: '/' },
-    { name: 'Sellos por uso', path: '/productos' },
+    { name: 'Productos', path: '/productos' },
     { name: useCase.title, path: canonical },
   ]);
+
+  const faqJsonLd = buildFaqJsonLd(useCase.faqs);
 
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
@@ -103,6 +109,10 @@ export default function SelloUseCasePage({ params }: PageParams) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <StampUseCasePageIntro

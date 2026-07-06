@@ -245,21 +245,21 @@ export const stampUseCases: StampUseCase[] = [
     slug: 'para-packaging',
     oficio: 'Packaging',
     material: 'Cartón',
-    title: 'Sellos de bronce para packaging y cartón',
-    seoTitle: 'Sello de bronce para packaging y cartón | Alcohn',
+    title: 'Sellos para cajas de cartón y packaging',
+    seoTitle: 'Sello para cajas de cartón y packaging | Bronce CNC | Alcohn',
     seoDescription:
-      'Marcá cajas, etiquetas y cartón con sello de bronce CNC. Ideal para series cortas y packaging artesanal.',
+      'Sello de bronce CNC para marcar cajas de cartón, etiquetas y bolsas de papel. Ideal para packaging artesanal y series cortas. Envío a todo Argentina.',
     description:
-      'Marcá cajas, etiquetas, bolsas, cartón, papel grueso y packaging artesanal con una identidad consistente.',
+      'Marcá cajas de cartón, etiquetas, bolsas, papel grueso y packaging artesanal con una identidad consistente.',
     intro:
-      'El packaging es el primer contacto con tu marca. Un sello bien aplicado hace que una caja o etiqueta genérica parezca parte real del producto.',
+      'El packaging es el primer contacto con tu marca. Un sello bien aplicado hace que una caja de cartón o etiqueta genérica parezca parte real del producto.',
     buyMaterial: 'otros',
     heroImage: '/images/clientes/cliente-monk-03.webp',
     heroAlt: 'Packaging artesanal con marca aplicada',
     productImage: '/images/clientes/cliente-monk-02.webp',
     productAlt: 'Packaging marcado con sello personalizado',
     searchIntent: 'Sello para packaging',
-    applications: ['Cajas', 'Etiquetas', 'Bolsas de papel', 'Cartón', 'Papel grueso', 'Envoltorios'],
+    applications: ['Cajas de cartón', 'Etiquetas', 'Bolsas de papel', 'Cartón', 'Papel grueso', 'Envoltorios'],
     recommendedSizes: [
       { label: 'Etiqueta chica', size: '25x25mm a 35x35mm', copy: 'Para tags, cierres y sellos secundarios.' },
       { label: 'Caja estándar', size: '40x40mm a 60x60mm', copy: 'Para frente de caja, bolsas y packaging de venta.' },
@@ -271,6 +271,11 @@ export const stampUseCases: StampUseCase[] = [
     ],
     proofPoints: ['Baja costo frente a tiradas impresas', 'Útil para series cortas y cambios de temporada', 'Aumenta consistencia visual en entregas'],
     faqs: [
+      {
+        question: '¿Sirve para cajas de cartón corrugado?',
+        answer:
+          'Sí, con marcado en caliente. El cartón corrugado sin forrar tiene superficie irregular: la presión en frío no transfiere bien el relieve. Con calor (prensa o plancha) el bronce marca limpio en el papel exterior. Funciona mejor en cartón kraft o cajas forradas con papel de encuadernación, donde también podés marcar a presión.',
+      },
       {
         question: '¿Puedo marcarlo a presión?',
         answer:

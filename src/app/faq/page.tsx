@@ -3,7 +3,7 @@ import PageIntro from '@/components/PageIntro';
 import FaqList from '@/components/FaqList';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import { faqs } from '@/data/faq';
-import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd, createPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Preguntas frecuentes sobre sellos de bronce personalizados | Alcohn',
@@ -12,18 +12,7 @@ export const metadata: Metadata = createPageMetadata({
   path: '/faq',
 });
 
-const faqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faqs.map((faq) => ({
-    '@type': 'Question',
-    name: faq.question,
-    acceptedAnswer: {
-      '@type': 'Answer',
-      text: faq.answer,
-    },
-  })),
-};
+const faqJsonLd = buildFaqJsonLd(faqs);
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: 'Inicio', path: '/' },

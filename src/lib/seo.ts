@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 export const SITE_URL = 'https://www.alcohnsellos.com';
 export const SITE_NAME = 'Alcohn';
 export const DEFAULT_OG_IMAGE = '/og-default.jpg';
+export const SITE_LOGO = '/logo-alcohn.png';
 
 /** Title y description por defecto (home + layout fallback). */
 export const SITE_DEFAULT_TITLE =
@@ -125,6 +126,26 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   };
 }
 
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
+export function buildFaqJsonLd(faqs: FaqItem[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
+}
+
 export const ORGANIZATION_ID = `${SITE_URL}#organization`;
 export const LOCAL_BUSINESS_ID = `${SITE_URL}#localbusiness`;
 
@@ -154,7 +175,7 @@ const organizationNode = {
   url: SITE_URL,
   logo: {
     '@type': 'ImageObject',
-    url: absoluteUrl(DEFAULT_OG_IMAGE),
+    url: absoluteUrl(SITE_LOGO),
   },
   image: absoluteUrl(DEFAULT_OG_IMAGE),
   description:
@@ -229,6 +250,13 @@ export type ProductJsonLdInput = {
   category?: string;
   price?: number;
   additionalProperty?: Array<{ name: string; value: string }>;
+  aggregateRating?: { ratingValue: number; reviewCount: number };
+  reviews?: Array<{
+    author: string;
+    ratingValue: number;
+    reviewBody: string;
+    datePublished?: string;
+  }>;
 };
 
 export function buildProductJsonLd(input: ProductJsonLdInput) {
@@ -257,6 +285,34 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
       '@type': 'PropertyValue',
       name: prop.name,
       value: prop.value,
+    }));
+  }
+
+  if (input.aggregateRating) {
+    product.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: input.aggregateRating.ratingValue,
+      reviewCount: input.aggregateRating.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  if (input.reviews?.length) {
+    product.review = input.reviews.map((review) => ({
+      '@type': 'Review',
+      author: {
+        '@type': 'Person',
+        name: review.author,
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: review.ratingValue,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      reviewBody: review.reviewBody,
+      ...(review.datePublished ? { datePublished: review.datePublished } : {}),
     }));
   }
 

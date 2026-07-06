@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import SpecStrip from '@/components/SpecStrip';
 import IntentCard from '@/components/IntentCard';
 import PersonalizadoProductCard from '@/components/sellos/PersonalizadoProductCard';
@@ -17,7 +18,7 @@ import {
 import { absoluteUrl, buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 
 const PRODUCTOS_TITLE =
-  'Sellos de bronce personalizados para cuero, madera, pan y packaging | Alcohn';
+  'Sellos de bronce personalizados | Cuero, madera, pan y packaging | Alcohn';
 const PRODUCTOS_DESCRIPTION =
   'Catálogo de sellos de bronce y abecedarios CNC. Cuero, madera, alimentos, cerámica y lacre. Comprá online o diseñá con tu logo.';
 
@@ -66,6 +67,38 @@ const customStampMinPrice = getCustomStampMinPrice();
 const standardStampMinPrice = getStandardStampMinPrice();
 const abecedarioMinPrice = getAbecedarioMinPrice();
 const accessoryMinPrice = getAccessoryMinPriceFrom();
+
+function BronceSeoCopy() {
+  return (
+  <div className="max-w-3xl space-y-4 text-sm leading-relaxed text-neutral-700">
+    <p>
+      Los <strong>sellos de bronce</strong> de Alcohn son matrices mecanizadas en CNC a partir de tu logo o
+      diseño. El bronce retiene bien el calor, transfiere el relieve con precisión y aguanta miles de
+      marcados sin perder definición. Por eso elegimos este material para cuero, madera, alimentos y
+      packaging.
+    </p>
+    <p>
+      Fabricamos <strong>sellos en bronce personalizados</strong> para cada uso: un{' '}
+      <Link href="/sellos/para-madera" className="text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-2 hover:text-neutral-700">
+        sello de bronce para madera
+      </Link>
+      , otro para{' '}
+      <Link href="/sellos/para-cuero" className="text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-2 hover:text-neutral-700">
+        cuero y calzado
+      </Link>
+      , o para cajas y etiquetas. El mismo proceso de{' '}
+      <Link href="/proceso" className="text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-2 hover:text-neutral-700">
+        marcaje en bronce
+      </Link>{' '}
+      aplica a todos: subís el logo, revisás la muestra y recibís el sello listo para el taller.
+    </p>
+    <p>
+      Si buscás un proveedor de sellos de bronce en Argentina con tiempos claros y compra online, este
+      catálogo reúne las opciones por material y el camino para diseñar el tuyo a medida.
+    </p>
+  </div>
+  );
+}
 
 export default function ProductosPage() {
   return (
@@ -203,6 +236,37 @@ export default function ProductosPage() {
                 </ActionButton>
               </div>
             </div>
+          </div>
+        </section>
+
+        <details className="mb-20 border-t border-[var(--alcohn-line)] pt-10 md:hidden">
+          <summary className="cursor-pointer list-none">
+            <span className="craft-label">Sobre los sellos de bronce</span>
+            <span className="mt-2 flex items-center justify-between text-lg font-semibold tracking-tight text-neutral-950">
+              ¿Qué es un sello de bronce CNC?
+              <svg
+                className="ml-4 h-5 w-5 shrink-0 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </summary>
+          <div className="pt-6">
+            <BronceSeoCopy />
+          </div>
+        </details>
+
+        <section className="mb-20 hidden border-t border-[var(--alcohn-line)] pt-10 md:block">
+          <p className="craft-label">Sobre los sellos de bronce</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
+            ¿Qué es un sello de bronce CNC?
+          </h2>
+          <div className="mt-6">
+            <BronceSeoCopy />
           </div>
         </section>
 
