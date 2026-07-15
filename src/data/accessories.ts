@@ -213,7 +213,11 @@ export const accessories: Accessory[] = [
       'Base plana de aluminio para montar el sello en remachadora o prensa. Presión uniforme para marcar en frío sobre cuero y otros materiales.',
     heroDescription:
       'Base plana de aluminio para montar el sello en remachadora o prensa y lograr presión uniforme en cada marca.',
-    image: '/images/sello/kit-sello-pieza-04-accesorios.png',
+    image: '/images/accesorios/base remachadora/base 2.jpeg',
+    galleryImages: [
+      '/images/accesorios/base remachadora/base 2.jpeg',
+      '/images/accesorios/base remachadora/base 1.jpeg',
+    ],
     price: 40000,
     includes: ['Base de aluminio', 'Adaptación a rosca estándar Alcohn'],
     seoTitle: 'Base de aluminio para remachadora | Sellos de bronce | Alcohn',
@@ -242,8 +246,8 @@ export const accessories: Accessory[] = [
     ],
     inclusionCopy: 'Incluye la base lista para montar tu sello en remachadora o prensa con presión pareja.',
     inclusionIllustration: {
-      src: '/images/sello/kit-sello-pieza-04-accesorios.png',
-      alt: 'Base de aluminio y accesorios para remachadora',
+      src: '/images/accesorios/base remachadora/base 2.jpeg',
+      alt: 'Base de aluminio para remachadora',
       width: 1200,
       height: 1200,
     },
