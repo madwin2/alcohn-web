@@ -141,7 +141,7 @@ La orden debe identificarse por `orden_id` o `web_checkout_ref` en la URL o sesi
 | Campo | Uso |
 |-------|-----|
 | `origen` | `'Web'` |
-| `metodo_pago` | `'Openpay'` \| `'Transferencia'` |
+| `metodo_pago` | `'Openpay'` \| `'Transferencia'` \| `'Internacional'` |
 | `estado_pago_web` | Ver sección 8 |
 | `pago_error_codigo` / `pago_error_mensaje` | Detalle del fallo |
 | `openpay_order_id` | Referencia externa |
@@ -206,7 +206,7 @@ Estados actuales: `procesando`, `pendiente_aprobacion`, `completado`, `error`. V
 | Columna | Tipo | Notas |
 |---------|------|--------|
 | `origen` | varchar | `'Web'` |
-| `metodo_pago` | varchar | `Openpay`, `Transferencia` |
+| `metodo_pago` | varchar | `Openpay`, `Transferencia`, `Internacional` |
 | `estado_pago_web` | varchar | Ver sección 8 |
 | `pago_error_*`, `openpay_order_id` | text | Errores tarjeta |
 | `comprobante_*` | text / timestamptz | Transferencia |

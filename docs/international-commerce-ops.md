@@ -25,6 +25,14 @@ El checkout internacional guarda:
 
 > El precio pagado en Alcohn incluye producto y envío DHL, pero no incluye impuestos, aranceles ni gastos de importación del país de destino. Si corresponden, DHL contactará al comprador por email o teléfono y el comprador los pagará directamente a DHL.
 
+## SQL requerido en Supabase
+
+Antes del primer pedido internacional en producción, ejecutar:
+
+`docs/sql/003_ordenes_metodo_pago_internacional.sql`
+
+Sin eso, `POST /api/checkout/international/intent` falla al insertar `metodo_pago = 'Internacional'` por el check constraint.
+
 ## Variables de entorno de pago
 
 | Variable | Uso |

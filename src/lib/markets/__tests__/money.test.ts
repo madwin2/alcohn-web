@@ -8,9 +8,13 @@ describe('market money', () => {
     expect(roundToIncrement(1500, 1000)).toBe(2000);
   });
 
-  it('formats local currency', () => {
+  it('formats local currency with ISO code outside Argentina', () => {
     expect(formatMarketMoney(125000, 'cl')).toContain('$');
+    expect(formatMarketMoney(125000, 'cl')).toContain('(CLP)');
     expect(formatMarketMoney(125.5, 'pe')).toContain('S/');
+    expect(formatMarketMoney(125.5, 'pe')).toContain('(PEN)');
     expect(formatMarketMoney(1250, 'mx')).toContain('$');
+    expect(formatMarketMoney(1250, 'mx')).toContain('(MXN)');
+    expect(formatMarketMoney(1000, 'ar')).not.toContain('(ARS)');
   });
 });

@@ -24,3 +24,20 @@ export function convertPublicArsToMarketPrice(publicArs: number, market: MarketC
   const raw = publicArs * pricing.arsToLocalRate;
   return roundToIncrement(raw, pricing.roundingIncrement);
 }
+
+/** Precio de producto a mostrar en wizard / catálogo según mercado. */
+export function displayWizardProductPrice(
+  linkArs: number,
+  transferArs: number,
+  market: MarketCode
+): number {
+  if (market === 'ar') return Math.round(linkArs);
+  const transfer =
+    Number.isFinite(transferArs) && transferArs > 0
+      ? transferArs
+      : Number.isFinite(linkArs) && linkArs > 0
+        ? linkArs / 1.15
+        : 0;
+  return convertTransferArsToMarketPrice(transfer, market);
+}
+

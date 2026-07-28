@@ -2,6 +2,9 @@
 
 import StampSizeScalePreview from '@/components/buy/StampSizeScalePreview';
 import WizardSizeCompareScale from '@/components/buy/WizardSizeCompareScale';
+import { useMarket } from '@/contexts/MarketContext';
+import { formatMarketMoney } from '@/lib/markets/money';
+import { displayWizardProductPrice } from '@/lib/markets/pricing';
 
 export type WizardSizeTierOption = {
   key: string;
@@ -71,6 +74,7 @@ export function WizardSizePickerRow({
   customSize,
   onSelect,
 }: WizardSizePickerRowProps) {
+  const { market } = useMarket();
   const usingCustom =
     customSize && customSize.width > 0 && customSize.height > 0;
 
@@ -78,6 +82,11 @@ export function WizardSizePickerRow({
     <div className="grid grid-cols-3 gap-2">
       {options.map((option) => {
         const isSelected = !usingCustom && selectedSize === option.size;
+        const displayPrice = displayWizardProductPrice(
+          option.price,
+          option.transferPrice ?? 0,
+          market
+        );
         return (
           <button
             key={option.key}
@@ -101,7 +110,7 @@ export function WizardSizePickerRow({
               {option.size.replace(/mm$/i, ' mm')}
             </span>
             <span className="mt-0.5 text-[13.5px] font-bold tabular-nums text-neutral-950">
-              ${option.price.toLocaleString('es-AR')}
+              {formatMarketMoney(displayPrice, market)}
             </span>
           </button>
         );
@@ -132,6 +141,8 @@ export function WizardSizeSummaryPanel({
   className = '',
   compactRows = false,
 }: WizardSizeSummaryPanelProps) {
+  const { market } = useMarket();
+  const isInternational = market !== 'ar';
   const summary = resolveSummaryState(
     options,
     selectedSize,
@@ -146,6 +157,8 @@ export function WizardSizeSummaryPanel({
     /(\d+)\s*[x×]\s*(\d+)/i,
     '$1×$2'
   );
+  const localPrice = displayWizardProductPrice(summary.price, summary.transfer, market);
+  const localCuota = Math.round(localPrice / 3);
 
   if (compactRows) {
     return (
@@ -154,18 +167,21 @@ export function WizardSizeSummaryPanel({
           <span className="text-neutral-600">Medida</span>
           <span className="font-semibold tabular-nums text-neutral-950">{sizeDisplay}</span>
         </div>
-        {summary.price > 0 && (
+        {localPrice > 0 && !isInternational && (
           <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px]">
             <span className="text-neutral-600">3 cuotas sin interés</span>
             <span className="font-semibold tabular-nums text-neutral-950">
-              ${summary.cuota.toLocaleString('es-AR')}
+              {formatMarketMoney(localCuota, market)}
             </span>
           </div>
         )}
         <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px] text-emerald-700">
-          <span>Pagando por transferencia</span>
+          <span>{isInternational ? 'Precio' : 'Pagando por transferencia'}</span>
           <span className="font-semibold tabular-nums">
-            ${summary.transfer.toLocaleString('es-AR')}
+            {formatMarketMoney(
+              isInternational ? localPrice : summary.transfer,
+              market
+            )}
           </span>
         </div>
       </div>
@@ -190,25 +206,36 @@ export function WizardSizeSummaryPanel({
           <p className="mb-3 text-base text-neutral-500">{sizeDisplay}</p>
 
           <dl className="space-y-1.5 text-sm">
-            <div>
+            {isInternational ? (
               <div className="flex items-baseline justify-between gap-2">
                 <dt className="text-neutral-600">Precio</dt>
                 <dd className="font-bold tabular-nums text-neutral-950">
-                  ${summary.price.toLocaleString('es-AR')}
+                  {formatMarketMoney(localPrice, market)}
                 </dd>
               </div>
-              {summary.price > 0 && (
-                <p className="mt-0.5 text-[11px] leading-snug text-neutral-500">
-                  (3 cuotas s/interés ${summary.cuota.toLocaleString('es-AR')})
-                </p>
-              )}
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <dt className="text-emerald-800">Transferencia</dt>
-              <dd className="font-semibold tabular-nums text-emerald-700">
-                ${summary.transfer.toLocaleString('es-AR')}
-              </dd>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <dt className="text-neutral-600">Precio</dt>
+                    <dd className="font-bold tabular-nums text-neutral-950">
+                      {formatMarketMoney(localPrice, market)}
+                    </dd>
+                  </div>
+                  {localPrice > 0 && (
+                    <p className="mt-0.5 text-[11px] leading-snug text-neutral-500">
+                      (3 cuotas s/interés {formatMarketMoney(localCuota, market)})
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between gap-2">
+                  <dt className="text-emerald-800">Transferencia</dt>
+                  <dd className="font-semibold tabular-nums text-emerald-700">
+                    {formatMarketMoney(summary.transfer, market)}
+                  </dd>
+                </div>
+              </>
+            )}
           </dl>
         </div>
 
@@ -258,8 +285,6 @@ export default function WizardSizeStepMobile({
         selectedTransferPrice={selectedTransferPrice}
         customSize={customSize}
         logoUrl={logoUrl}
-        compactRows
-        className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
       />
     </div>
   );

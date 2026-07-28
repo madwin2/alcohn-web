@@ -15,7 +15,7 @@ import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { getMarketConfig } from '@/lib/markets/config';
 import { formatMarketMoney } from '@/lib/markets/money';
 import { marketPath } from '@/lib/markets/paths';
-import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
+import { displayWizardProductPrice } from '@/lib/markets/pricing';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { saveCheckoutPrefill, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { fetchShippingCost } from '@/lib/shipping/client';
@@ -1805,7 +1805,11 @@ export default function BuyWizard({
   /** Lleva al checkout el sello configurado en el wizard. */
   const handleAddWizardToCheckout = (metodo: CheckoutMetodoPagoPrefill = 'Openpay') => {
     const price = isInternationalMarket
-      ? data.selectedPrice ?? 0
+      ? displayWizardProductPrice(
+          data.selectedPrice ?? 0,
+          data.selectedTransferPrice ?? 0,
+          market
+        )
       : metodo === 'Transferencia'
         ? data.selectedTransferPrice ?? 0
         : data.selectedPrice;
@@ -1826,6 +1830,7 @@ export default function BuyWizard({
     const variantSize = data.selectedSize;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
+    const marketConfig = getMarketConfig(market);
     const cartLine = {
       title: `Sello personalizado (${materialLabel}, ${variantSize})`,
       collection: 'Personalizado',
@@ -1835,6 +1840,9 @@ export default function BuyWizard({
       price,
       image: wizardCartImageUrl(data),
       designSlug,
+      ...(isInternationalMarket
+        ? { market, currency: marketConfig.currency }
+        : {}),
     };
     syncMedidasToMockup();
     addItem(cartLine);
@@ -2184,7 +2192,9 @@ export default function BuyWizard({
                 <span className="hidden md:inline">Elegir medida</span>
               </h2>
               <p className="mt-1 text-[13.5px] text-neutral-600 md:hidden">
-                Precio final, sin sorpresas. Transferencia tiene 10% de descuento.
+                {isInternationalMarket
+                  ? 'Precio del producto en tu moneda local. El envío DHL se suma en el checkout.'
+                  : 'Precio final, sin sorpresas. Transferencia tiene 10% de descuento.'}
               </p>
               <p className="hidden text-sm text-gray-600 md:block md:text-base">
                 {data.selectedSize
@@ -2196,9 +2206,19 @@ export default function BuyWizard({
               <div className="hidden md:block bg-primary/10 border border-primary rounded-lg p-4 mb-4">
                 <p className="text-sm font-medium text-gray-900">
                   Medida pre-seleccionada: <span className="font-semibold">{getSizeDisplayText()}</span>
-                  {data.selectedPrice && (
-                    <span className="ml-2">- ${data.selectedPrice.toLocaleString('es-AR')}</span>
-                  )}
+                  {data.selectedPrice ? (
+                    <span className="ml-2">
+                      -{' '}
+                      {formatMarketMoney(
+                        displayWizardProductPrice(
+                          data.selectedPrice,
+                          data.selectedTransferPrice ?? 0,
+                          market
+                        ),
+                        market
+                      )}
+                    </span>
+                  ) : null}
                 </p>
               </div>
             )}
@@ -2389,6 +2409,11 @@ export default function BuyWizard({
                         option.transferPrice ??
                         data.sizeOptions?.[index]?.transferPrice ??
                         0;
+                      const localPrice = displayWizardProductPrice(
+                        option.price,
+                        transfer,
+                        market
+                      );
                       return (
                         <button
                           key={option.key}
@@ -2413,15 +2438,19 @@ export default function BuyWizard({
                           </div>
                           <div className="flex-1 space-y-0.5">
                             <div className="text-2xl font-bold text-gray-900">
-                              ${option.price.toLocaleString('es-AR')}
+                              {formatMarketMoney(localPrice, market)}
                             </div>
-                            <div className="text-xs text-gray-600">
-                              3 cuotas sin interés:{' '}
-                              ${Math.round(option.price / 3).toLocaleString('es-AR')}
-                            </div>
-                            <div className="text-xs font-medium text-green-600">
-                              Transferencia: ${transfer.toLocaleString('es-AR')}
-                            </div>
+                            {!isInternationalMarket && (
+                              <>
+                                <div className="text-xs text-gray-600">
+                                  3 cuotas sin interés:{' '}
+                                  {formatMarketMoney(Math.round(localPrice / 3), market)}
+                                </div>
+                                <div className="text-xs font-medium text-green-600">
+                                  Transferencia: {formatMarketMoney(transfer, market)}
+                                </div>
+                              </>
+                            )}
                           </div>
                           <StampSizeScalePreview
                             sizeLabel={option.size}
@@ -2471,14 +2500,28 @@ export default function BuyWizard({
                   {data.selectedPrice && (
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-gray-900">
-                        <strong>Precio:</strong> ${data.selectedPrice.toLocaleString('es-AR')}
+                        <strong>Precio:</strong>{' '}
+                        {formatMarketMoney(
+                          displayWizardProductPrice(
+                            data.selectedPrice,
+                            data.selectedTransferPrice ?? 0,
+                            market
+                          ),
+                          market
+                        )}
                       </p>
-                      <p className="text-xs text-gray-600">
-                        3 cuotas sin interés: ${Math.round(data.selectedPrice / 3).toLocaleString('es-AR')}
-                      </p>
-                      <p className="text-xs text-green-600 font-medium">
-                        Transferencia: ${(data.selectedTransferPrice ?? 0).toLocaleString('es-AR')}
-                      </p>
+                      {!isInternationalMarket && (
+                        <>
+                          <p className="text-xs text-gray-600">
+                            3 cuotas sin interés:{' '}
+                            {formatMarketMoney(Math.round(data.selectedPrice / 3), market)}
+                          </p>
+                          <p className="text-xs text-green-600 font-medium">
+                            Transferencia:{' '}
+                            {formatMarketMoney(data.selectedTransferPrice ?? 0, market)}
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                   </div>
@@ -2806,7 +2849,11 @@ export default function BuyWizard({
           const clientLogo = data.logoOptimized || data.logoPreview;
 
           if (isInternationalMarket) {
-            const productLocal = convertPublicArsToMarketPrice(cardPrice, market);
+            const productLocal = displayWizardProductPrice(
+              cardPrice,
+              transferPrice,
+              market
+            );
             const dhlShipping = getMarketConfig(market).dhlShippingAmount;
             const estimatedTotal = productLocal + dhlShipping;
 

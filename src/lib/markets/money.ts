@@ -9,9 +9,16 @@ export function roundToIncrement(value: number, increment: number): number {
 
 export function formatMarketMoney(value: number, market: MarketCode): string {
   const config = getMarketConfig(market);
-  return new Intl.NumberFormat(config.locale, {
+  const formatted = new Intl.NumberFormat(config.locale, {
     style: 'currency',
     currency: config.currency,
     maximumFractionDigits: config.currency === 'PEN' || config.currency === 'MXN' ? 2 : 0,
   }).format(value);
+
+  // En LatAm el símbolo $ es ambiguo (ARS/CLP/COP/MXN): aclarar con ISO.
+  if (market !== 'ar') {
+    return `${formatted} (${config.currency})`;
+  }
+
+  return formatted;
 }

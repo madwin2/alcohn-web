@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMarket } from '@/contexts/MarketContext';
 
 interface ContactStepProps {
   nombre: string;
@@ -19,6 +20,7 @@ export default function ContactStep({
   isProcessing = false,
   processingMessage = 'Optimizando tu logo… Generando tu muestra…',
 }: ContactStepProps) {
+  const { config } = useMarket();
   const [nombre, setNombre] = useState(initialNombre);
   const [whatsapp, setWhatsapp] = useState(initialWhatsapp);
   const [email, setEmail] = useState(initialEmail);
@@ -151,7 +153,7 @@ export default function ContactStep({
             className={`w-full border bg-white px-3.5 py-3 text-base text-neutral-950 focus:outline-none md:px-4 md:py-3 md:text-sm md:focus:ring-2 md:focus:ring-[var(--alcohn-bronze)] ${
               errors.whatsapp ? 'border-red-500' : 'border-[var(--alcohn-line-strong)] md:border-[var(--alcohn-line)]'
             }`}
-            placeholder="+54 9 223 123-4567"
+            placeholder={config.phoneExample}
           />
           {errors.whatsapp ? (
             <p className="mt-1 text-sm text-red-600">{errors.whatsapp}</p>
@@ -190,7 +192,10 @@ export default function ContactStep({
           <span>Usamos tus datos solo para la muestra y tu pedido. Sin spam.</span>
         </div>
 
-        <button type="submit" className="wizard-cta-btn md:min-h-[44px] md:border md:border-[var(--alcohn-ink)] md:tracking-wider">
+        <button
+          type="submit"
+          className="wizard-cta-btn flex w-full min-h-[52px] items-center justify-center border border-[var(--alcohn-ink)] bg-[var(--alcohn-ink)] px-4 text-[12.5px] font-semibold uppercase tracking-wider text-white transition-colors hover:bg-neutral-800 md:min-h-[44px]"
+        >
           Ver mi muestra gratis →
         </button>
       </form>

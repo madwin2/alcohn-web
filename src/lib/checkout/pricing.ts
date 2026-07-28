@@ -93,6 +93,24 @@ export function computeMarketCheckoutPricing(
   market: MarketCode
 ): MarketCheckoutPricing {
   const currency = getMarketConfig(market).currency;
+
+  if (market !== 'ar') {
+    const alreadyLocal = items.every(
+      (item) => item.currency === currency && Number.isFinite(item.price) && item.price > 0
+    );
+    if (alreadyLocal) {
+      const marketItems = items
+        .filter((item) => !isNonSelloCartLine(item))
+        .map((item) => ({ ...item, market, currency }));
+      return {
+        market,
+        currency,
+        marketItems,
+        marketSubtotal: marketItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+      };
+    }
+  }
+
   const base = computeCheckoutPricing(items, catalog);
   const sourceItems = market === 'ar' ? base.linkItems : base.transferItems;
 
