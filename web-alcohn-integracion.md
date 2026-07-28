@@ -31,6 +31,8 @@ No hace falta modificar el `001` para que la app interna funcione. Las reglas qu
 | Pago Openpay falla | UPDATE en la misma orden: `estado_pago_web = 'pago_fallido'` + `pago_error_codigo`, `pago_error_mensaje`. |
 | Cliente sube comprobante | Subir a bucket `comprobantes`, setear `comprobante_path`/`comprobante_url`/`comprobante_subido_at`. La app interna lo validará y pasará a `pagado`. |
 
+**Importante al materializar `sellos` desde `carrito_json` (app o web):** cada línea ya trae `item_type` explícito (`SELLO`, `ABECEDARIO`, `SOLDADOR`, `MANGO_GOLPE`, `BASE_REMACHADORA`). Hay que usarlo tal cual: un accesorio **no** debe insertarse como `SELLO`. Si falta `item_type`, inferirlo por `designSlug` / `collection` (p. ej. `base-aluminio-remachadora` → `BASE_REMACHADORA`). También setear `diseno` = título de la línea y `item_config` con `design_slug` / `collection`.
+
 **Por qué:** los triggers de la app (`update_orden_totals`, `trigger_consume_stock_on_envio`, etc.) se disparan ante cambios en `sellos`. Si la web inserta sellos antes de pagar, se mete ruido en producción y stock.
 
 ### Si el pago nunca llega

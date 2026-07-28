@@ -1,7 +1,12 @@
 import type { CartItem } from '@/lib/cart';
 import { cotizarRectangular } from '@/lib/cotizador/quote';
 import type { CotizadorCatalog } from '@/lib/cotizador/types';
-import { isNonSelloCartLine, parseVariantSizeToCm } from '@/lib/supabase/sellosFromCart';
+import {
+  enrichCartItemsWithItemType,
+  isNonSelloCartLine,
+  parseVariantSizeToCm,
+  type CartLineForDb,
+} from '@/lib/supabase/sellosFromCart';
 
 const MAX_IMAGE_LEN = 2048;
 
@@ -49,9 +54,9 @@ export function applyTransferPricesToCartItems(
   });
 }
 
-/** Evita data URLs enormes en JSONB y normaliza precio/cantidad. */
-export function sanitizeCartItemsForDb(items: CartItem[]): CartItem[] {
-  return items.map((item) => {
+/** Evita data URLs enormes en JSONB y normaliza precio/cantidad + `item_type`. */
+export function sanitizeCartItemsForDb(items: CartItem[]): CartLineForDb[] {
+  const cleaned = items.map((item) => {
     const price = typeof item.price === 'number' ? item.price : Number(item.price);
     const qtyRaw = typeof item.qty === 'number' ? item.qty : Number(item.qty);
     let image = typeof item.image === 'string' ? item.image : '';
@@ -72,9 +77,11 @@ export function sanitizeCartItemsForDb(items: CartItem[]): CartItem[] {
       image,
     };
   });
+
+  return enrichCartItemsWithItemType(cleaned);
 }
 
-export function parseCartItemsFromBody(raw: unknown): CartItem[] | null {
+export function parseCartItemsFromBody(raw: unknown): CartLineForDb[] | null {
   if (!Array.isArray(raw) || raw.length === 0) return null;
 
   const parsed: CartItem[] = [];

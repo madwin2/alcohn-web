@@ -1,3 +1,5 @@
+import type { CurrencyCode, MarketCode } from '@/lib/markets/types';
+
 // Tipos para el carrito
 export interface CartItem {
   id: string; // design-slug + size (ej: "bandera-argentina-30x30mm")
@@ -10,6 +12,8 @@ export interface CartItem {
   qty: number;
   image: string;
   designSlug: string; // Para poder cambiar variante después
+  market?: MarketCode;
+  currency?: CurrencyCode;
 }
 
 export interface CartState {
@@ -29,23 +33,25 @@ export const generateCartItemId = (designSlug: string, size: string): string => 
   return `${designSlug}-${size}`;
 };
 
-// Persistencia en localStorage
 const CART_STORAGE_KEY = 'alcohn_cart';
 
-export const loadCartFromStorage = (): CartItem[] => {
+export const cartStorageKeyForMarket = (market: MarketCode): string =>
+  market === 'ar' ? CART_STORAGE_KEY : `${CART_STORAGE_KEY}_${market}`;
+
+export const loadCartFromStorage = (market: MarketCode = 'ar'): CartItem[] => {
   if (typeof window === 'undefined') return [];
   try {
-    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    const stored = localStorage.getItem(cartStorageKeyForMarket(market));
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 };
 
-export const saveCartToStorage = (items: CartItem[]): void => {
+export const saveCartToStorage = (items: CartItem[], market: MarketCode = 'ar'): void => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(cartStorageKeyForMarket(market), JSON.stringify(items));
   } catch {
     // Ignorar errores de localStorage
   }

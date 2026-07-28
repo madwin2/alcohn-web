@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import Link from 'next/link';
 import CartItemRow from './CartItemRow';
 import CartSummary from './CartSummary';
@@ -13,8 +15,11 @@ interface CartDrawerProps {
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, getSubtotal } = useCart();
+  const { market } = useMarket();
+  const cartHref = marketPath(market, '/carrito');
+  const checkoutHref = marketPath(market, '/checkout');
+  const emptyCatalogHref = marketBuyPath(market);
 
-  // Cerrar con ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -25,7 +30,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Bloquear scroll del body cuando está abierto
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -44,21 +48,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className="fixed inset-0 bg-black/20 z-[60] transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Drawer */}
       <div
         className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[60] shadow-xl flex flex-col transform transition-transform duration-300 ease-out"
         role="dialog"
         aria-modal="true"
         aria-label="Carrito de compras"
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-200">
           <h2 className="text-xl font-semibold text-neutral-900 tracking-tight">
             Carrito
@@ -74,7 +75,6 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {hasItems ? (
             <div className="p-6 space-y-4">
@@ -89,30 +89,29 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </svg>
               <p className="text-sm text-neutral-600 mb-2">Tu carrito está vacío</p>
               <Link
-                href="/sellos/estandar"
+                href={emptyCatalogHref}
                 onClick={onClose}
                 className="text-sm text-neutral-900 underline hover:text-neutral-600 transition-colors"
               >
-                Ver diseños disponibles
+                {market === 'ar' ? 'Ver diseños disponibles' : 'Diseñar mi sello'}
               </Link>
             </div>
           )}
         </div>
 
-        {/* Footer */}
         {hasItems && (
           <div className="border-t border-neutral-200 p-6 space-y-4">
             <CartSummary subtotal={subtotal} />
             <div className="flex flex-col gap-2">
               <Link
-                href="/carrito"
+                href={cartHref}
                 onClick={onClose}
                 className="w-full border border-neutral-300 bg-white text-neutral-900 px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-50 transition-colors text-center focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
               >
                 Ir al carrito
               </Link>
               <Link
-                href="/checkout"
+                href={checkoutHref}
                 onClick={onClose}
                 className="w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors text-center focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
               >
@@ -125,4 +124,3 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     </>
   );
 }
-

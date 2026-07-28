@@ -4,7 +4,9 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ActionButton from './ActionButton';
-import { formatPriceFrom } from '@/lib/formatPrice';
+import { useMarket } from '@/contexts/MarketContext';
+import { formatMarketMoney } from '@/lib/markets/money';
+import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 import AutoImageCarousel from './AutoImageCarousel';
 import { prefersReducedMotion } from '@/lib/motion';
 
@@ -28,6 +30,7 @@ interface HeroProps {
 
 export default function Hero({ title, subtitle, priceFrom, primaryCta, secondaryCta }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const { market } = useMarket();
 
   useGSAP(
     () => {
@@ -105,7 +108,8 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
               data-hero-reveal
               className="mb-6 text-sm font-semibold uppercase tracking-wide text-white/90 md:mb-8 md:text-base"
             >
-              {formatPriceFrom(priceFrom)} · fabricación en 72hs hábiles
+              Desde {formatMarketMoney(convertPublicArsToMarketPrice(priceFrom, market), market)} ·
+              fabricación en 72hs hábiles
             </p>
           )}
           {primaryCta && (

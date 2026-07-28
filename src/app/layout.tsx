@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { Inter } from 'next/font/google';
+import { IBM_Plex_Mono, Inter } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/Header';
+import ConditionalHeader from '@/components/ConditionalHeader';
 import ConditionalFooter from '@/components/ConditionalFooter';
 import ConditionalWhatsapp from '@/components/ConditionalWhatsapp';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
@@ -10,6 +10,7 @@ import AnalyticsProvider from '@/components/AnalyticsProvider';
 import GoogleTagManager from '@/components/GoogleTagManager';
 import MetaPixel from '@/components/MetaPixel';
 import { CartProvider } from '@/contexts/CartContext';
+import { MarketProvider } from '@/contexts/MarketContext';
 import {
   DEFAULT_OG_IMAGE,
   SITE_DEFAULT_DESCRIPTION,
@@ -19,7 +20,12 @@ import {
   SITE_URL,
 } from '@/lib/seo';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
+});
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID?.trim();
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
@@ -99,7 +105,7 @@ export default function RootLayout({
           </>
         ) : null}
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${inter.variable} ${ibmPlexMono.variable}`}>
         {GTM_ID ? (
           <noscript>
             <iframe
@@ -119,16 +125,18 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildGlobalSchemaGraph()) }}
         />
-        <CartProvider>
-          <Suspense fallback={null}>
-            <AnalyticsProvider />
-          </Suspense>
-          <Header />
-          <main className="w-full max-w-full">{children}</main>
-          <ConditionalFooter />
-          <ConditionalWhatsapp />
-          <CookieConsentBanner />
-        </CartProvider>
+        <MarketProvider>
+          <CartProvider>
+            <Suspense fallback={null}>
+              <AnalyticsProvider />
+            </Suspense>
+            <ConditionalHeader />
+            <main className="w-full max-w-full">{children}</main>
+            <ConditionalFooter />
+            <ConditionalWhatsapp />
+            <CookieConsentBanner />
+          </CartProvider>
+        </MarketProvider>
       </body>
     </html>
   );

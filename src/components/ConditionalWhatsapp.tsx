@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { stripMarketFromPathname } from '@/lib/markets/paths';
 import WhatsappButton from './WhatsappButton';
 
 /**
@@ -10,13 +11,12 @@ import WhatsappButton from './WhatsappButton';
  */
 export default function ConditionalWhatsapp() {
   const pathname = usePathname() || '/';
+  const currentPath = stripMarketFromPathname(pathname);
 
-  // En carrito y checkout hay sticky bottom bar en mobile, evitamos solapamiento.
-  // En /buy el wizard ocupa toda la pantalla y el WhatsApp distrae.
   const hideOnMobile =
-    pathname.startsWith('/carrito') ||
-    pathname.startsWith('/checkout') ||
-    pathname.startsWith('/buy');
+    currentPath.startsWith('/carrito') ||
+    currentPath.startsWith('/checkout') ||
+    currentPath.startsWith('/buy');
 
   return (
     <WhatsappButton

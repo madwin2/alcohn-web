@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ActionButton from './ActionButton';
 
 const stages = [
@@ -42,6 +44,7 @@ const stages = [
 ];
 
 export default function DossInspiredSections() {
+  const { market } = useMarket();
   const [activeStage, setActiveStage] = useState(stages[1]);
   const shortBody =
     activeStage.body.length > 110
@@ -129,10 +132,10 @@ export default function DossInspiredSections() {
               </div>
 
               <div className="mt-6 md:mt-10 flex flex-col gap-3 sm:flex-row">
-                <ActionButton href="/buy?mode=custom" variant="secondary" className="border-white bg-white text-neutral-900 hover:bg-[var(--alcohn-paper)]">
+                <ActionButton href={marketBuyPath(market)} variant="secondary" className="border-white bg-white text-neutral-900 hover:bg-[var(--alcohn-paper)]">
                   Probar el flujo online
                 </ActionButton>
-                <ActionButton href="/proceso" variant="ghost" className="text-white hover:text-white">
+                <ActionButton href={marketPath(market, '/proceso')} variant="ghost" className="text-white hover:text-white">
                   Ver proceso completo
                 </ActionButton>
               </div>

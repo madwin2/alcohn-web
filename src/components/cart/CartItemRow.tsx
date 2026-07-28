@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
 import { CartItem } from '@/lib/cart';
+import { formatMarketMoney } from '@/lib/markets/money';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -11,6 +13,7 @@ interface CartItemRowProps {
 
 export default function CartItemRow({ item, showImage = true }: CartItemRowProps) {
   const { updateQuantity, removeItem } = useCart();
+  const { market } = useMarket();
 
   return (
     <div className="flex gap-4 pb-4 border-b border-neutral-200 last:border-0 last:pb-0">
@@ -73,7 +76,7 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
             </button>
           </div>
           <p className="text-sm font-semibold text-neutral-900">
-            ${(item.price * item.qty).toLocaleString('es-AR')}
+            {formatMarketMoney(item.price * item.qty, market)}
           </p>
         </div>
       </div>

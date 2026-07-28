@@ -10,6 +10,13 @@ import ContactStep from './buy/ContactStep';
 import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
+import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
+import { getMarketConfig } from '@/lib/markets/config';
+import { formatMarketMoney } from '@/lib/markets/money';
+import { marketPath } from '@/lib/markets/paths';
+import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
+import type { InternationalMarketCode } from '@/lib/markets/types';
 import { saveCheckoutPrefill, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
@@ -38,6 +45,8 @@ import {
 import StampSizeScalePreview from '@/components/buy/StampSizeScalePreview';
 import WizardCollapsible from '@/components/buy/WizardCollapsible';
 import WizardCustomSizeFields from '@/components/buy/WizardCustomSizeFields';
+import WizardMobileHeader from '@/components/buy/WizardMobileHeader';
+import WizardSizeCompareScale from '@/components/buy/WizardSizeCompareScale';
 import {
   WizardSizePickerRow,
   WizardSizeSummaryPanel,
@@ -907,6 +916,8 @@ export default function BuyWizard({
 }: BuyWizardProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { market } = useMarket();
+  const isInternationalMarket = market !== 'ar';
   const { addItem, clearCart } = useCart();
   const [step, setStep] = useState(0); // Paso 0 = material
   /** Mobile paso medida: tarjetas estándar vs formulario personalizado */
@@ -956,6 +967,10 @@ export default function BuyWizard({
   }, [step]);
 
   useEffect(() => {
+    if (isInternationalMarket) {
+      setShippingCost(0);
+      return;
+    }
     if (shippingMethod === 'retiro') {
       setShippingCost(0);
       return;
@@ -968,7 +983,7 @@ export default function BuyWizard({
     return () => {
       cancelled = true;
     };
-  }, [shippingMethod]);
+  }, [shippingMethod, isInternationalMarket]);
 
   useEffect(() => {
     if (!initialMaterial && !initialUsoSlug) return;
@@ -1789,14 +1804,15 @@ export default function BuyWizard({
 
   /** Lleva al checkout el sello configurado en el wizard. */
   const handleAddWizardToCheckout = (metodo: CheckoutMetodoPagoPrefill = 'Openpay') => {
-    const price =
-      metodo === 'Transferencia'
+    const price = isInternationalMarket
+      ? data.selectedPrice ?? 0
+      : metodo === 'Transferencia'
         ? data.selectedTransferPrice ?? 0
         : data.selectedPrice;
     if (!price || !data.material || checkoutNavigateBusy) return;
     if (!data.selectedSize?.trim()) return;
     setCheckoutNavigateBusy(true);
-    if (data.nombre?.trim() && data.whatsapp?.trim()) {
+    if (!isInternationalMarket && data.nombre?.trim() && data.whatsapp?.trim()) {
       saveCheckoutPrefill({
         nombre: data.nombre.trim(),
         whatsapp: data.whatsapp.trim(),
@@ -1804,7 +1820,9 @@ export default function BuyWizard({
         metodoPago: metodo,
       });
     }
-    saveCheckoutShipping(shippingMethod, shippingCost);
+    if (!isInternationalMarket) {
+      saveCheckoutShipping(shippingMethod, shippingCost);
+    }
     const variantSize = data.selectedSize;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
@@ -1825,7 +1843,7 @@ export default function BuyWizard({
       void markCheckoutStarted(mid, [cartLine]);
     }
     window.setTimeout(() => {
-      router.push('/checkout');
+      router.push(isInternationalMarket ? marketPath(market, '/checkout') : '/checkout');
     }, 0);
   };
 
@@ -1907,13 +1925,20 @@ export default function BuyWizard({
 
   return (
     <div ref={wizardRef} className="buy-wizard mx-auto flex h-full max-w-5xl flex-col">
-      <Stepper steps={steps} currentStep={step + 1} />
+      <WizardMobileHeader
+        steps={steps}
+        currentStep={step + 1}
+        onBack={step > 0 ? goToPreviousStep : undefined}
+      />
+      <div className="hidden md:block">
+        <Stepper steps={steps} currentStep={step + 1} />
+      </div>
 
-      <div className="technical-sheet blueprint-sheet flex flex-1 min-h-0 flex-col overflow-hidden p-3 md:p-8 lg:p-10">
-        <div className="hidden mb-4 grid-cols-1 gap-3 border-b border-[var(--alcohn-line)] pb-3 md:mb-8 md:grid md:grid-cols-[1fr_auto] md:gap-4 md:pb-6 md:items-end">
+      <div className="wizard-mobile-body technical-sheet blueprint-sheet flex min-h-0 flex-1 flex-col overflow-hidden md:p-8 lg:p-10">
+        <div className="mb-4 hidden grid-cols-1 items-end gap-3 border-b border-[var(--alcohn-line)] pb-3 md:mb-8 md:grid md:grid-cols-[1fr_auto] md:gap-4 md:pb-6">
           <div>
             <p className="craft-label mb-2">Ficha de pedido personalizada</p>
-            <h2 className="text-[1.95rem] md:text-3xl font-semibold tracking-tight text-neutral-950">
+            <h2 className="text-[1.95rem] font-semibold tracking-tight text-neutral-950 md:text-3xl">
               Diseñá, revisá y pagá con datos guardados
             </h2>
           </div>
@@ -1925,52 +1950,61 @@ export default function BuyWizard({
 
         {/* Material */}
         {currentStepKey === 'material' && (
-          <div className="h-full overflow-hidden md:overflow-y-auto space-y-3 md:space-y-6">
-            <div>
-              <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
-                Qué querés marcar
+          <div className="wizard-step h-full overflow-y-auto md:space-y-6 md:[animation:none]">
+            <div className="wizard-step-heading">
+              <h2 className="mb-1 text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
+                ¿Qué querés marcar?
               </h2>
-              <p className="hidden md:block text-sm text-gray-600 md:text-base">
-                En celular, elegí una opción para avanzar rápido.
+              <p className="text-[13.5px] text-neutral-600 md:text-base">
+                <span className="md:hidden">Tocá una opción y seguimos. Podés cambiarla cuando quieras.</span>
+                <span className="hidden md:inline">
+                  Elegí el uso principal. El sello igual sirve para varios materiales.
+                </span>
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
               {wizardMaterialOptions.map((option) => {
                 const isSelected = data.usoSlug === option.slug;
-                const shortMaterialLabel = option.materialLabel.split(' ')[0];
                 return (
                   <button
                     key={option.slug}
                     type="button"
                     onClick={() => handleMaterialSelect(option)}
-                    className={`min-h-[68px] rounded-sm border px-3 py-3 text-center transition-all duration-200 active:scale-[0.98] md:min-h-0 md:rounded-none md:px-6 md:py-6 md:text-left ${
-                      isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    className={`wizard-opt-card flex min-h-[76px] flex-col justify-center gap-0.5 border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-3 py-3.5 text-left md:min-h-0 md:px-6 md:py-6 ${
+                      isSelected ? 'is-selected border-[var(--alcohn-ink)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]' : 'hover:border-neutral-400 hover:bg-white'
                     }`}
                   >
-                    <div className="font-semibold text-gray-900 text-[15px] leading-tight md:mb-1 md:text-base md:leading-normal">
-                      {shortMaterialLabel}
-                    </div>
+                    <span className="wizard-opt-card__title text-[15px] font-semibold leading-tight text-neutral-950 md:text-base">
+                      {option.materialLabel}
+                    </span>
+                    <span className="wizard-opt-card__hint text-[11.5px] leading-snug text-neutral-500 md:mt-1 md:text-sm">
+                      {option.shortDescription}
+                    </span>
                   </button>
                 );
               })}
+            </div>
+            <div className="wizard-trust-strip md:hidden">
+              <span>Muestra gratis</span>
+              <span>Bronce macizo</span>
+              <span>Envíos a todo el país</span>
             </div>
           </div>
         )}
 
         {/* Logo */}
         {currentStepKey === 'logo' && (
-          <div className="h-full overflow-hidden md:overflow-y-auto space-y-4 md:space-y-6">
-            <div>
-              <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
-                Subir logo
+          <div className="wizard-step h-full overflow-y-auto md:space-y-6 md:[animation:none]">
+            <div className="wizard-step-heading">
+              <h2 className="mb-1 text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
+                <span className="md:hidden">Subí tu logo</span>
+                <span className="hidden md:inline">Subir logo</span>
               </h2>
-              <p className="text-sm text-gray-600 md:text-base">
-                Subí PNG, JPG o SVG. Ideal con fondo transparente.
+              <p className="text-[13.5px] text-neutral-600 md:text-base">
+                PNG, JPG o SVG · ideal con fondo transparente. No hace falta que sea perfecto: lo optimizamos gratis.
               </p>
             </div>
-            <div className="border border-dashed border-gray-300 p-6 md:p-12 text-center hover:border-gray-400 transition-colors">
+            <div className="wizard-dropzone border border-dashed border-[var(--alcohn-line-strong)] bg-[var(--alcohn-surface)] text-center transition-colors hover:border-neutral-400 md:border-gray-300 md:p-12">
               <input
                 type="file"
                 id="logo-upload"
@@ -1985,7 +2019,7 @@ export default function BuyWizard({
               >
                 {data.logoPreview ? (
                   <div className="space-y-4">
-                    <div className="relative w-32 h-32 mx-auto">
+                    <div className="relative mx-auto h-32 w-32">
                       <Image
                         src={data.logoPreview}
                         alt="Logo preview"
@@ -1994,37 +2028,46 @@ export default function BuyWizard({
                         unoptimized
                       />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Click para cambiar el logo
+                    <p className="text-sm text-neutral-600">
+                      Tocá para cambiar el logo
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <svg
-                      className="w-16 h-16 mx-auto text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
+                  <div className="space-y-3">
+                    <div className="mx-auto flex h-[52px] w-[52px] items-center justify-center border border-dashed border-[rgba(184,132,79,0.55)] bg-[rgba(184,132,79,0.08)] text-[22px] text-neutral-900">
+                      ↑
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Click para subir o arrastrar aquí
+                      <p className="text-[15px] font-semibold text-neutral-900">
+                        Tocá para subir tu logo
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        PNG, JPG, SVG hasta 10MB
+                      <p className="mt-1 font-mono text-[10.5px] text-neutral-500">
+                        PNG, JPG, SVG · también podés sacarle una foto
                       </p>
                     </div>
                   </div>
                 )}
               </label>
             </div>
+            {data.logoPreview && (
+              <div className="wizard-notice wizard-notice--green md:rounded-lg md:border-solid md:border-blue-200 md:bg-blue-50 md:text-blue-800">
+                <span className="md:hidden" aria-hidden>✓</span>
+                <div>
+                  <p className="text-sm font-medium md:text-blue-900">
+                    <span className="md:hidden">Logo listo.</span>
+                    <span className="hidden md:inline">Logo listo</span>
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] md:mt-1 md:text-xs md:text-blue-800">
+                    <span className="md:hidden">
+                      En el próximo paso te pedimos tus datos para enviarte la muestra digital gratis.
+                    </span>
+                    <span className="hidden md:inline">
+                      En el siguiente paso pedimos tus datos y generamos la muestra digital con IA.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
 
             {pendingLogoUpload && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4">
@@ -2108,21 +2151,12 @@ export default function BuyWizard({
             )}
 
             {data.logoPreview && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-900">Logo listo</p>
-                <p className="mt-1 text-xs text-blue-800">
-                  En el siguiente paso pedimos tus datos y generamos la muestra digital con IA.
-                </p>
-              </div>
-            )}
-
-            {data.logoPreview && (
               <button
                 type="button"
                 onClick={() => goToStepKey('contact')}
-                className="sticky bottom-0 z-20 inline-flex w-full min-h-[52px] items-center justify-center px-6 py-3 bg-primary text-white rounded-md text-sm font-semibold uppercase tracking-wider shadow-[0_-8px_24px_rgba(17,16,14,0.18)] hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="wizard-cta-btn sticky bottom-0 z-20 md:rounded-md md:text-sm md:tracking-wider"
               >
-                Continuar
+                Continuar →
               </button>
             )}
           </div>
@@ -2144,10 +2178,14 @@ export default function BuyWizard({
         {currentStepKey === 'size' && (
           <div className="flex min-h-0 flex-1 flex-col md:block">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto md:space-y-6 md:overflow-visible">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 md:mb-2 md:text-2xl">
-                Elegir medida
+            <div className="wizard-step-heading">
+              <h2 className="text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
+                <span className="md:hidden">Elegí la medida</span>
+                <span className="hidden md:inline">Elegir medida</span>
               </h2>
+              <p className="mt-1 text-[13.5px] text-neutral-600 md:hidden">
+                Precio final, sin sorpresas. Transferencia tiene 10% de descuento.
+              </p>
               <p className="hidden text-sm text-gray-600 md:block md:text-base">
                 {data.selectedSize
                   ? `Medida seleccionada: ${getSizeDisplayText()}. Podés cambiarla si querés.`
@@ -2249,7 +2287,7 @@ export default function BuyWizard({
 
               return (
                 <>
-                  <div className="space-y-2 md:hidden">
+                  <div className="space-y-3 md:hidden">
                     {mobileSizeMode === 'standard' ? (
                       <>
                         <WizardSizePickerRow
@@ -2261,6 +2299,11 @@ export default function BuyWizard({
                             selectTierOption(option);
                           }}
                         />
+                        <WizardSizeCompareScale
+                          options={tierOptions}
+                          selectedSize={data.selectedSize}
+                          logoUrl={logoForScale}
+                        />
                         <button
                           type="button"
                           onClick={() => {
@@ -2271,15 +2314,30 @@ export default function BuyWizard({
                               customSize: prev.customSize ?? { width: 0, height: 0 },
                             }));
                           }}
-                          className="flex min-h-[44px] w-full items-center justify-center rounded-lg border border-dashed border-[var(--alcohn-line)] bg-white px-3 text-sm font-medium text-neutral-800 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+                          className="wizard-cta-btn wizard-cta-btn--secondary"
                         >
-                          Medida personalizada
+                          Necesito una medida personalizada
                         </button>
+                        {(data.selectedSize ||
+                          (data.customSize &&
+                            data.customSize.width > 0 &&
+                            data.customSize.height > 0)) && (
+                          <WizardSizeSummaryPanel
+                            options={tierOptions}
+                            selectedSize={data.selectedSize}
+                            selectedPrice={data.selectedPrice}
+                            selectedTransferPrice={data.selectedTransferPrice}
+                            customSize={data.customSize}
+                            logoUrl={logoForScale}
+                            compactRows
+                            className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
+                          />
+                        )}
                       </>
                     ) : (
                       <>
-                        <div className="rounded-lg border border-[var(--alcohn-ink)] bg-white p-3 shadow-[inset_0_0_0_1px_var(--alcohn-ink)]">
-                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-700">
+                        <div className="border border-[var(--alcohn-ink)] bg-[var(--alcohn-surface)] p-3 shadow-[inset_0_0_0_1px_var(--alcohn-ink)]">
+                          <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-wide text-neutral-700">
                             Medida personalizada
                           </p>
                           <WizardCustomSizeFields
@@ -2305,6 +2363,20 @@ export default function BuyWizard({
                         >
                           ← Volver a Pequeño / Mediano / Grande
                         </button>
+                        {data.customSize &&
+                          data.customSize.width > 0 &&
+                          data.customSize.height > 0 && (
+                            <WizardSizeSummaryPanel
+                              options={tierOptions}
+                              selectedSize={data.selectedSize}
+                              selectedPrice={data.selectedPrice}
+                              selectedTransferPrice={data.selectedTransferPrice}
+                              customSize={data.customSize}
+                              logoUrl={logoForScale}
+                              compactRows
+                              className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
+                            />
+                          )}
                       </>
                     )}
                   </div>
@@ -2427,24 +2499,32 @@ export default function BuyWizard({
               data.logoOptimized || data.logoPreview || data.thumbnailUrl || null;
 
             return (
-              <div className="shrink-0 overflow-hidden rounded-t-xl border border-b-0 border-[var(--alcohn-line)] bg-white shadow-[0_-8px_24px_rgba(17,16,14,0.08)] md:hidden">
-                <WizardSizeSummaryPanel
-                  options={tierOptions}
-                  selectedSize={data.selectedSize}
-                  selectedPrice={data.selectedPrice}
-                  selectedTransferPrice={data.selectedTransferPrice}
-                  customSize={data.customSize}
-                  logoUrl={logoForScale}
-                />
-                <div className="flex items-center justify-between gap-3 border-t border-[var(--alcohn-line)]/80 px-3 py-2.5">
-                  <button
-                    type="button"
-                    onClick={goToPreviousStep}
-                    className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-[var(--alcohn-line)] bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-neutral-400"
-                  >
-                    ← Atrás
-                  </button>
-                  {data.selectedSize && data.selectedPrice && (
+              <div className="wizard-mobile-cta shrink-0 border-t border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] shadow-[0_-10px_24px_rgba(17,16,14,0.07)] md:hidden">
+                {(data.selectedSize ||
+                  (data.customSize &&
+                    data.customSize.width > 0 &&
+                    data.customSize.height > 0)) &&
+                  data.selectedPrice && (
+                  <div className="flex items-baseline justify-between gap-2.5 px-4 pb-1 pt-2.5">
+                    <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-neutral-500">
+                      {(data.customSize &&
+                      data.customSize.width > 0 &&
+                      data.customSize.height > 0
+                        ? `${data.customSize.width}×${data.customSize.height} mm`
+                        : data.selectedSize?.replace(/mm$/i, ' mm')) ?? ''}
+                    </span>
+                    <span className="text-right text-[15px] font-bold tabular-nums text-neutral-950">
+                      ${data.selectedPrice.toLocaleString('es-AR')}
+                      {data.selectedTransferPrice != null && (
+                        <small className="mt-0.5 block text-[11px] font-medium text-emerald-700">
+                          Transferencia: ${data.selectedTransferPrice.toLocaleString('es-AR')}
+                        </small>
+                      )}
+                    </span>
+                  </div>
+                )}
+                <div className="px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
+                  {data.selectedSize && data.selectedPrice ? (
                     <button
                       type="button"
                       onClick={() =>
@@ -2454,9 +2534,13 @@ export default function BuyWizard({
                           data.selectedTransferPrice
                         )
                       }
-                      className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-[var(--alcohn-ink)] px-4 py-2 text-sm font-semibold uppercase tracking-wider text-white hover:bg-[var(--alcohn-ink-soft)]"
+                      className="wizard-cta-btn"
                     >
-                      Continuar
+                      Continuar →
+                    </button>
+                  ) : (
+                    <button type="button" disabled className="wizard-cta-btn">
+                      Elegí una medida para continuar
                     </button>
                   )}
                 </div>
@@ -2720,15 +2804,84 @@ export default function BuyWizard({
           const cuotaPrice = Math.round(cardTotal / 3);
           const materialDisplay = wizardUsoDisplayLabel(data);
           const clientLogo = data.logoOptimized || data.logoPreview;
+
+          if (isInternationalMarket) {
+            const productLocal = convertPublicArsToMarketPrice(cardPrice, market);
+            const dhlShipping = getMarketConfig(market).dhlShippingAmount;
+            const estimatedTotal = productLocal + dhlShipping;
+
+            return (
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-6 md:space-y-6 md:pb-0">
+                <div>
+                  <h2 className="mb-2 text-lg font-semibold text-gray-900 md:text-2xl">
+                    Confirmá tu pedido internacional
+                  </h2>
+                  <p className="text-sm text-gray-600 md:text-base">
+                    Revisá el resumen y continuá al checkout para pagar en moneda local con envío DHL.
+                  </p>
+                </div>
+
+                <div className="technical-sheet space-y-4 p-5 md:p-6">
+                  <div>
+                    <p className="craft-label mb-2">Resumen</p>
+                    <h3 className="text-xl font-semibold tracking-tight text-neutral-950">
+                      Sello personalizado listo para checkout
+                    </h3>
+                  </div>
+                  <dl className="divide-y divide-[var(--alcohn-line)] text-sm">
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Material</dt>
+                      <dd className="font-medium text-neutral-950">{materialDisplay}</dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Medida</dt>
+                      <dd className="font-medium text-neutral-950">{getSizeDisplayText()}</dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Producto desde</dt>
+                      <dd className="font-medium text-neutral-950">
+                        {formatMarketMoney(productLocal, market)}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                      <dt className="text-neutral-500">Envío DHL</dt>
+                      <dd className="font-medium text-neutral-950">
+                        {formatMarketMoney(dhlShipping, market)}
+                      </dd>
+                    </div>
+                  </dl>
+                  <div className="flex items-center justify-between border-t border-[var(--alcohn-line)] pt-4 text-base font-semibold text-neutral-950">
+                    <span>Total estimado</span>
+                    <span>{formatMarketMoney(estimatedTotal, market)}</span>
+                  </div>
+                </div>
+
+                <ImportDutiesNotice market={market as InternationalMarketCode} />
+
+                <button
+                  type="button"
+                  disabled={checkoutNavigateBusy}
+                  onClick={() => handleAddWizardToCheckout()}
+                  className="w-full border border-neutral-900 bg-neutral-900 px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
+                >
+                  {checkoutNavigateBusy ? 'Agregando al carrito...' : 'Continuar al checkout internacional'}
+                </button>
+              </div>
+            );
+          }
           
           return (
             <div className="min-h-0 flex-1 overflow-y-auto space-y-4 pb-6 md:space-y-6 md:pb-0">
-              <div>
-                <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mb-2">
-                  Método de pago
+              <div className="wizard-step-heading">
+                <h2 className="mb-1 text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
+                  <span className="md:hidden">¿Cómo querés pagar?</span>
+                  <span className="hidden md:inline">Método de pago</span>
                 </h2>
-                <p className="text-sm md:text-base text-gray-600">
-                  Elegí cómo querés pagar tu sello personalizado.
+                <p className="text-[13.5px] text-neutral-600 md:text-base">
+                  <span className="md:hidden">Elegí ahora, pagás al final del checkout.</span>
+                  <span className="hidden md:inline">
+                    Elegí cómo querés pagar tu sello personalizado.
+                  </span>
                 </p>
               </div>
 
@@ -2846,53 +2999,72 @@ export default function BuyWizard({
               {/* Payment Methods */}
               {!paymentMethod ? (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-                  {/* Tarjeta con Open Pay */}
+                  {/* Transferencia primero en mobile (ahorro), tarjeta después */}
                   <button
-                    onClick={() => setPaymentMethod('card')}
-                    className="technical-sheet p-4 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+                    type="button"
+                    onClick={() => setPaymentMethod('transfer')}
+                    className="relative border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-4 text-left transition-all hover:border-[var(--alcohn-bronze)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 md:order-2 md:p-6"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">Pagar con tarjeta</h3>
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-6 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
+                    {cardTotal > transferTotal && (
+                      <span className="absolute -top-2.5 right-3 bg-emerald-700 px-2 py-0.5 font-mono text-[8.5px] font-semibold uppercase tracking-wide text-white md:hidden">
+                        Ahorrás ${(cardTotal - transferTotal).toLocaleString('es-AR')}
+                      </span>
+                    )}
+                    <div className="mb-2 flex items-center justify-between gap-2 md:mb-3">
+                      <h3 className="text-[15px] font-semibold text-neutral-950 md:text-base">
+                        Transferencia bancaria
+                      </h3>
+                      <span className="hidden h-5 w-5 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)] md:block" aria-hidden />
                     </div>
                     <div className="space-y-1">
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-[20px] font-bold tabular-nums text-neutral-950 md:text-2xl">
+                        {cardTotal > transferTotal && (
+                          <span className="mr-1.5 text-[13px] font-medium text-neutral-400 line-through md:hidden">
+                            ${cardTotal.toLocaleString('es-AR')}
+                          </span>
+                        )}
+                        ${transferTotal.toLocaleString('es-AR')}
+                      </div>
+                      <div className="text-[12px] text-neutral-600 md:text-sm md:text-green-600 md:font-medium">
+                        <span className="md:hidden">Señás $20.000 ahora · el resto cuando el sello está listo</span>
+                        <span className="hidden md:inline">
+                          10% de descuento · Seña $20.000
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('card')}
+                    className="relative border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] p-4 text-left transition-all hover:border-[var(--alcohn-bronze)] focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 md:order-1 md:p-6"
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2 md:mb-3">
+                      <h3 className="text-[15px] font-semibold text-neutral-950 md:text-base">
+                        <span className="md:hidden">Tarjeta (Openpay)</span>
+                        <span className="hidden md:inline">Pagar con tarjeta</span>
+                      </h3>
+                      <span className="hidden h-5 w-5 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)] md:block" aria-hidden />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[20px] font-bold tabular-nums text-neutral-950 md:text-2xl">
                         ${cardTotal.toLocaleString('es-AR')}
                       </div>
-                      <div className="text-sm text-green-600 font-medium">
-                        3 cuotas sin interés: ${cuotaPrice.toLocaleString('es-AR')}
+                      <div className="text-[12px] text-neutral-600 md:text-sm md:font-medium md:text-green-600">
+                        3 cuotas sin interés de ${cuotaPrice.toLocaleString('es-AR')}
+                        <span className="md:hidden"> · pago seguro BBVA</span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-2">
+                      <div className="mt-2 hidden text-xs text-gray-500 md:block">
                         Pagá con Open Pay de BBVA
                       </div>
                     </div>
                   </button>
 
-                  {/* Transferencia */}
-                  <button
-                    onClick={() => setPaymentMethod('transfer')}
-                    className="technical-sheet p-4 md:p-6 text-left transition-all hover:border-[var(--alcohn-bronze)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">Transferencia bancaria</h3>
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                      </svg>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-2xl font-bold text-gray-900 line-through text-gray-400">
-                        ${cardTotal.toLocaleString('es-AR')}
-                      </div>
-                      <div className="text-2xl font-bold text-green-600">
-                        ${transferTotal.toLocaleString('es-AR')}
-                      </div>
-                      <div className="text-sm text-green-600 font-medium">
-                        Ahorrá ${Math.max(0, cardTotal - transferTotal).toLocaleString('es-AR')} pagando por transferencia
-                      </div>
-                    </div>
-                  </button>
+                  <div className="wizard-trust-strip pt-1 md:hidden">
+                    <span>Pago seguro</span>
+                    <span>Factura C</span>
+                    <span>Garantía de por vida</span>
+                  </div>
                 </div>
               ) : paymentMethod === 'card' ? (
                 // Pago con tarjeta - Open Pay
@@ -2995,13 +3167,13 @@ export default function BuyWizard({
           !(currentStepKey === 'contact' && (isContactProcessing || data.isAnalyzing || data.isOptimizing)) &&
           !pendingLogoUpload && (
           <div
-            className={`z-20 mt-3 shrink-0 border-t border-gray-200 bg-[var(--alcohn-surface)] pt-3 flex items-center justify-between gap-3 md:mt-4 ${
+            className={`z-20 mt-3 flex shrink-0 items-center justify-between gap-3 border-t border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] pt-3 md:mt-4 ${
               currentStepKey === 'size' ? 'hidden md:flex' : ''
             }`}
           >
             <button
               onClick={goToPreviousStep}
-              className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-[var(--alcohn-line)] rounded-md hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-center border border-[var(--alcohn-line)] bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[var(--alcohn-bronze)] hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 md:rounded-md"
             >
               ← Atrás
             </button>
@@ -3011,9 +3183,9 @@ export default function BuyWizard({
               !data.isGeneratingMockup && (
                 <button
                   onClick={() => goToStepKey('size')}
-                  className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white bg-primary border border-primary rounded-md hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  className="inline-flex min-h-[52px] flex-1 items-center justify-center bg-[var(--alcohn-ink)] px-5 py-2 text-[12.5px] font-semibold uppercase tracking-[0.06em] text-white transition-colors hover:bg-[var(--alcohn-ink-soft)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:translate-y-px md:min-h-[44px] md:rounded-md md:bg-primary md:text-sm md:tracking-wider md:hover:bg-primary-light"
                 >
-                  Continuar
+                  Continuar →
                 </button>
               )}
             {currentStepKey === 'size' && data.selectedSize && data.selectedPrice && (
@@ -3025,7 +3197,7 @@ export default function BuyWizard({
                     data.selectedTransferPrice
                   )
                 }
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white bg-primary border border-primary rounded-md hover:bg-primary-light transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-md border border-primary bg-primary px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 Continuar
               </button>

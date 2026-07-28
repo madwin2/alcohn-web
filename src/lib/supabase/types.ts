@@ -32,7 +32,7 @@ export type MockupOrigen = 'app' | 'web';
 
 export type OrdenOrigen = 'Web' | 'App';
 
-export type MetodoPago = 'Openpay' | 'Transferencia';
+export type MetodoPago = 'Openpay' | 'Transferencia' | 'Internacional';
 
 export type EstadoPagoWeb =
   | 'pendiente'

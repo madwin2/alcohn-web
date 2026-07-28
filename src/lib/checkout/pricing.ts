@@ -6,6 +6,9 @@ import {
 } from '@/data/accessories';
 import { precioTransferencia } from '@/lib/abecedarioConfigurator';
 import { cotizarRectangular, type CotizadorCatalog } from '@/lib/cotizador';
+import { getMarketConfig } from '@/lib/markets/config';
+import { convertTransferArsToMarketPrice } from '@/lib/markets/pricing';
+import type { MarketCode } from '@/lib/markets/types';
 import { isNonSelloCartLine, parseVariantSizeToCm } from '@/lib/supabase/sellosFromCart';
 
 function isAccessoryCartLine(item: CartItem): boolean {
@@ -75,6 +78,38 @@ export interface CheckoutPricing {
   transferSubtotal: number;
   linkItems: CartItem[];
   transferItems: CartItem[];
+}
+
+export interface MarketCheckoutPricing {
+  market: MarketCode;
+  currency: string;
+  marketSubtotal: number;
+  marketItems: CartItem[];
+}
+
+export function computeMarketCheckoutPricing(
+  items: CartItem[],
+  catalog: CotizadorCatalog | null,
+  market: MarketCode
+): MarketCheckoutPricing {
+  const currency = getMarketConfig(market).currency;
+  const base = computeCheckoutPricing(items, catalog);
+  const sourceItems = market === 'ar' ? base.linkItems : base.transferItems;
+
+  const marketItems = sourceItems.map((item) => {
+    const price =
+      market === 'ar'
+        ? item.price
+        : convertTransferArsToMarketPrice(item.price, market);
+    return { ...item, price, market, currency };
+  });
+
+  return {
+    market,
+    currency,
+    marketItems,
+    marketSubtotal: marketItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+  };
 }
 
 export function computeCheckoutPricing(

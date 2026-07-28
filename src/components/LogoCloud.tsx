@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { brands } from '@/data/brands';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ActionButton from './ActionButton';
 
 interface LogoCloudProps {
@@ -25,6 +27,7 @@ const longestTrustWord = trustWords.reduce(
 );
 
 export default function LogoCloud({ compact = false }: LogoCloudProps) {
+  const { market } = useMarket();
   const [wordIndex, setWordIndex] = useState(0);
   const [visibleLetters, setVisibleLetters] = useState(trustWords[0].length);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -179,10 +182,10 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
                 </div>
 
                 <div className="mt-10 flex flex-row gap-3">
-                  <ActionButton href="/buy?mode=custom" variant="primary">
+                  <ActionButton href={marketBuyPath(market)} variant="primary">
                     Diseñar el mío
                   </ActionButton>
-                  <ActionButton href="/casos-reales" variant="ghost">
+                  <ActionButton href={marketPath(market, '/casos-reales')} variant="ghost">
                     Ver casos reales
                   </ActionButton>
                 </div>

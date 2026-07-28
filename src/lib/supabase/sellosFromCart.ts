@@ -4,8 +4,31 @@
  */
 
 import type { CartItem } from '@/lib/cart';
-import { getAccessoryBySlug } from '@/data/accessories';
+import {
+  getAccessoryBySlug,
+  type Accessory,
+  type AccessoryCode,
+} from '@/data/accessories';
 import type { SelloInsert, SelloItemType } from './types';
+
+const VALID_ITEM_TYPES = new Set<SelloItemType>([
+  'SELLO',
+  'ABECEDARIO',
+  'SOLDADOR',
+  'MANGO_GOLPE',
+  'BASE_REMACHADORA',
+]);
+
+const ACCESSORY_CODE_TO_ITEM_TYPE: Record<AccessoryCode, SelloItemType> = {
+  soldador: 'SOLDADOR',
+  mango_golpe: 'MANGO_GOLPE',
+  base_remachadora: 'BASE_REMACHADORA',
+};
+
+/** Cart line persistido en `ordenes.carrito_json` (puede traer `item_type`). */
+export type CartLineForDb = CartItem & {
+  item_type?: SelloItemType;
+};
 
 /** Parsea medidas tipo "30x30mm", "5x3 cm", "40x40" → cm. */
 export function parseVariantSizeToCm(
@@ -33,9 +56,22 @@ export function parseVariantSizeToCm(
   return { largo_real: w, ancho_real: h };
 }
 
-function resolveItemType(item: CartItem): SelloItemType {
-  const slug = item.designSlug.toLowerCase();
-  const collection = item.collection.toLowerCase();
+function accessoryItemType(accessory: Accessory): SelloItemType {
+  return ACCESSORY_CODE_TO_ITEM_TYPE[accessory.code];
+}
+
+/**
+ * Clasifica una línea del carrito web al `item_type` de `sellos`.
+ * Prioriza `item_type` ya persistido, luego catálogo de accesorios, luego heurísticas.
+ */
+export function resolveItemType(item: CartLineForDb): SelloItemType {
+  if (item.item_type && VALID_ITEM_TYPES.has(item.item_type)) {
+    return item.item_type;
+  }
+
+  const slug = (item.designSlug ?? '').toLowerCase();
+  const collection = (item.collection ?? '').toLowerCase();
+  const title = (item.title ?? '').toLowerCase();
 
   if (slug.includes('abecedario') || collection.includes('abecedario')) {
     return 'ABECEDARIO';
@@ -43,29 +79,47 @@ function resolveItemType(item: CartItem): SelloItemType {
 
   const accessory = getAccessoryBySlug(slug);
   if (accessory) {
-    switch (accessory.code) {
-      case 'soldador':
-        return 'SOLDADOR';
-      case 'mango_golpe':
-        return 'MANGO_GOLPE';
-      case 'base_remachadora':
-        return 'BASE_REMACHADORA';
-      default:
-        break;
-    }
+    return accessoryItemType(accessory);
   }
 
-  if (collection.includes('accesorio')) {
-    if (slug.includes('calentador') || slug.includes('soldador')) return 'SOLDADOR';
-    if (slug.includes('mango')) return 'MANGO_GOLPE';
-    if (slug.includes('base') || slug.includes('remachadora')) return 'BASE_REMACHADORA';
+  if (
+    collection.includes('accesorio') ||
+    (item.material ?? '').toLowerCase().includes('accesorio')
+  ) {
+    if (
+      slug.includes('calentador') ||
+      slug.includes('soldador') ||
+      title.includes('calentador') ||
+      title.includes('soldador')
+    ) {
+      return 'SOLDADOR';
+    }
+    if (slug.includes('mango') || title.includes('mango')) {
+      return 'MANGO_GOLPE';
+    }
+    if (
+      slug.includes('base') ||
+      slug.includes('remachadora') ||
+      title.includes('remachadora') ||
+      title.includes('base de aluminio')
+    ) {
+      return 'BASE_REMACHADORA';
+    }
   }
 
   return 'SELLO';
 }
 
-function resolveTipo(item: CartItem): SelloInsert['tipo'] {
-  if (resolveItemType(item) === 'ABECEDARIO') return 'ABC';
+function resolveTipo(item: CartLineForDb, itemType: SelloItemType): SelloInsert['tipo'] {
+  if (itemType === 'ABECEDARIO') return 'ABC';
+  // Accesorios no son sellos CNC: el check de DB exige un `tipo`, usamos Clasico.
+  if (
+    itemType === 'SOLDADOR' ||
+    itemType === 'MANGO_GOLPE' ||
+    itemType === 'BASE_REMACHADORA'
+  ) {
+    return 'Clasico';
+  }
   const p = (item.process ?? '').toLowerCase();
   if (p.includes('alimento')) return 'Alimento';
   if (p.includes('lacre')) return 'Lacre';
@@ -74,9 +128,33 @@ function resolveTipo(item: CartItem): SelloInsert['tipo'] {
   return 'Clasico';
 }
 
+function isPersonalizedCartLine(item: CartLineForDb): boolean {
+  return (
+    item.collection === 'Personalizado' ||
+    (item.designSlug ?? '').startsWith('personalizado-')
+  );
+}
+
+function isAccessoryItemType(itemType: SelloItemType): boolean {
+  return (
+    itemType === 'SOLDADOR' ||
+    itemType === 'MANGO_GOLPE' ||
+    itemType === 'BASE_REMACHADORA'
+  );
+}
+
 /** Ítems de carrito que no son sellos fabricables (p. ej. línea de envío en Openpay). */
 export function isNonSelloCartLine(item: CartItem): boolean {
   return item.id.startsWith('envio-') || item.designSlug.startsWith('envio-');
+}
+
+/** Anota `item_type` en cada línea para que la app interna no tenga que adivinar. */
+export function enrichCartItemsWithItemType(items: CartItem[]): CartLineForDb[] {
+  return items.map((item) => {
+    if (isNonSelloCartLine(item)) return item;
+    const item_type = resolveItemType(item);
+    return { ...item, item_type };
+  });
 }
 
 export function buildSellosInsertsFromCart(
@@ -95,24 +173,32 @@ export function buildSellosInsertsFromCart(
       : 0;
 
   const rows = productItems.map((item) => {
-    const dims = parseVariantSizeToCm(item.variantSize);
-    const isPersonalized =
-      item.collection === 'Personalizado' ||
-      item.designSlug.startsWith('personalizado-');
+    const itemType = resolveItemType(item);
+    const accessory = getAccessoryBySlug(item.designSlug);
+    const isAccessory = isAccessoryItemType(itemType);
+    const isPersonalized = isPersonalizedCartLine(item) && !isAccessory;
+
+    // Accesorios no tienen medida de sello; no inventar dims desde "Único".
+    const dims = isAccessory
+      ? { largo_real: null, ancho_real: null }
+      : parseVariantSizeToCm(item.variantSize);
 
     const lineTotal = item.price * Math.max(1, item.qty);
+    const diseno = accessory?.title ?? item.title;
+
+    const noteParts = isAccessory
+      ? [accessory?.title ?? item.title, item.variantSize !== 'Único' ? item.variantSize : null]
+      : [item.material, item.variantSize, item.process];
 
     return {
       orden_id: ordenId,
       valor: lineTotal,
-      item_type: resolveItemType(item),
-      tipo: resolveTipo(item),
+      item_type: itemType,
+      tipo: resolveTipo(item, itemType),
       estado_fabricacion: 'Sin Hacer' as const,
       estado_venta: 'Señado' as const,
-      diseno: item.title,
-      nota: [item.material, item.variantSize, item.process]
-        .filter(Boolean)
-        .join(' · '),
+      diseno,
+      nota: noteParts.filter(Boolean).join(' · '),
       largo_real: dims.largo_real,
       ancho_real: dims.ancho_real,
       mockup_solicitud_id: isPersonalized
@@ -120,6 +206,8 @@ export function buildSellosInsertsFromCart(
         : null,
       item_config: {
         origen: 'web',
+        item_type: itemType,
+        cart_item_id: item.id,
         design_slug: item.designSlug,
         collection: item.collection,
         material_web: item.material,
@@ -127,18 +215,32 @@ export function buildSellosInsertsFromCart(
         variant_size: item.variantSize,
         qty: item.qty,
         unit_price: item.price,
-        line_total: item.price * item.qty,
+        line_total: lineTotal,
         image: item.image?.startsWith('data:') ? '[data-url]' : item.image,
+        ...(accessory
+          ? {
+              accessory_code: accessory.code,
+              accessory_slug: accessory.slug,
+            }
+          : {}),
+        ...(accessory?.code === 'soldador'
+          ? { soldadorPower: '200W' }
+          : {}),
       },
     };
   });
 
   if (envioCosto > 0 && rows.length > 0) {
-    rows[0].valor = Number(rows[0].valor) + envioCosto;
+    // Preferir sumar el envío al primer sello fabricable (no a un accesorio).
+    const stampIdx = rows.findIndex((r) => r.item_type === 'SELLO' || r.item_type === 'ABECEDARIO');
+    const envioIdx = stampIdx >= 0 ? stampIdx : 0;
+    rows[envioIdx].valor = Number(rows[envioIdx].valor) + envioCosto;
     const envioNote = `Envío $${envioCosto.toLocaleString('es-AR')}`;
-    rows[0].nota = rows[0].nota ? `${rows[0].nota} · ${envioNote}` : envioNote;
-    const cfg = rows[0].item_config as Record<string, unknown>;
-    (rows[0] as SelloInsert).item_config = { ...cfg, envio_costo: envioCosto };
+    rows[envioIdx].nota = rows[envioIdx].nota
+      ? `${rows[envioIdx].nota} · ${envioNote}`
+      : envioNote;
+    const cfg = rows[envioIdx].item_config as Record<string, unknown>;
+    (rows[envioIdx] as SelloInsert).item_config = { ...cfg, envio_costo: envioCosto };
   }
 
   return rows as SelloInsert[];

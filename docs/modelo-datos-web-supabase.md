@@ -74,7 +74,7 @@ flowchart LR
 | Pago tarjeta falla | UPDATE orden → `estado_pago_web='pago_fallido'` + `pago_error_codigo` + `pago_error_mensaje` |
 | Elige **transferencia** | Orden con `estado_pago_web='esperando_comprobante'` |
 | Sube comprobante | Bucket `comprobantes` + columnas `comprobante_*` en la orden |
-| App valida transferencia | **INSERT `sellos`** + UPDATE orden → `estado_pago_web='pagado'` y `estado_orden='Señado'` |
+| App valida transferencia | **INSERT `sellos`** (uno por cada ítem de `carrito_json`, respetando `item_type`) + UPDATE orden → `estado_pago_web='pagado'` y `estado_orden='Señado'` |
 
 ### Mapeo web → `clientes`
 

@@ -9,19 +9,33 @@ import AccessoryImageGallery from '@/components/accesorios/AccessoryImageGallery
 import AccessorySpecificationsCard from '@/components/accesorios/AccessorySpecificationsCard';
 import AccessoryVariantSelector from '@/components/accesorios/AccessoryVariantSelector';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
 import type { Accessory } from '@/data/accessories';
 import {
   getAccessoryLinkPrice,
   getAccessoryTransferPrice,
   getDefaultAccessoryVariant,
 } from '@/data/accessories';
+import { formatMarketMoney } from '@/lib/markets/money';
+import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 
 interface AccessoryProductPageProps {
   accessory: Accessory;
+  backHref?: string;
+  checkoutHref?: string;
+  continueShoppingHref?: string;
+  showTransferPrice?: boolean;
 }
 
-export default function AccessoryProductPage({ accessory }: AccessoryProductPageProps) {
+export default function AccessoryProductPage({
+  accessory,
+  backHref = '/accesorios',
+  checkoutHref = '/checkout',
+  continueShoppingHref = '/accesorios',
+  showTransferPrice = true,
+}: AccessoryProductPageProps) {
   const { addItem } = useCart();
+  const { market } = useMarket();
   const defaultVariant = getDefaultAccessoryVariant(accessory) ?? accessory.variants?.[0];
   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(
     defaultVariant?.id
@@ -41,6 +55,8 @@ export default function AccessoryProductPage({ accessory }: AccessoryProductPage
   const transferPrice = selectedVariant?.outOfStock
     ? 0
     : selectedVariant?.transferPrice ?? getAccessoryTransferPrice(accessory);
+  const displayLinkPrice = convertPublicArsToMarketPrice(linkPrice, market);
+  const displayTransferPrice = convertPublicArsToMarketPrice(transferPrice, market);
   const variantLabel = selectedVariant?.label ?? 'Único';
   const canPurchase = !selectedVariant?.outOfStock && linkPrice > 0;
 
@@ -113,7 +129,7 @@ export default function AccessoryProductPage({ accessory }: AccessoryProductPage
           }}
           secondaryCta={{
             label: 'Ver otros accesorios',
-            href: '/accesorios',
+            href: backHref,
             variant: 'secondary',
           }}
           highlights={
@@ -170,14 +186,14 @@ export default function AccessoryProductPage({ accessory }: AccessoryProductPage
 
                 <div className="space-y-1.5">
                   <p className="min-h-[2.25rem] text-2xl font-bold leading-tight tracking-tight text-neutral-900 md:min-h-[2.75rem] md:text-3xl">
-                    {canPurchase ? `$${linkPrice.toLocaleString('es-AR')}` : 'Sin stock'}
+                    {canPurchase ? formatMarketMoney(displayLinkPrice, market) : 'Sin stock'}
                   </p>
 
-                  {canPurchase ? (
+                  {canPurchase && showTransferPrice ? (
                     <p className="min-h-[1.25rem] text-sm font-semibold leading-snug text-green-600">
-                      ${transferPrice.toLocaleString('es-AR')} c/ transferencia
+                      {formatMarketMoney(displayTransferPrice, market)} c/ transferencia
                     </p>
-                  ) : (
+                  ) : canPurchase ? null : (
                     <p className="min-h-[1.25rem] text-sm font-semibold leading-snug text-neutral-500">
                       Sin stock por el momento
                     </p>
@@ -210,10 +226,10 @@ export default function AccessoryProductPage({ accessory }: AccessoryProductPage
                       Agregado al carrito. Podés finalizar la compra ahora o seguir mirando accesorios.
                     </p>
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                      <ActionButton href="/checkout" variant="primary" className="flex-1">
+                      <ActionButton href={checkoutHref} variant="primary" className="flex-1">
                         Finalizar compra
                       </ActionButton>
-                      <ActionButton href="/accesorios" variant="secondary" className="flex-1">
+                      <ActionButton href={continueShoppingHref} variant="secondary" className="flex-1">
                         Seguir comprando
                       </ActionButton>
                     </div>
@@ -249,7 +265,7 @@ export default function AccessoryProductPage({ accessory }: AccessoryProductPage
         </div>
 
         <div className="border-t border-[var(--alcohn-line)] pt-12">
-          <ActionButton href="/accesorios" variant="ghost">
+          <ActionButton href={backHref} variant="ghost">
             ← Ver todos los accesorios
           </ActionButton>
         </div>

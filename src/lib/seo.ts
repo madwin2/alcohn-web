@@ -1,4 +1,8 @@
 import type { Metadata } from 'next';
+import type { MarketCode } from '@/lib/markets/types';
+import { getMarketConfig } from '@/lib/markets/config';
+import { alternateLanguages, marketAbsoluteUrl } from '@/lib/markets/seo';
+import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 
 export const SITE_URL = 'https://www.alcohnsellos.com';
 export const SITE_NAME = 'Alcohn';
@@ -17,6 +21,7 @@ type PageMetadataOptions = {
   path: string;
   image?: string;
   robots?: Metadata['robots'];
+  market?: MarketCode;
 };
 
 /** Metadata on-page consistente (title, description, canonical, OG, Twitter). */
@@ -26,7 +31,9 @@ export function createPageMetadata({
   path,
   image = DEFAULT_OG_IMAGE,
   robots,
+  market,
 }: PageMetadataOptions): Metadata {
+  const canonicalPath = market ? marketAbsoluteUrl(market, path) : path;
   const ogImages =
     image === DEFAULT_OG_IMAGE
       ? [
@@ -43,11 +50,14 @@ export function createPageMetadata({
     title,
     description,
     ...(robots ? { robots } : {}),
-    alternates: { canonical: path },
+    alternates: {
+      canonical: canonicalPath,
+      ...(market ? { languages: alternateLanguages(path) } : {}),
+    },
     openGraph: {
       type: 'website',
-      locale: 'es_AR',
-      url: path,
+      locale: market ? getMarketConfig(market).locale.replace('-', '_') : 'es_AR',
+      url: canonicalPath,
       siteName: SITE_NAME,
       title,
       description,
@@ -249,6 +259,7 @@ export type ProductJsonLdInput = {
   sku?: string;
   category?: string;
   price?: number;
+  market?: MarketCode;
   additionalProperty?: Array<{ name: string; value: string }>;
   aggregateRating?: { ratingValue: number; reviewCount: number };
   reviews?: Array<{
@@ -259,7 +270,35 @@ export type ProductJsonLdInput = {
   }>;
 };
 
+function buildInternationalOfferShippingDetails(countryIso2: string) {
+  return {
+    '@type': 'OfferShippingDetails',
+    shippingDestination: {
+      '@type': 'DefinedRegion',
+      addressCountry: countryIso2,
+    },
+    deliveryTime: {
+      '@type': 'ShippingDeliveryTime',
+      handlingTime: {
+        '@type': 'QuantitativeValue',
+        minValue: 3,
+        maxValue: 5,
+        unitCode: 'DAY',
+      },
+      transitTime: {
+        '@type': 'QuantitativeValue',
+        minValue: 5,
+        maxValue: 15,
+        unitCode: 'DAY',
+      },
+    },
+  };
+}
+
 export function buildProductJsonLd(input: ProductJsonLdInput) {
+  const market = input.market ?? 'ar';
+  const marketConfig = getMarketConfig(market);
+  const productPath = market !== 'ar' ? marketAbsoluteUrl(market, input.path) : absoluteUrl(input.path);
   const images = (Array.isArray(input.image) ? input.image : [input.image]).map((src) =>
     src.startsWith('http') ? src : absoluteUrl(src)
   );
@@ -270,7 +309,7 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
     name: input.name,
     description: input.description,
     image: images,
-    url: absoluteUrl(input.path),
+    url: productPath,
     brand: {
       '@type': 'Brand',
       name: SITE_NAME,
@@ -317,14 +356,20 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
   }
 
   if (input.price != null) {
+    const offerPrice =
+      market === 'ar' ? input.price : convertPublicArsToMarketPrice(input.price, market);
+
     product.offers = {
       '@type': 'Offer',
-      priceCurrency: 'ARS',
-      price: input.price,
+      priceCurrency: marketConfig.currency,
+      price: offerPrice,
       availability: 'https://schema.org/InStock',
-      url: absoluteUrl(input.path),
+      url: productPath,
       seller: { '@id': ORGANIZATION_ID },
-      shippingDetails: buildOfferShippingDetails(),
+      shippingDetails:
+        market === 'ar'
+          ? buildOfferShippingDetails()
+          : buildInternationalOfferShippingDetails(marketConfig.countryIso2),
       hasMerchantReturnPolicy: buildMerchantReturnPolicy(),
     };
   }

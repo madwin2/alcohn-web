@@ -12,7 +12,10 @@
     "images:optimize": "node scripts/optimize-images.mjs",
     "seo:assets": "node scripts/generate-seo-assets.mjs",
     "feed:merchant": "tsx scripts/generate-merchant-feed.ts",
-    "feed:pinterest": "tsx scripts/generate-pinterest-feed.ts"
+    "feed:merchant:latam": "tsx scripts/generate-merchant-feed-latam.ts",
+    "feed:pinterest": "tsx scripts/generate-pinterest-feed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -36,6 +39,8 @@
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
     "tsx": "^4.22.4",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vite": "^5.4.19",
+    "vitest": "^3.2.4"
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import StampSizeScalePreview from '@/components/buy/StampSizeScalePreview';
+import WizardSizeCompareScale from '@/components/buy/WizardSizeCompareScale';
 
 export type WizardSizeTierOption = {
   key: string;
@@ -82,24 +83,24 @@ export function WizardSizePickerRow({
             key={option.key}
             type="button"
             onClick={() => onSelect(option)}
-            className={`relative flex min-h-[80px] flex-col items-center justify-center gap-0.5 border px-1.5 py-2 text-center transition-all active:scale-[0.98] ${
+            className={`relative flex min-h-[80px] flex-col items-center justify-center gap-0.5 border px-1.5 py-2.5 text-center transition-all active:scale-[0.98] ${
               isSelected
-                ? 'border-[var(--alcohn-ink)] bg-white shadow-[inset_0_0_0_1px_var(--alcohn-ink)]'
-                : 'border-[var(--alcohn-line)] bg-neutral-50/80 hover:border-neutral-400'
+                ? 'border-[var(--alcohn-ink)] bg-[var(--alcohn-surface)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]'
+                : 'border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] hover:border-neutral-400'
             }`}
           >
             {option.recommended && (
-              <span className="absolute -top-2 left-1/2 z-[1] -translate-x-1/2 whitespace-nowrap rounded bg-[var(--alcohn-ink)] px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-white">
-                Rec.
+              <span className="absolute -top-2 left-1/2 z-[1] -translate-x-1/2 whitespace-nowrap bg-[var(--alcohn-bronze)] px-1.5 py-px font-mono text-[8px] font-semibold uppercase tracking-wide text-white">
+                Recomendado
               </span>
             )}
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-700">
+            <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-500">
               {option.label}
             </span>
-            <span className="text-[10px] font-medium leading-tight text-neutral-800">
+            <span className="text-[12px] font-semibold leading-tight text-neutral-900">
               {option.size.replace(/mm$/i, ' mm')}
             </span>
-            <span className="mt-0.5 text-xs font-bold tabular-nums text-neutral-950">
+            <span className="mt-0.5 text-[13.5px] font-bold tabular-nums text-neutral-950">
               ${option.price.toLocaleString('es-AR')}
             </span>
           </button>
@@ -117,6 +118,8 @@ type WizardSizeSummaryPanelProps = {
   customSize?: { width: number; height: number };
   logoUrl?: string | null;
   className?: string;
+  /** En mobile del rediseño: filas de resumen sin la moneda lateral (va en la comparación). */
+  compactRows?: boolean;
 };
 
 export function WizardSizeSummaryPanel({
@@ -127,6 +130,7 @@ export function WizardSizeSummaryPanel({
   customSize,
   logoUrl,
   className = '',
+  compactRows = false,
 }: WizardSizeSummaryPanelProps) {
   const summary = resolveSummaryState(
     options,
@@ -142,6 +146,31 @@ export function WizardSizeSummaryPanel({
     /(\d+)\s*[x×]\s*(\d+)/i,
     '$1×$2'
   );
+
+  if (compactRows) {
+    return (
+      <div className={`px-4 py-3 ${className}`}>
+        <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px]">
+          <span className="text-neutral-600">Medida</span>
+          <span className="font-semibold tabular-nums text-neutral-950">{sizeDisplay}</span>
+        </div>
+        {summary.price > 0 && (
+          <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px]">
+            <span className="text-neutral-600">3 cuotas sin interés</span>
+            <span className="font-semibold tabular-nums text-neutral-950">
+              ${summary.cuota.toLocaleString('es-AR')}
+            </span>
+          </div>
+        )}
+        <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px] text-emerald-700">
+          <span>Pagando por transferencia</span>
+          <span className="font-semibold tabular-nums">
+            ${summary.transfer.toLocaleString('es-AR')}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`px-3 py-3 ${className}`}>
@@ -217,6 +246,11 @@ export default function WizardSizeStepMobile({
         customSize={customSize}
         onSelect={onSelect}
       />
+      <WizardSizeCompareScale
+        options={options}
+        selectedSize={selectedSize}
+        logoUrl={logoUrl}
+      />
       <WizardSizeSummaryPanel
         options={options}
         selectedSize={selectedSize}
@@ -224,7 +258,8 @@ export default function WizardSizeStepMobile({
         selectedTransferPrice={selectedTransferPrice}
         customSize={customSize}
         logoUrl={logoUrl}
-        className="border border-[var(--alcohn-line)] bg-white"
+        compactRows
+        className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
       />
     </div>
   );

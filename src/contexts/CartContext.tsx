@@ -2,27 +2,29 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, CartState, generateCartItemId, loadCartFromStorage, saveCartToStorage } from '@/lib/cart';
+import { useMarket } from '@/contexts/MarketContext';
 import { trackMetaAddToCart } from '@/lib/analytics/metaPixel';
 
 const CartContext = createContext<CartState | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { market, config: marketConfig } = useMarket();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Cargar del localStorage al montar
+  // Cargar del localStorage al montar o al cambiar de mercado
   useEffect(() => {
-    const loadedItems = loadCartFromStorage();
+    const loadedItems = loadCartFromStorage(market);
     setItems(loadedItems);
     setIsHydrated(true);
-  }, []);
+  }, [market]);
 
   // Guardar en localStorage cuando cambian los items
   useEffect(() => {
     if (isHydrated) {
-      saveCartToStorage(items);
+      saveCartToStorage(items, market);
     }
-  }, [items, isHydrated]);
+  }, [items, isHydrated, market]);
 
   const addItem = (item: Omit<CartItem, 'id' | 'qty'>) => {
     const id = generateCartItemId(item.designSlug, item.variantSize);
@@ -48,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         price: item.price,
         qty: 1,
       });
-      return [...prevItems, { ...item, id, qty: 1 }];
+      return [...prevItems, { ...item, id, qty: 1, market, currency: marketConfig.currency }];
     });
   };
 

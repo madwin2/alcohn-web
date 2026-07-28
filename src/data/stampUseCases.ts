@@ -1,3 +1,6 @@
+import type { MarketCode } from '@/lib/markets/types';
+import { marketBuyPath } from '@/lib/markets/paths';
+
 export type WizardMaterial = 'cuero' | 'madera' | 'ambos' | 'ceramica' | 'alimentos' | 'otros';
 
 export interface StampUseCase {
@@ -512,6 +515,12 @@ export function getWizardOptionBySlug(slug: string): WizardMaterialOption | unde
   return wizardMaterialOptions.find((o) => o.slug === slug);
 }
 
-export function getStampUseCaseBuyHref(useCase: Pick<StampUseCase, 'slug' | 'buyMaterial'>) {
-  return `/buy?mode=custom&material=${useCase.buyMaterial}&uso=${useCase.slug}`;
+export function getStampUseCaseBuyHref(
+  useCase: Pick<StampUseCase, 'slug' | 'buyMaterial'>,
+  market: MarketCode = 'ar'
+) {
+  return marketBuyPath(
+    market,
+    `mode=custom&material=${useCase.buyMaterial}&uso=${useCase.slug}`
+  );
 }

@@ -1,6 +1,11 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { stampUseCases } from '@/data/stampUseCases';
+import { useMarket } from '@/contexts/MarketContext';
+import { isStampUseCaseAvailableInMarket } from '@/lib/markets/catalog';
+import { marketPath } from '@/lib/markets/paths';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 
@@ -10,17 +15,22 @@ interface StampMaterialGridProps {
 }
 
 export default function StampMaterialGrid({ className = '', onLinkClick }: StampMaterialGridProps) {
+  const { market } = useMarket();
+  const useCases = stampUseCases.filter((useCase) =>
+    isStampUseCaseAvailableInMarket(useCase.slug, market)
+  );
+
   return (
     <div className={className}>
       <div className="md:hidden">
         <MobileOverlayCarousel
           showDots
           onLinkClick={onLinkClick}
-          items={stampUseCases.map((useCase, index) => ({
+          items={useCases.map((useCase, index) => ({
             key: useCase.slug,
             image: useCase.heroImage,
             alt: useCase.heroAlt,
-            href: `/sellos/${useCase.slug}`,
+            href: marketPath(market, `/sellos/${useCase.slug}`),
             overlay: (
               <>
                 <p className="absolute left-4 top-4 text-[10px] font-semibold uppercase text-white/64">
@@ -39,10 +49,10 @@ export default function StampMaterialGrid({ className = '', onLinkClick }: Stamp
 
       <div className="technical-sheet hidden md:block">
         <MobileCarousel rowClassName="relative z-10 sm:grid sm:grid-cols-2 lg:grid-cols-3" hint="Deslizá materiales">
-          {stampUseCases.map((useCase, index) => (
+          {useCases.map((useCase, index) => (
             <Link
               key={useCase.slug}
-              href={`/sellos/${useCase.slug}`}
+              href={marketPath(market, `/sellos/${useCase.slug}`)}
               onClick={onLinkClick}
               className="mobile-snap-card group relative min-h-[220px] overflow-hidden border border-[var(--alcohn-line)] p-5 text-white sm:min-w-0 sm:border-b sm:border-r"
             >
