@@ -8,6 +8,7 @@ import InternationalShippingForm from '@/components/checkout/InternationalShippi
 import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
+import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { formatMarketMoney } from '@/lib/markets/money';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
@@ -122,6 +123,18 @@ export default function InternationalCheckoutPage() {
       if (!intentRes.ok || !intentData.orden_id) {
         throw new Error(intentData.error ?? 'No se pudo crear la orden');
       }
+
+      // Snapshot para el tracking de conversión (Google Ads) en la página de éxito.
+      savePurchaseSnapshot({
+        orderId: intentData.orden_id,
+        value: pricing?.total ?? 0,
+        items: (pricing?.lineItems ?? []).map((li) => ({
+          id: li.id,
+          title: li.title,
+          price: li.price,
+          qty: li.qty,
+        })),
+      });
 
       const paymentRes = await fetch('/api/checkout/international/payment', {
         method: 'POST',

@@ -4,6 +4,9 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
+import { MARKETS } from '@/lib/markets/config';
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 
@@ -14,6 +17,7 @@ function InternationalCheckoutSuccessContent() {
   const { clearCart } = useCart();
   const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const confirmSentRef = useRef(false);
+  const purchaseTrackedRef = useRef(false);
 
   const marketParam = typeof params.market === 'string' ? params.market : 'cl';
   const market = (
@@ -25,6 +29,22 @@ function InternationalCheckoutSuccessContent() {
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+
+  // Evento de compra para Google Ads (vía GTM). Se dispara una sola vez por orden.
+  useEffect(() => {
+    if (!ordenId || purchaseTrackedRef.current) return;
+    const snapshot = consumePurchaseSnapshot(ordenId);
+    if (!snapshot) return;
+    purchaseTrackedRef.current = true;
+
+    pushGtmEvent('purchase_international', {
+      transaction_id: snapshot.orderId,
+      value: snapshot.value,
+      currency: MARKETS[market].currency,
+      market,
+      items: snapshot.items,
+    });
+  }, [ordenId, market]);
 
   useEffect(() => {
     if (!ordenId || confirmSentRef.current) return;
