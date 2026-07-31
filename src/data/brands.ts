@@ -56,6 +56,34 @@ export const brands: Brand[] = [
     name: "Terrazas de los Andes",
     logo: "/images/brands/brand-terrazas-andes.webp"
   },
+  {
+    name: "Cardon",
+    logo: "/images/brands/brand-cardon.png"
+  },
+  {
+    name: "Kevingstone",
+    logo: "/images/brands/brand-kevingstone.png"
+  },
+  {
+    name: "Ribera",
+    logo: "/images/brands/brand-ribera.png"
+  },
+  {
+    name: "Estancias",
+    logo: "/images/brands/brand-estancias.png"
+  },
+  {
+    name: "Pato Pampa",
+    logo: "/images/brands/brand-pato-pampa.png"
+  },
+  {
+    name: "Flavia Palmiero",
+    logo: "/images/brands/brand-flavia-palmiero.png"
+  },
+  {
+    name: "Pucheta",
+    logo: "/images/brands/brand-pucheta.png"
+  },
 ];
 
 
