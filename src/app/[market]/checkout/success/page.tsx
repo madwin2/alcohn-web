@@ -30,8 +30,9 @@ function InternationalCheckoutSuccessContent() {
     clearCart();
   }, [clearCart]);
 
-  // Evento de compra para Google Ads (vía GTM). Se dispara una sola vez por orden.
+  // Google Ads (GTM) para CL/CO/MX. Perú tiene su propio flujo más abajo.
   useEffect(() => {
+    if (market === 'pe') return;
     if (!ordenId || purchaseTrackedRef.current) return;
     const snapshot = consumePurchaseSnapshot(ordenId);
     if (!snapshot) return;
@@ -45,6 +46,49 @@ function InternationalCheckoutSuccessContent() {
       items: snapshot.items,
     });
   }, [ordenId, market]);
+
+  // Perú: purchase_international solo en /pe/checkout/success tras pago confirmado.
+  useEffect(() => {
+    if (market !== 'pe') return;
+    if (syncState !== 'ok') return;
+    if (!ordenId || purchaseTrackedRef.current) return;
+
+    const transactionId = String(ordenId);
+    const eventId = `pe_${transactionId}`;
+    const dedupeKey = `alcohn_gtm_purchase_international_${eventId}`;
+
+    try {
+      if (sessionStorage.getItem(dedupeKey)) {
+        purchaseTrackedRef.current = true;
+        return;
+      }
+    } catch {
+      // sessionStorage puede fallar; seguimos con el snapshot.
+    }
+
+    const snapshot = consumePurchaseSnapshot(transactionId);
+    if (!snapshot?.orderId) return;
+
+    const value = Number(snapshot.value);
+    if (!Number.isFinite(value) || value <= 0) return;
+
+    const resolvedTransactionId = String(snapshot.orderId);
+    purchaseTrackedRef.current = true;
+
+    try {
+      sessionStorage.setItem(dedupeKey, '1');
+    } catch {
+      // El tracking no debe romper la página de éxito.
+    }
+
+    pushGtmEvent('purchase_international', {
+      market: 'pe',
+      value,
+      currency: 'PEN',
+      transaction_id: resolvedTransactionId,
+      event_id: `pe_${resolvedTransactionId}`,
+    });
+  }, [market, syncState, ordenId]);
 
   useEffect(() => {
     if (!ordenId || confirmSentRef.current) return;
