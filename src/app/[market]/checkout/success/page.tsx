@@ -5,10 +5,38 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { trackMetaPurchasePeru } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { MARKETS } from '@/lib/markets/config';
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
+
+const META_PE_PENDING_PREFIX = 'alcohn_meta_pe_pending_';
+const META_PE_FIRED_PREFIX = 'alcohn_meta_pe_purchase_';
+
+function fireMetaPurchasePeOnce(value: number, transactionId: string, trackedRef: { current: boolean }): void {
+  if (trackedRef.current) return;
+
+  const metaKey = `${META_PE_FIRED_PREFIX}${transactionId}`;
+  try {
+    if (sessionStorage.getItem(metaKey)) {
+      trackedRef.current = true;
+      return;
+    }
+  } catch {
+    // Seguimos; la ref evita doble disparo en la misma carga.
+  }
+
+  trackedRef.current = true;
+  try {
+    sessionStorage.setItem(metaKey, '1');
+    sessionStorage.removeItem(`${META_PE_PENDING_PREFIX}${transactionId}`);
+  } catch {
+    // El tracking no debe romper la página de éxito.
+  }
+
+  trackMetaPurchasePeru({ value, transactionId });
+}
 
 function InternationalCheckoutSuccessContent() {
   const searchParams = useSearchParams();
@@ -18,6 +46,7 @@ function InternationalCheckoutSuccessContent() {
   const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const confirmSentRef = useRef(false);
   const purchaseTrackedRef = useRef(false);
+  const metaPeTrackedRef = useRef(false);
 
   const marketParam = typeof params.market === 'string' ? params.market : 'cl';
   const market = (
@@ -77,6 +106,10 @@ function InternationalCheckoutSuccessContent() {
 
     try {
       sessionStorage.setItem(dedupeKey, '1');
+      sessionStorage.setItem(
+        `${META_PE_PENDING_PREFIX}${resolvedTransactionId}`,
+        JSON.stringify({ value, orderId: resolvedTransactionId })
+      );
     } catch {
       // El tracking no debe romper la página de éxito.
     }
@@ -88,6 +121,25 @@ function InternationalCheckoutSuccessContent() {
       transaction_id: resolvedTransactionId,
       event_id: `pe_${resolvedTransactionId}`,
     });
+
+    fireMetaPurchasePeOnce(value, resolvedTransactionId, metaPeTrackedRef);
+  }, [market, syncState, ordenId]);
+
+  // Meta Purchase PE: cubre refresh si GTM ya estaba deduplicado pero Meta aún no.
+  useEffect(() => {
+    if (market !== 'pe' || syncState !== 'ok' || !ordenId) return;
+
+    const transactionId = String(ordenId);
+    try {
+      const raw = sessionStorage.getItem(`${META_PE_PENDING_PREFIX}${transactionId}`);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { value?: unknown; orderId?: unknown };
+      if (typeof parsed.value !== 'number' || typeof parsed.orderId !== 'string') return;
+      if (!Number.isFinite(parsed.value) || parsed.value <= 0) return;
+      fireMetaPurchasePeOnce(parsed.value, parsed.orderId, metaPeTrackedRef);
+    } catch {
+      // El tracking no debe romper la página de éxito.
+    }
   }, [market, syncState, ordenId]);
 
   useEffect(() => {

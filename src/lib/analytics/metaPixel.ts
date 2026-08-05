@@ -137,6 +137,27 @@ export function trackMetaPurchase(snapshot: PurchaseSnapshot): void {
   });
 }
 
+/** Purchase Meta solo para checkout Perú (`/pe/checkout/success`). No altera Argentina. */
+export function trackMetaPurchasePeru(params: {
+  value: number;
+  transactionId: string;
+}): void {
+  if (!META_PIXEL_ID) return;
+
+  const payload = {
+    value: params.value,
+    currency: 'PEN',
+    market: 'pe',
+    transaction_id: params.transactionId,
+  };
+  const eventOptions = { eventID: `pe_${params.transactionId}` };
+
+  runWhenReady(() => {
+    if (!isFbqReady()) return;
+    window.fbq!('track', 'Purchase', payload, eventOptions);
+  });
+}
+
 /** @deprecated Mantener compatibilidad con imports existentes. */
 export function initMetaPixel(): void {
   trackMetaPageView();
