@@ -97,22 +97,46 @@ export function getInternationalTermsSections(countryName: string): LegalSection
 export function getInternationalPrivacySections(market: InternationalMarketCode): LegalSection[] {
   return [
     {
-      title: 'Datos que recopilamos',
+      title: '1. Información que recopilamos',
       paragraphs: [
-        'Contacto, dirección de envío internacional, datos del pedido, referencia del proveedor de pago y archivos de logo o diseño que subas para fabricar tu sello.',
+        'Podemos recopilar nombre, teléfono, email, domicilio de envío internacional, datos de facturación, mensajes, imágenes, logotipos, diseños y otros archivos enviados para presupuestos o pedidos.',
+        'También podemos recibir información relacionada con las comunicaciones realizadas a través de WhatsApp.',
       ],
     },
     {
-      title: 'Uso de los datos',
+      title: '2. Cómo utilizamos la información',
       paragraphs: [
-        'Usamos tus datos para fabricar el pedido, cobrar el pago, coordinar el envío DHL, brindar soporte y mejorar la experiencia del sitio.',
+        'Utilizamos estos datos para responder consultas, elaborar presupuestos, gestionar pedidos, fabricar productos personalizados, procesar pagos, coordinar envíos DHL, brindar atención al cliente y realizar comunicaciones relacionadas con nuestros productos y servicios.',
       ],
     },
     {
-      title: 'Compartición',
+      title: '3. WhatsApp Business',
       paragraphs: [
-        'Compartimos datos solo con el proveedor de pago internacional y con DHL en la medida necesaria para completar la compra y la entrega.',
+        'Alcohn Sellos utiliza WhatsApp Business y la WhatsApp Business Platform de Meta para comunicarse con clientes.',
+        'Cuando un usuario se comunica con nosotros a través de WhatsApp, podemos procesar su número de teléfono, nombre, contenido de los mensajes y archivos enviados con el objetivo de atender su consulta o gestionar su pedido.',
+        'El uso de WhatsApp también está sujeto a las políticas y condiciones de Meta y WhatsApp.',
+      ],
+    },
+    {
+      title: '4. Proveedores de servicios',
+      paragraphs: [
+        'Compartimos datos solo con proveedores necesarios para completar la compra y la entrega, como el proveedor de pago internacional, DHL, hosting e infraestructura tecnológica.',
+        'Estos proveedores pueden procesar únicamente la información necesaria para prestar dichos servicios.',
+      ],
+    },
+    {
+      title: '5. Conservación, seguridad y derechos',
+      paragraphs: [
+        'Conservamos los datos el tiempo necesario para las finalidades indicadas y obligaciones legales. Adoptamos medidas razonables de seguridad.',
+        `Los usuarios pueden solicitar acceso, rectificación, actualización o eliminación de sus datos escribiendo a ${SITE_CONTACT.email}.`,
         `Esta versión aplica al mercado ${market.toUpperCase()} del sitio internacional de Alcohn.`,
+      ],
+    },
+    {
+      title: '6. Contacto',
+      paragraphs: [
+        'Alcohn Sellos · alcohnsellos.com · Argentina',
+        `Email: ${SITE_CONTACT.email}`,
       ],
     },
   ];

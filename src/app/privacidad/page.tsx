@@ -1,100 +1,83 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { createPageMetadata, SITE_CONTACT, SITE_NAME, SITE_URL } from '@/lib/seo';
+import { createPageMetadata, SITE_CONTACT } from '@/lib/seo';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Política de privacidad | Alcohn Sellos de bronce',
   description:
-    'Cómo recopilamos, usamos y protegemos tus datos personales en alcohnsellos.com. Cumplimos con la Ley 25.326 de Argentina.',
+    'Cómo recopilamos, usamos y protegemos tus datos personales en alcohnsellos.com. Incluye el uso de WhatsApp Business.',
   path: '/privacidad',
 });
 
 const sections: Array<{ title: string; paragraphs: string[] }> = [
   {
-    title: 'Responsable del tratamiento',
+    title: '1. Información que recopilamos',
     paragraphs: [
-      `Esta Política de Privacidad describe cómo ${SITE_NAME} recolecta, utiliza y protege los datos personales de quienes visitan o realizan pedidos en alcohnsellos.com.`,
-      `Para consultas sobre el tratamiento de tus datos, podés contactarnos por email a ${SITE_CONTACT.email} o por WhatsApp al ${SITE_CONTACT.phoneDisplay}.`,
+      'Podemos recopilar información proporcionada directamente por nuestros clientes, incluyendo nombre, número de teléfono, dirección de correo electrónico, domicilio, información necesaria para facturación y envíos, así como mensajes, imágenes, logotipos, diseños y otros archivos enviados para solicitar presupuestos o realizar pedidos.',
+      'También podemos recibir información relacionada con las comunicaciones realizadas a través de WhatsApp.',
     ],
   },
   {
-    title: 'Marco legal',
+    title: '2. Cómo utilizamos la información',
     paragraphs: [
-      'Tratamos tus datos personales en cumplimiento de la Ley Nacional 25.326 de Protección de Datos Personales de la República Argentina y su normativa reglamentaria.',
-      'La Agencia de Acceso a la Información Pública es el organismo de control en materia de protección de datos en Argentina.',
+      'Utilizamos estos datos para responder consultas, elaborar presupuestos, gestionar pedidos, fabricar productos personalizados, procesar pagos y facturación, coordinar envíos, brindar atención al cliente y realizar comunicaciones relacionadas con nuestros productos y servicios.',
     ],
   },
   {
-    title: 'Datos que recopilamos',
+    title: '3. WhatsApp Business',
     paragraphs: [
-      'Datos identificatorios y de contacto que cargás voluntariamente al hacer un pedido o usar el formulario de contacto: nombre, apellido, email, teléfono, dirección de envío y, si corresponde, DNI o CUIT para emisión de comprobantes.',
-      'Información sobre tu pedido: producto elegido, medidas, uso, logo o diseño subido para personalización, método de envío y método de pago seleccionado.',
-      'Datos técnicos de navegación: dirección IP, tipo de dispositivo, navegador, sistema operativo, páginas visitadas y referencia de origen, recopilados mediante cookies y herramientas de analítica.',
-      'No almacenamos datos completos de tarjetas de crédito o débito; los pagos se procesan a través de pasarelas externas habilitadas que cumplen estándares PCI.',
+      'Alcohn Sellos utiliza WhatsApp Business y la WhatsApp Business Platform de Meta para comunicarse con clientes.',
+      'Cuando un usuario se comunica con nosotros a través de WhatsApp, podemos procesar su número de teléfono, nombre, contenido de los mensajes y archivos enviados con el objetivo de atender su consulta o gestionar su pedido.',
+      'El uso de WhatsApp también está sujeto a las políticas y condiciones de Meta y WhatsApp.',
     ],
   },
   {
-    title: 'Finalidad del tratamiento',
+    title: '4. Proveedores de servicios',
     paragraphs: [
-      'Procesar y gestionar tu pedido (fabricación, facturación, envío y postventa).',
-      'Comunicarnos con vos respecto a tu compra, muestras digitales, consultas o reclamos.',
-      'Cumplir con obligaciones legales, fiscales y contables.',
-      'Mejorar el funcionamiento del sitio, la experiencia de usuario y las acciones de marketing propias, siempre dentro de los límites permitidos por la ley.',
-      'Prevenir fraude o usos indebidos del servicio.',
+      'Podemos utilizar proveedores externos para prestar determinados servicios, como infraestructura tecnológica, alojamiento de servidores, procesamiento de pagos, facturación, logística y herramientas de comunicación.',
+      'Estos proveedores pueden procesar únicamente la información necesaria para prestar dichos servicios.',
     ],
   },
   {
-    title: 'Base legal',
+    title: '5. Conservación de la información',
     paragraphs: [
-      'Tratamos tus datos sobre la base de tu consentimiento al realizar un pedido o enviar un formulario, la ejecución del contrato de compraventa, el cumplimiento de obligaciones legales y el interés legítimo de Alcohn en mantener el sitio operativo y seguro.',
+      'Conservamos los datos personales únicamente durante el tiempo necesario para cumplir con las finalidades para las que fueron recopilados, atender obligaciones administrativas o legales y mantener el historial necesario para brindar soporte a nuestros clientes.',
     ],
   },
   {
-    title: 'Cookies y tecnologías similares',
+    title: '6. Seguridad',
     paragraphs: [
-      'Utilizamos cookies propias y de terceros para recordar tus preferencias, mantener tu sesión, medir el uso del sitio y, eventualmente, mostrar publicidad relacionada con Alcohn en otras plataformas.',
-      'Podés gestionar o eliminar las cookies desde la configuración de tu navegador. Bloquearlas puede afectar el funcionamiento de algunas partes del sitio (carrito, checkout, formularios).',
+      'Adoptamos medidas razonables de seguridad para proteger la información contra accesos no autorizados, pérdida, modificación o divulgación indebida.',
     ],
   },
   {
-    title: 'Con quién compartimos tus datos',
+    title: '7. Derechos del usuario',
     paragraphs: [
-      'Compartimos los datos estrictamente necesarios con: la pasarela de pago elegida (para procesar el cobro), el operador logístico o correo (para entregar el pedido), el proveedor de hosting y servicios de infraestructura cloud, y las herramientas de analítica y marketing que usamos en el sitio.',
-      'Estos terceros acceden a tus datos únicamente para prestar el servicio contratado y están obligados a tratarlos con la debida confidencialidad. No vendemos ni cedemos tus datos personales a terceros con fines comerciales ajenos a la operación de Alcohn.',
+      'Los usuarios pueden solicitar acceso, rectificación, actualización o eliminación de sus datos personales comunicándose con nosotros.',
     ],
   },
   {
-    title: 'Conservación de los datos',
+    title: '8. Eliminación de datos',
     paragraphs: [
-      'Conservamos tus datos mientras dure la relación comercial y, posteriormente, durante el plazo necesario para atender garantías, reclamos y obligaciones legales, fiscales o contables aplicables.',
-      'Los logs técnicos de navegación se conservan por períodos más breves, salvo requerimiento legal en contrario.',
+      'Para solicitar la eliminación de información personal asociada a una conversación, consulta o pedido, el usuario puede contactarnos a:',
+      SITE_CONTACT.email,
+      'Indicando los datos necesarios para identificar la información que desea eliminar.',
     ],
   },
   {
-    title: 'Tus derechos',
+    title: '9. Contacto',
     paragraphs: [
-      'De acuerdo con la Ley 25.326, tenés derecho a acceder gratuitamente a tus datos personales en intervalos no menores a seis meses, salvo interés legítimo. También podés solicitar la rectificación, actualización, supresión o confidencialidad de tus datos cuando corresponda.',
-      `Para ejercer estos derechos escribinos a ${SITE_CONTACT.email}. Te responderemos dentro de los plazos previstos por la normativa vigente.`,
-      'Asimismo, el titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto, conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326.',
-      'La Agencia de Acceso a la Información Pública, en su carácter de Órgano de Control de la Ley Nº 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.',
+      'Para consultas relacionadas con esta Política de Privacidad:',
+      'Alcohn Sellos',
+      'Sitio web: alcohnsellos.com',
+      `Email: ${SITE_CONTACT.email}`,
+      'Argentina',
     ],
   },
   {
-    title: 'Seguridad',
+    title: '10. Cambios en esta política',
     paragraphs: [
-      'Adoptamos medidas técnicas y organizativas razonables para proteger tus datos contra pérdida, acceso no autorizado, alteración o divulgación. Ningún sistema es 100% inviolable; en caso de incidente que pueda afectar tus datos, lo comunicaremos según corresponda a la normativa aplicable.',
-    ],
-  },
-  {
-    title: 'Menores de edad',
-    paragraphs: [
-      'El sitio está dirigido a personas mayores de 18 años con capacidad legal para contratar. Si sos menor, podés navegar el sitio, pero los pedidos deben ser realizados por un adulto responsable.',
-    ],
-  },
-  {
-    title: 'Cambios en esta política',
-    paragraphs: [
-      `Podemos actualizar esta Política de Privacidad. La versión vigente es la publicada en ${SITE_URL}/privacidad. Última actualización: junio de 2026.`,
+      'Podemos actualizar esta Política de Privacidad cuando sea necesario. Las modificaciones serán publicadas en esta misma página junto con la fecha de última actualización.',
     ],
   },
 ];
@@ -105,11 +88,13 @@ export default function PrivacidadPage() {
       <div className="container mx-auto max-w-3xl px-4 md:px-8">
         <p className="craft-label mb-3">Información legal</p>
         <h1 className="mb-4 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
-          Política de privacidad
+          Política de Privacidad
         </h1>
+        <p className="mb-2 text-sm text-gray-500">Última actualización: agosto de 2026</p>
         <p className="mb-10 text-base leading-relaxed text-gray-700 md:text-lg">
-          Cómo tratamos tus datos personales cuando navegás, comprás o nos consultás en
-          alcohnsellos.com. Conforme a la Ley 25.326 de Argentina.
+          En Alcohn Sellos respetamos la privacidad de nuestros clientes y usuarios. Esta Política
+          de Privacidad explica qué información recopilamos, cómo la utilizamos y qué opciones
+          tienen los usuarios respecto de sus datos personales.
         </p>
 
         <div className="space-y-10">
@@ -120,7 +105,7 @@ export default function PrivacidadPage() {
               </h2>
               <div className="space-y-3 text-base leading-relaxed text-gray-700">
                 {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+                  <p key={`${section.title}-${paragraph.slice(0, 48)}`}>{paragraph}</p>
                 ))}
               </div>
             </section>

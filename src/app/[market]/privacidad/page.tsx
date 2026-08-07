@@ -33,7 +33,7 @@ export default function InternationalPrivacidadPage({ params }: PageParams) {
     <InternationalLegalLayout
       market={market}
       title="Política de privacidad"
-      intro={`Tratamiento de datos personales para compras internacionales con envío DHL a ${country}.`}
+      intro={`Última actualización: agosto de 2026. Tratamiento de datos personales para compras internacionales con envío DHL a ${country}.`}
       sections={getInternationalPrivacySections(market)}
     />
   );
