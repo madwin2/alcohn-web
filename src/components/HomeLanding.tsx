@@ -8,7 +8,8 @@ import HomeScrollShell from '@/components/animations/HomeScrollShell';
 import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
+import InternationalBuySteps from '@/components/market/InternationalBuySteps';
+import MarketTrustStrip from '@/components/market/MarketTrustStrip';
 import { getStampPriceFrom, stampUseCases } from '@/data/stampUseCases';
 import { isStampUseCaseAvailableInMarket } from '@/lib/markets/catalog';
 import {
@@ -17,12 +18,13 @@ import {
   getHomeDesignCtaLabel,
   getHomeFinalCta,
   getHomeHeroSubtitle,
+  getHomeHeroTitle,
   getHomePrimaryCta,
   getHomeSecondaryCta,
   homePriceFromLabel,
 } from '@/lib/markets/home';
 import { marketPath } from '@/lib/markets/paths';
-import type { MarketCode } from '@/lib/markets/types';
+import type { InternationalMarketCode, MarketCode } from '@/lib/markets/types';
 import { getCustomStampMinPrice } from '@/lib/pricing';
 
 const materialProofs = [
@@ -129,7 +131,7 @@ export default function HomeLanding({ market }: HomeLandingProps) {
       />
       <HomeScrollShell>
         <Hero
-          title="Más que una herramienta, una forma de contar tu historia."
+          title={getHomeHeroTitle(market)}
           subtitle={getHomeHeroSubtitle(market)}
           primaryCta={primaryCta}
           secondaryCta={secondaryCta}
@@ -139,7 +141,7 @@ export default function HomeLanding({ market }: HomeLandingProps) {
         {market !== 'ar' && (
           <section className="relative z-[1] -mt-px border-t border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] py-4 md:py-5">
             <div className="container mx-auto max-w-7xl px-4 md:px-8">
-              <ImportDutiesNotice market={market} />
+              <MarketTrustStrip market={market as InternationalMarketCode} />
             </div>
           </section>
         )}
@@ -220,6 +222,8 @@ export default function HomeLanding({ market }: HomeLandingProps) {
         </section>
 
         <TrustStatsStrip />
+
+        {market !== 'ar' && <InternationalBuySteps market={market as InternationalMarketCode} />}
 
         <section id="lo-transforma" className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:py-24">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">

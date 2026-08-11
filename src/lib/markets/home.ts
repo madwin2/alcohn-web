@@ -1,4 +1,5 @@
-import { getMarketConfig } from './config';
+import { getMarketConfig, isInternationalMarket } from './config';
+import { getMarketLocalCopy } from './localCopy';
 import { formatMarketMoney } from './money';
 import { marketBuyPath, marketPath } from './paths';
 import { convertPublicArsToMarketPrice } from './pricing';
@@ -10,13 +11,18 @@ export function homePriceFromLabel(publicArs: number, market: MarketCode): strin
   return `Desde ${formatMarketMoney(amount, market)}`;
 }
 
+export function getHomeHeroTitle(market: MarketCode): string {
+  if (!isInternationalMarket(market)) {
+    return 'Más que una herramienta, una forma de contar tu historia.';
+  }
+  return getMarketLocalCopy(market).heroTitle;
+}
+
 export function getHomeHeroSubtitle(market: MarketCode): string {
   if (market === 'ar') {
     return 'Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí cómo lo vas a usar y recibí muestra, medida y precio antes de fabricar.';
   }
-
-  const country = getMarketConfig(market).countryName;
-  return `Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí uso y medida, mirá la muestra y comprá con envío DHL a ${country}.`;
+  return getMarketLocalCopy(market).heroSubtitle;
 }
 
 export function getHomePrimaryCta(market: MarketCode) {
@@ -52,17 +58,21 @@ export function getHomeDesignCtaLabel(market: MarketCode): string {
 }
 
 export function getHomeFinalCta(market: MarketCode) {
+  if (market === 'ar') {
+    return {
+      href: marketBuyPath(market),
+      label: 'Diseñar y comprar online',
+      description: 'Subí tu logo, mirá una muestra, confirmá medida y avanzá al pago online.',
+      descriptionMobile: 'Subí tu logo, revisá la muestra y avanzá al pago.',
+    };
+  }
+
+  const copy = getMarketLocalCopy(market);
   return {
     href: marketBuyPath(market),
     label: 'Diseñar y comprar online',
-    description:
-      market === 'ar'
-        ? 'Subí tu logo, mirá una muestra, confirmá medida y avanzá al pago online.'
-        : 'Subí tu logo, mirá la muestra, confirmá medida y pagá en moneda local con envío DHL.',
-    descriptionMobile:
-      market === 'ar'
-        ? 'Subí tu logo, revisá la muestra y avanzá al pago.'
-        : 'Subí tu logo, revisá la muestra y comprá con envío DHL.',
+    description: `Sube tu logo, mira la muestra, confirma la medida y ${copy.currencyPhrase}, con envío DHL incluido.`,
+    descriptionMobile: `Sube tu logo, revisa la muestra y ${copy.currencyPhrase}.`,
   };
 }
 

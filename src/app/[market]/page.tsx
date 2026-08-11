@@ -1,20 +1,27 @@
 import type { Metadata } from 'next';
 import HomeLanding from '@/components/HomeLanding';
+import { getMarketLocalCopy } from '@/lib/markets/localCopy';
 import { requireInternationalMarket } from '@/lib/markets/params';
-import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
-import { SITE_DEFAULT_DESCRIPTION, SITE_DEFAULT_TITLE, createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo';
 
 type PageParams = {
   params: { market: string };
+};
+
+const HOME_TITLES: Record<InternationalMarketCode, string> = {
+  cl: 'Cuños de bronce personalizados | Envío DHL a Chile | Alcohn',
+  pe: 'Sellos de bronce personalizados | Envío DHL a Perú | Alcohn',
+  co: 'Sellos al calor de bronce personalizados | Envío DHL a Colombia | Alcohn',
+  mx: 'Sellos a fuego y hierros de marcar de bronce | Envío DHL a México | Alcohn',
 };
 
 export function generateMetadata({ params }: PageParams): Metadata {
   const market = requireInternationalMarket(params.market);
 
   return createPageMetadata({
-    title: marketSeoTitle(SITE_DEFAULT_TITLE, market),
-    description: marketSeoDescription(SITE_DEFAULT_DESCRIPTION, market),
+    title: HOME_TITLES[market],
+    description: getMarketLocalCopy(market).heroSubtitle,
     path: '/',
     market,
   });

@@ -26,7 +26,7 @@ export function getInternationalShippingPolicySections(countryName: string): Leg
       title: 'Seguimiento',
       paragraphs: [
         'Cuando despachamos por DHL, compartimos la información de seguimiento por email o WhatsApp.',
-        'Revisá el paquete al recibirlo. Si llega dañado o incompleto, escribinos con fotos del embalaje, del contenido y del número de pedido.',
+        'Revisa el paquete al recibirlo. Si llega dañado o incompleto, escríbenos con fotos del embalaje, del contenido y del número de pedido.',
       ],
     },
     {
@@ -56,8 +56,8 @@ export function getInternationalReturnsPolicySections(): LegalSection[] {
     {
       title: 'Plazos',
       paragraphs: [
-        'Contactanos dentro de los 10 días corridos desde la recepción del paquete para reportar defectos de fabricación.',
-        'Para envíos dañados, escribinos dentro de las 72 horas de recibido con evidencia del embalaje.',
+        'Contáctanos dentro de los 10 días corridos desde la recepción del paquete para reportar defectos de fabricación.',
+        'Para envíos dañados, escríbenos dentro de las 72 horas de recibido con evidencia del embalaje.',
       ],
     },
   ];

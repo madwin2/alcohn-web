@@ -1,4 +1,7 @@
 import { config } from '@/lib/config';
+import { getMarketConfig } from '@/lib/markets/config';
+import { formatMarketMoney } from '@/lib/markets/money';
+import type { MarketCode } from '@/lib/markets/types';
 
 export interface FAQ {
   question: string;
@@ -96,3 +99,38 @@ export const faqs: FAQ[] = [
       'Ese es el objetivo de la web. Podés elegir diseño estándar o subir tu logo, cargar datos, ver precio y avanzar al pago. WhatsApp queda como ayuda para casos puntuales o pedidos fuera del flujo.',
   },
 ];
+
+/** FAQ adaptado por mercado. Para 'ar' devuelve el array original sin cambios. */
+export function getFaqs(market: MarketCode): FAQ[] {
+  if (market === 'ar') return faqs;
+
+  const marketConfig = getMarketConfig(market);
+  const country = marketConfig.countryName;
+  const shippingPrice = formatMarketMoney(marketConfig.dhlShippingAmount, market);
+
+  const overrides: Record<string, string> = {
+    '¿Cuánto sale el envío?': `El envío internacional a ${country} se hace por DHL Express y cuesta ${shippingPrice}. Se muestra en el checkout antes de pagar y queda incluido en el total. No incluye impuestos ni aranceles de importación: si corresponden, DHL te contacta y los pagas directamente a DHL.`,
+    '¿Cómo pago?': `Pagas online en el checkout, en moneda local (${marketConfig.currency}), con tarjeta de crédito o débito a través de nuestro procesador de pagos internacional. El total incluye el producto y el envío DHL a ${country}.`,
+    '¿Cuánto tarda la fabricación?': `El plazo habitual de producción es de 72 horas hábiles desde que la muestra y el pago quedan confirmados. Después despachamos por DHL Express a ${country}, con seguimiento que te enviamos por email o WhatsApp.`,
+    '¿Puedo comprar un diseño estándar?': `Para envíos a ${country} trabajamos con sellos personalizados: subes tu logo o texto, eliges medida y ves la muestra antes de fabricar. Puedes ver todos los usos disponibles en el catálogo.`,
+    '¿Hacen factura?': `Sí. En compras internacionales emitimos el comprobante fiscal argentino de la operación. Puedes dejar la indicación en el checkout o pedirla al confirmar el pedido.`,
+    '¿Solo hacen sellos?': `Fabricamos sellos de bronce personalizados y abecedarios. En envíos a ${country} el accesorio disponible es el mango de golpe.`,
+    '¿Puedo comprar sin hablar por WhatsApp?': `Ese es el objetivo de la web. Puedes subir tu logo, cargar datos, ver precio y avanzar al pago. WhatsApp queda como ayuda para casos puntuales o pedidos fuera del flujo.`,
+    '¿Sirve mi logo si lo tengo como una foto o imagen?':
+      'Sí. Puedes subir foto, captura, dibujo, PDF, PNG, JPG o vector. El diseñador online analiza el archivo y, si hace falta, usamos esa base para armar una muestra antes de fabricar.',
+    '¿Cómo sé qué medida elegir?':
+      'Después de subir tu logo te mostramos medidas sugeridas según la proporción del diseño. También puedes cargar una medida personalizada en milímetros. Si dudas, elige la recomendada: suele equilibrar legibilidad, precio y uso real.',
+    '¿Veo una muestra antes de fabricar?':
+      'Sí. La web intenta generar una muestra digital con tu logo y el material elegido. Si el logo es muy complejo y necesita revisión manual, nuestro equipo va a ver el diseño especifico y contactarse contigo para enviarte una muestra.',
+    '¿Qué pasa si el mockup no sale bien?':
+      'Puedes contactarnos por WhatsApp y te hacemos la muestra o correcciones de la muestra que necesites.',
+    '¿Sirve para marcar cuchillos o fundas?':
+      'Sí. En cuchillería suele usarse sobre cuero, madera o packaging vinculado al producto. Si necesitas marcar metal directamente, el sello de bronce no es lo recomendado.',
+    '¿No tengo logo, ustedes me lo diseñan?':
+      'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso puedes contactarnos por WhatsApp y te asesoramos.',
+  };
+
+  return faqs.map((item) =>
+    overrides[item.question] ? { ...item, answer: overrides[item.question] } : item
+  );
+}

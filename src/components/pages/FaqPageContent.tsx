@@ -1,7 +1,7 @@
 import PageIntro from '@/components/PageIntro';
 import FaqList from '@/components/FaqList';
 import SalesCtaBand from '@/components/SalesCtaBand';
-import { faqs } from '@/data/faq';
+import { getFaqs } from '@/data/faq';
 import {
   marketBreadcrumbJsonLd,
   marketBuyCta,
@@ -16,7 +16,8 @@ type FaqPageContentProps = {
 };
 
 export default function FaqPageContent({ market }: FaqPageContentProps) {
-  const faqJsonLd = buildFaqJsonLd(faqs);
+  const marketFaqs = getFaqs(market);
+  const faqJsonLd = buildFaqJsonLd(marketFaqs);
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
     { name: 'Preguntas frecuentes', path: '/faq' },
@@ -44,11 +45,15 @@ export default function FaqPageContent({ market }: FaqPageContentProps) {
         />
 
         <section className="mb-20">
-          <FaqList faqs={faqs} />
+          <FaqList faqs={marketFaqs} />
         </section>
 
         <SalesCtaBand
-          title="Cuando ya entendés el producto, el mejor paso es probar tu logo"
+          title={
+            market === 'ar'
+              ? 'Cuando ya entendés el producto, el mejor paso es probar tu logo'
+              : 'Cuando ya entiendes el producto, el mejor paso es probar tu logo'
+          }
           copy="El diseñador online te guía por uso, medida, muestra y precio. Si algo necesita revisión, queda registrado para que Alcohn pueda seguirlo."
           primaryLabel="Diseñar mi sello"
           primaryHref={marketBuyPath(market)}

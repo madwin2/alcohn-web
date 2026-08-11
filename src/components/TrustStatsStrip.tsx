@@ -4,7 +4,8 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { trustStats } from '@/data/trustStats';
+import { useMarket } from '@/contexts/MarketContext';
+import { getTrustStats } from '@/data/trustStats';
 import { prefersReducedMotion, revealEase } from '@/lib/motion';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -27,6 +28,8 @@ function formatCounterValue(prefix: string, amount: number, suffix: string) {
 
 export default function TrustStatsStrip() {
   const sectionRef = useRef<HTMLElement>(null);
+  const { market } = useMarket();
+  const stats = getTrustStats(market);
 
   useGSAP(
     () => {
@@ -41,7 +44,7 @@ export default function TrustStatsStrip() {
       gsap.set(items, { y: 18, opacity: 0 });
       gsap.set(labels, { opacity: 0 });
 
-      trustStats.forEach((stat, index) => {
+      stats.forEach((stat, index) => {
         const parsed = parseStatValue(stat.value);
         if (!parsed) return;
         const valueEl = section.querySelector<HTMLElement>(`[data-trust-value="${index}"]`);
@@ -73,7 +76,7 @@ export default function TrustStatsStrip() {
         0.08
       );
 
-      trustStats.forEach((stat, index) => {
+      stats.forEach((stat, index) => {
         const parsed = parseStatValue(stat.value);
         if (!parsed) return;
 
@@ -106,7 +109,7 @@ export default function TrustStatsStrip() {
         0.38
       );
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [market] }
   );
 
   return (
@@ -119,7 +122,7 @@ export default function TrustStatsStrip() {
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         <div data-trust-panel className="trust-stats-strip__inner">
-          {trustStats.map((stat, index) => (
+          {stats.map((stat, index) => (
             <div key={stat.label} data-trust-stat className="trust-stats-strip__cell">
               <p data-trust-value={index} className="trust-stats-strip__value tabular-nums">
                 {stat.value}
