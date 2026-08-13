@@ -24,9 +24,12 @@ import {
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS, SHIPPING_METODO_OPTIONS } from '@/lib/shipping/types';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { useMarket } from '@/contexts/MarketContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { market } = useMarket();
   const { items, getSubtotal, clearCart } = useCart();
   const [step, setStep] = useState(1);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -458,6 +461,7 @@ export default function CheckoutPage() {
   const handleSendWhatsApp = () => {
     const message = buildWhatsAppMessage();
     const whatsappUrl = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(message)}`;
+    pushGtmEvent('click_whatsapp', { ubicacion: 'checkout', market });
     window.open(whatsappUrl, '_blank');
   };
 

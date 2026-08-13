@@ -3,12 +3,16 @@
 import { CotizacionData } from '@/types';
 import { config } from '@/lib/config';
 import { trackEvent } from '@/lib/analytics/client';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { useMarket } from '@/contexts/MarketContext';
 
 interface WhatsappButtonProps {
   data?: CotizacionData;
   className?: string;
   children?: React.ReactNode;
   variant?: 'dark' | 'light';
+  /** Identificador del touchpoint para el evento `click_whatsapp` de Google Ads. */
+  ubicacion?: string;
 }
 
 export default function WhatsappButton({
@@ -16,7 +20,10 @@ export default function WhatsappButton({
   className = '',
   children,
   variant = 'dark',
+  ubicacion = 'boton_flotante',
 }: WhatsappButtonProps) {
+  const { market } = useMarket();
+
   const buildMessage = () => {
     const baseMessage = config.whatsapp.message.base;
     
@@ -47,6 +54,7 @@ export default function WhatsappButton({
   const whatsappUrl = `https://wa.me/${config.whatsapp.number}?text=${message}`;
 
   const handleClick = () => {
+    pushGtmEvent('click_whatsapp', { ubicacion, market });
     void trackEvent('whatsapp_click', {
       metadata: {
         hasCotizacionData: Boolean(data),

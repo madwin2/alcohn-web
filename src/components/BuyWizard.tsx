@@ -23,6 +23,7 @@ import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { trackWizardStep, WIZARD_STEPS, getWizardStepIndex, type WizardStepKey } from '@/lib/analytics/wizardStep';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
@@ -930,6 +931,7 @@ export default function BuyWizard({
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
   const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
   const wizardPaymentTrackedRef = useRef(false);
+  const mockupGeneradoTrackedRef = useRef(false);
   const [shippingMethod, setShippingMethod] = useState<ShippingMetodoUi>('retiro');
   const [shippingCost, setShippingCost] = useState(0);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -1336,6 +1338,14 @@ export default function BuyWizard({
 
           if (result.success) {
             const mockupUrl = result.mockupUrl;
+            if (!mockupGeneradoTrackedRef.current) {
+              mockupGeneradoTrackedRef.current = true;
+              pushGtmEvent('mockup_generado', {
+                market,
+                material: data.material,
+                medida: sizeStr,
+              });
+            }
             setData((prevData) => ({
               ...prevData,
               previewGenerated: true,
@@ -1922,6 +1932,7 @@ export default function BuyWizard({
 
       const message = encodeURIComponent(lines.join('\n'));
       const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+      pushGtmEvent('click_whatsapp', { ubicacion: 'buy_wizard', market });
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('[wizard] solicitar corrección por whatsapp', error);

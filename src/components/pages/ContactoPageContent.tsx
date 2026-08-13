@@ -40,6 +40,10 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
             label: 'Contactar por WhatsApp',
             href: `${SITE_CONTACT.whatsappUrl}?text=${encodeURIComponent(config.whatsapp.message.base)}`,
             variant: 'secondary',
+            gtmEvent: {
+              name: 'click_whatsapp',
+              params: { ubicacion: 'contacto_intro', market },
+            },
           }}
         />
 
@@ -82,7 +86,9 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
                   Es útil para pedidos fuera de medida, materiales raros, urgencias o cuando el logo
                   necesita revisión manual.
                 </p>
-                <WhatsappButton variant="light">Abrir WhatsApp</WhatsappButton>
+                <WhatsappButton variant="light" ubicacion="contacto_panel">
+                  Abrir WhatsApp
+                </WhatsappButton>
               </div>
             </section>
 

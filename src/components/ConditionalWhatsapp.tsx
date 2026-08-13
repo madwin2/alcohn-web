@@ -20,6 +20,7 @@ export default function ConditionalWhatsapp() {
 
   return (
     <WhatsappButton
+      ubicacion="boton_flotante"
       className={`fixed bottom-[max(env(safe-area-inset-bottom),1rem)] right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full !px-0 shadow-[0_18px_44px_rgba(17,16,14,0.32)] md:bottom-4 md:h-11 md:w-auto md:rounded-none md:!px-5 md:shadow-none ${
         hideOnMobile ? 'hidden md:inline-flex' : ''
       }`}

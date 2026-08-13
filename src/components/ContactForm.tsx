@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { config } from '@/lib/config';
 import { trackEvent } from '@/lib/analytics/client';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { useMarket } from '@/contexts/MarketContext';
 
 export default function ContactForm() {
+  const { market } = useMarket();
   const [formData, setFormData] = useState({
     nombre: '',
     whatsapp: '',
@@ -29,6 +32,7 @@ export default function ContactForm() {
       `Mensaje: ${formData.mensaje}`,
     ].join('\n');
     const whatsappUrl = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(message)}`;
+    pushGtmEvent('click_whatsapp', { ubicacion: 'contacto_formulario', market });
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
   };

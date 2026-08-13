@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMarket } from '@/contexts/MarketContext';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { getMarketConfig } from '@/lib/markets/config';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 
@@ -46,6 +47,30 @@ export function FooterMobileTagline({ className = '' }: { className?: string }) 
     <p className={`mt-2 text-sm text-neutral-300 leading-relaxed ${className}`}>
       Sellos de bronce CNC. Fabricación en Mar del Plata, envío DHL a {country}.
     </p>
+  );
+}
+
+export function FooterWhatsappLink({
+  href,
+  className = '',
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const { market } = useMarket();
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      onClick={() => pushGtmEvent('click_whatsapp', { ubicacion: 'footer', market })}
+    >
+      {children}
+    </a>
   );
 }
 

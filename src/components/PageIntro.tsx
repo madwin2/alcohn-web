@@ -6,6 +6,7 @@ interface Cta {
   href?: string;
   onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'ghost';
+  gtmEvent?: { name: string; params?: Record<string, unknown> };
 }
 
 interface PageIntroProps {
@@ -95,6 +96,7 @@ export default function PageIntro({
                     <ActionButton
                       href={secondaryCta.href}
                       onClick={secondaryCta.onClick}
+                      gtmEvent={secondaryCta.gtmEvent}
                       variant={secondaryCta.variant || 'secondary'}
                       className="w-full"
                     >
@@ -136,6 +138,7 @@ export default function PageIntro({
                 <ActionButton
                   href={secondaryCta.href}
                   onClick={secondaryCta.onClick}
+                  gtmEvent={secondaryCta.gtmEvent}
                   variant={secondaryCta.variant || 'secondary'}
                   className="w-full sm:w-auto"
                 >

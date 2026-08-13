@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
 
 interface ActionButtonProps {
   children: React.ReactNode;
@@ -8,6 +11,8 @@ interface ActionButtonProps {
   target?: string;
   rel?: string;
   className?: string;
+  /** Evento de dataLayer a disparar al hacer clic (serializable, usable desde Server Components). */
+  gtmEvent?: { name: string; params?: Record<string, unknown> };
 }
 
 export default function ActionButton({
@@ -18,6 +23,7 @@ export default function ActionButton({
   target,
   rel,
   className = '',
+  gtmEvent,
 }: ActionButtonProps) {
   const baseStyles = 'inline-flex min-h-[42px] items-center justify-center gap-2 px-4 py-2 text-xs uppercase tracking-[0.05em] font-semibold transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-offset-1 md:min-h-[44px] md:px-4 md:py-2 md:text-xs md:tracking-wider';
   
@@ -41,6 +47,11 @@ export default function ActionButton({
 
   const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${className}`;
 
+  const handleClick = () => {
+    if (gtmEvent) pushGtmEvent(gtmEvent.name, gtmEvent.params);
+    onClick?.();
+  };
+
   if (href) {
     return (
       <Link
@@ -48,6 +59,7 @@ export default function ActionButton({
         target={target}
         rel={rel}
         className={combinedClassName}
+        onClick={handleClick}
       >
         {children}
         {icon}
@@ -57,7 +69,7 @@ export default function ActionButton({
 
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={combinedClassName}
     >
       {children}

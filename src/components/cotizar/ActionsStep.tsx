@@ -20,7 +20,7 @@ export default function ActionsStep({ data }: ActionsStepProps) {
           Comprar ahora
         </Link>
         <div className="flex-1">
-          <WhatsappButton data={data} className="w-full">
+          <WhatsappButton data={data} ubicacion="cotizador" className="w-full">
             Hablar por WhatsApp
           </WhatsappButton>
         </div>

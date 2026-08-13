@@ -9,6 +9,7 @@ import {
   FooterMobileTagline,
   FooterNavLinks,
   FooterProductLinks,
+  FooterWhatsappLink,
 } from './market/FooterMarketClient';
 import { SITE_CONTACT, SITE_SOCIAL } from '@/lib/seo';
 
@@ -35,14 +36,12 @@ function FooterContactDetails({ className = '' }: { className?: string }) {
         </a>
       </p>
       <p className="mt-1">
-        <a
+        <FooterWhatsappLink
           href={SITE_CONTACT.whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className="text-neutral-400 hover:text-white transition-colors"
         >
           WhatsApp
-        </a>
+        </FooterWhatsappLink>
       </p>
       <p className="mt-1">
         <a
