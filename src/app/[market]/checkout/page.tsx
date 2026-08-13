@@ -5,7 +5,6 @@ import Link from 'next/link';
 import CartItemRow from '@/components/cart/CartItemRow';
 import CartSummary from '@/components/cart/CartSummary';
 import InternationalShippingForm from '@/components/checkout/InternationalShippingForm';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
@@ -197,7 +196,6 @@ export default function InternationalCheckoutPage() {
                       shippingCost={pricing.shipping}
                       shippingLabel="DHL Internacional"
                     />
-                    <ImportDutiesNotice market={internationalMarket} />
                   </>
                 ) : pricingError ? (
                   <p className="text-sm text-red-600">{pricingError}</p>

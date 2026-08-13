@@ -1,8 +1,6 @@
-import Link from 'next/link';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { getMarketConfig } from '@/lib/markets/config';
 import { getMarketLocalCopy } from '@/lib/markets/localCopy';
-import { marketPath } from '@/lib/markets/paths';
 
 export default function MarketTrustStrip({ market }: { market: InternationalMarketCode }) {
   const country = getMarketConfig(market).countryName;
@@ -26,12 +24,6 @@ export default function MarketTrustStrip({ market }: { market: InternationalMark
           </li>
         ))}
       </ul>
-      <p className="mt-1 text-xs text-neutral-500">
-        El total no incluye impuestos de importación del país de destino.{' '}
-        <Link href={marketPath(market, '/politica-envios')} className="underline underline-offset-2">
-          Ver detalle
-        </Link>
-      </p>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import AccessoryProductPage from '@/components/accesorios/AccessoryProductPage';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { getAccessoryBySlug } from '@/data/accessories';
 import { getAccessoryLinkPrice } from '@/data/accessories';
 import { isAccessoryAvailableInMarket } from '@/lib/markets/catalog';
@@ -77,11 +76,6 @@ export default function InternationalMangoPage({ params }: PageParams) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <div className="container mx-auto max-w-7xl px-4 md:px-8">
-        <div className="py-6 md:py-8">
-          <ImportDutiesNotice market={market} />
-        </div>
-      </div>
       <AccessoryProductPage
         accessory={accessory}
         backHref={marketPath(market, '/productos')}

@@ -11,12 +11,10 @@ import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
 import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { getMarketConfig } from '@/lib/markets/config';
 import { formatMarketMoney } from '@/lib/markets/money';
 import { marketPath } from '@/lib/markets/paths';
 import { displayWizardProductPrice } from '@/lib/markets/pricing';
-import type { InternationalMarketCode } from '@/lib/markets/types';
 import { saveCheckoutPrefill, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
@@ -2926,8 +2924,6 @@ export default function BuyWizard({
                     <span>{formatMarketMoney(estimatedTotal, market)}</span>
                   </div>
                 </div>
-
-                <ImportDutiesNotice market={market as InternationalMarketCode} />
 
                 <button
                   type="button"

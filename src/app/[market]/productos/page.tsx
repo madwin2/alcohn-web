@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ActionButton from '@/components/ActionButton';
 import IntentCard from '@/components/IntentCard';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import PageIntro from '@/components/PageIntro';
 import PersonalizadoProductCard from '@/components/sellos/PersonalizadoProductCard';
 import PriceFrom from '@/components/PriceFrom';
@@ -108,10 +107,6 @@ export default function InternationalProductosPage({ params }: PageParams) {
             'Precio en moneda local',
           ]}
         />
-
-        <div className="mb-10">
-          <ImportDutiesNotice market={market} />
-        </div>
 
         <SpecStrip />
 

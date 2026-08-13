@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ActionButton from '@/components/ActionButton';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 import PriceFrom from '@/components/PriceFrom';
@@ -145,10 +144,6 @@ export default function InternationalStampUseCasePage({ params }: PageParams) {
             'Precio en moneda local',
           ]}
         />
-
-        <div className="mb-8 mt-6">
-          <ImportDutiesNotice market={market} />
-        </div>
 
         <section className="mb-12 grid grid-cols-1 gap-4 md:mb-20 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="material-frame relative min-h-[280px] overflow-hidden md:min-h-[560px]">

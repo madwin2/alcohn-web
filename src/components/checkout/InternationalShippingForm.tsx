@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import { getMarketConfig } from '@/lib/markets/config';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import {
@@ -55,8 +54,6 @@ export default function InternationalShippingForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <ImportDutiesNotice market={market} />
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-600">

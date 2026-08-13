@@ -3,7 +3,6 @@ import ActionButton from '@/components/ActionButton';
 import AbecedarioConfigurator from '@/components/abecedarios/AbecedarioConfigurator';
 import AbecedarioSpecificationsCard from '@/components/abecedarios/AbecedarioSpecificationsCard';
 import VideoShowcasePanel from '@/components/abecedarios/VideoShowcasePanel';
-import ImportDutiesNotice from '@/components/market/ImportDutiesNotice';
 import PageIntro from '@/components/PageIntro';
 import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
@@ -65,10 +64,6 @@ export default function InternationalAbecedariosPage({ params }: PageParams) {
             href: '#configurador',
           }}
         />
-
-        <div className="mb-8">
-          <ImportDutiesNotice market={market} />
-        </div>
 
         <SpecStrip className="hidden md:block" />
 
