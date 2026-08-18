@@ -26,6 +26,7 @@ import { SHIPPING_METODO_LABELS, SHIPPING_METODO_OPTIONS } from '@/lib/shipping/
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketCatalogPath, marketPath } from '@/lib/markets/paths';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -510,15 +511,15 @@ export default function CheckoutPage() {
               Podés diseñar un sello con tu logo o comprar un diseño estándar listo para personalizar.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <ActionButton href="/buy?mode=custom" variant="primary" className="w-full sm:w-auto px-6">
+              <ActionButton href={marketBuyPath(market)} variant="primary" className="w-full sm:w-auto px-6">
                 Subir logo y ver precio
               </ActionButton>
-              <ActionButton href="/sellos/estandar" variant="secondary" className="w-full sm:w-auto px-6">
+              <ActionButton href={marketCatalogPath(market)} variant="secondary" className="w-full sm:w-auto px-6">
                 Comprar estándar
               </ActionButton>
             </div>
             <Link
-              href="/carrito"
+              href={marketPath(market, '/carrito')}
               className="mt-6 inline-flex min-h-9 items-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
             >
               Volver al carrito
@@ -1165,7 +1166,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <Link
-                  href="/carrito"
+                  href={marketPath(market, '/carrito')}
                   className="flex min-h-9 items-center justify-center text-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
                 >
                   ← Volver al carrito

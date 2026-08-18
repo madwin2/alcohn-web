@@ -1,5 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import { Product, MaterialType } from '@/data/products';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
@@ -19,7 +23,8 @@ function generateProductCode(product: Product, index: number): string {
 }
 
 export default function ProductCard({ product, materialFilter = 'todos', index = 0 }: ProductCardProps) {
-  
+  const { market } = useMarket();
+
   const getImageSrc = () => {
     if (materialFilter === 'cuero' && product.images.onLeather) {
       return product.images.onLeather;
@@ -104,14 +109,14 @@ export default function ProductCard({ product, materialFilter = 'todos', index =
           {/* CTAs - Botones industriales */}
           <div className="flex flex-col sm:flex-row gap-2">
             <ActionButton
-              href={`/productos/${product.slug}`}
+              href={marketPath(market, `/productos/${product.slug}`)}
               variant="secondary"
               className="flex-1"
             >
               Ver ficha
             </ActionButton>
             <ActionButton
-              href={`/buy?product=${product.slug}`}
+              href={marketBuyPath(market, `product=${product.slug}`)}
               target="_blank"
               rel="noopener noreferrer"
               variant="primary"

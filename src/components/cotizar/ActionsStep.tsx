@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketPath } from '@/lib/markets/paths';
 import WhatsappButton from '../WhatsappButton';
 import { CotizacionData } from '@/types';
 
@@ -9,12 +11,14 @@ interface ActionsStepProps {
 }
 
 export default function ActionsStep({ data }: ActionsStepProps) {
+  const { market } = useMarket();
+
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold mb-4">¿Qué querés hacer ahora?</h3>
       <div className="flex flex-col sm:flex-row gap-4">
         <Link
-          href="/checkout"
+          href={marketPath(market, '/checkout')}
           className="flex-1 bg-accent text-primary px-8 py-4 rounded-md font-semibold text-center hover:bg-accent-light transition-colors"
         >
           Comprar ahora

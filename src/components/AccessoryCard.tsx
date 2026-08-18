@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { Accessory, getAccessoryLinkPrice, getAccessoryTransferPrice } from '@/data/accessories';
 import ActionButton from '@/components/ActionButton';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketPath } from '@/lib/markets/paths';
 
 interface AccessoryCardProps {
   accessory: Accessory;
@@ -13,6 +15,7 @@ interface AccessoryCardProps {
 
 export default function AccessoryCard({ accessory }: AccessoryCardProps) {
   const { addItem } = useCart();
+  const { market } = useMarket();
   const [added, setAdded] = useState(false);
   const price = getAccessoryLinkPrice(accessory);
 
@@ -32,7 +35,7 @@ export default function AccessoryCard({ accessory }: AccessoryCardProps) {
 
   return (
     <div className="material-card p-3 flex flex-col">
-      <Link href={`/accesorios/${accessory.slug}`} className="block">
+      <Link href={marketPath(market, `/accesorios/${accessory.slug}`)} className="block">
         <div className="material-frame aspect-square relative overflow-hidden">
           <Image
             src={accessory.image}
@@ -45,7 +48,7 @@ export default function AccessoryCard({ accessory }: AccessoryCardProps) {
       </Link>
 
       <div className="px-2 pb-2 pt-5 space-y-4 flex-1 flex flex-col">
-        <Link href={`/accesorios/${accessory.slug}`} className="block">
+        <Link href={marketPath(market, `/accesorios/${accessory.slug}`)} className="block">
           <h3 className="text-lg font-semibold text-neutral-900 tracking-tight hover:text-[var(--alcohn-bronze-dark)] transition-colors">
             {accessory.title}
           </h3>
@@ -60,13 +63,17 @@ export default function AccessoryCard({ accessory }: AccessoryCardProps) {
         {added ? (
           <div className="space-y-3">
             <p className="text-sm font-medium text-neutral-900">Agregado al carrito.</p>
-            <ActionButton href="/checkout" variant="primary" className="w-full">
+            <ActionButton href={marketPath(market, '/checkout')} variant="primary" className="w-full">
               Finalizar compra
             </ActionButton>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <ActionButton href={`/accesorios/${accessory.slug}`} variant="secondary" className="w-full">
+            <ActionButton
+              href={marketPath(market, `/accesorios/${accessory.slug}`)}
+              variant="secondary"
+              className="w-full"
+            >
               Ver producto
             </ActionButton>
             <button

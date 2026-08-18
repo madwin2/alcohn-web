@@ -32,3 +32,9 @@ export function marketBuyPath(market: MarketCode, query?: string): string {
   if (!query) return `${base}?mode=custom`;
   return query.startsWith('?') ? `${base}${query}` : `${base}?${query}`;
 }
+
+/** Catálogo principal para "seguir comprando" según mercado. */
+export function marketCatalogPath(market: MarketCode): string {
+  if (market === 'ar') return '/sellos/estandar';
+  return marketPath(market, '/productos');
+}

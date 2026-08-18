@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath } from '@/lib/markets/paths';
 import {
   STAMP_SIZE_RANGE_LABEL,
   isValidStampSizeMm,
@@ -11,6 +13,7 @@ import {
 
 export default function CustomSizeInput() {
   const router = useRouter();
+  const { market } = useMarket();
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
   const [errors, setErrors] = useState<{ width?: string; height?: string; pair?: string }>({});
@@ -75,7 +78,7 @@ export default function CustomSizeInput() {
       return;
     }
 
-    router.push(`/buy?mode=custom&w=${w}&h=${h}`);
+    router.push(marketBuyPath(market, `mode=custom&w=${w}&h=${h}`));
   };
 
   return (

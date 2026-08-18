@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath } from '@/lib/markets/paths';
 
 interface RecommendedSize {
   title: string;
@@ -21,6 +23,7 @@ interface RecommendedSizesProps {
 
 export default function RecommendedSizes({ sizes, onSelect, onUnsureClick }: RecommendedSizesProps) {
   const router = useRouter();
+  const { market } = useMarket();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const handleCardClick = (index: number, size: RecommendedSize) => {
@@ -29,7 +32,7 @@ export default function RecommendedSizes({ sizes, onSelect, onUnsureClick }: Rec
     
     // Redirigir al flujo de compra con la medida seleccionada
     const sizeKey = size.sizeKey || size.title.toLowerCase();
-    router.push(`/buy?size=${sizeKey}&price=${size.price}`);
+    router.push(marketBuyPath(market, `size=${sizeKey}&price=${size.price}`));
   };
 
   const handleUnsureClick = (e: React.MouseEvent) => {

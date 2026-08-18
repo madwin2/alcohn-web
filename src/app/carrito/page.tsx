@@ -1,6 +1,8 @@
 'use client';
 
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketCatalogPath, marketPath } from '@/lib/markets/paths';
 import Link from 'next/link';
 import CartItemRow from '@/components/cart/CartItemRow';
 import CartSummary from '@/components/cart/CartSummary';
@@ -8,6 +10,7 @@ import ActionButton from '@/components/ActionButton';
 
 export default function CartPage() {
   const { items, getSubtotal, clearCart } = useCart();
+  const { market } = useMarket();
   const subtotal = getSubtotal();
   const hasItems = items.length > 0;
 
@@ -25,7 +28,7 @@ export default function CartPage() {
             <p className="text-sm text-neutral-600 mb-8">
               Agregá productos para comenzar tu pedido.
             </p>
-            <ActionButton href="/sellos/estandar" variant="primary">
+            <ActionButton href={marketCatalogPath(market)} variant="primary">
               Ver diseños disponibles
             </ActionButton>
           </div>
@@ -47,7 +50,7 @@ export default function CartPage() {
               ¿Querés ver cómo quedaría tu logo marcado en cuero o madera antes de pagar?
             </p>
             <Link
-              href="/buy?mode=custom"
+              href={marketBuyPath(market)}
               className="inline-block border border-neutral-900 bg-neutral-900 text-white px-5 py-2 text-xs font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors"
             >
               Generar muestra con mi logo
@@ -90,7 +93,7 @@ export default function CartPage() {
 
                 <div className="hidden md:block pt-4 border-t border-neutral-200">
                   <Link
-                    href="/checkout"
+                    href={marketPath(market, '/checkout')}
                     className="block w-full border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors text-center focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
                   >
                     Finalizar pedido
@@ -98,7 +101,7 @@ export default function CartPage() {
                 </div>
 
                 <Link
-                  href="/sellos/estandar"
+                  href={marketCatalogPath(market)}
                   className="block text-center text-sm text-neutral-600 hover:text-neutral-900 underline transition-colors"
                 >
                   Seguir comprando
@@ -119,7 +122,7 @@ export default function CartPage() {
             </span>
           </div>
           <Link
-            href="/checkout"
+            href={marketPath(market, '/checkout')}
             className="inline-flex flex-1 min-h-[48px] items-center justify-center border border-neutral-900 bg-neutral-900 px-4 text-[12px] font-semibold uppercase tracking-wider text-white"
           >
             Finalizar pedido

@@ -1,5 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import { Product } from '@/data/products';
+import { useMarket } from '@/contexts/MarketContext';
+import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
@@ -20,6 +24,7 @@ function generateProductCode(product: Product): string {
 }
 
 export default function ProductSheet({ product }: ProductSheetProps) {
+  const { market } = useMarket();
   const priceDisplay =
     typeof product.price === 'number'
       ? `$${product.price.toLocaleString('es-AR')}`
@@ -141,14 +146,14 @@ export default function ProductSheet({ product }: ProductSheetProps) {
           {/* CTAs - Botones industriales */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 md:pt-6 border-t border-[var(--alcohn-line)]">
             <ActionButton
-              href={`/buy?product=${product.slug}`}
+              href={marketBuyPath(market, `product=${product.slug}`)}
               variant="primary"
               className="flex-1"
             >
               Subir logo y ver precio
             </ActionButton>
             <ActionButton
-              href="/proceso"
+              href={marketPath(market, '/proceso')}
               variant="secondary"
               className="flex-1"
             >
