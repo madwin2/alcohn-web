@@ -14,7 +14,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { items, getSubtotal } = useCart();
+  const { items, getDisplaySubtotal } = useCart();
   const { market } = useMarket();
   const cartHref = marketPath(market, '/carrito');
   const checkoutHref = marketPath(market, '/checkout');
@@ -43,7 +43,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
   if (!isOpen) return null;
 
-  const subtotal = getSubtotal();
+  const subtotal = getDisplaySubtotal();
   const hasItems = items.length > 0;
 
   return (

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useMarket } from '@/contexts/MarketContext';
 import { abecedarios } from '@/lib/catalog';
 import {
   ABECEDARIO_COMPLETO_PRECIO_DESDE,
@@ -19,12 +20,14 @@ import {
   buildAbecedarioSampleText,
   calcularPresupuestoPersonalizado,
   clampQty,
-  formatArs,
   getAbecedarioCompletoPrecio,
   getAbecedarioPrecios,
   getFontOption,
   precioTransferencia,
 } from '@/lib/abecedarioConfigurator';
+import { getMarketConfig } from '@/lib/markets/config';
+import { marketPath } from '@/lib/markets/paths';
+import { formatCatalogPriceFromLinkArs } from '@/lib/markets/pricing';
 import { generateLeatherTextMockup, sizeScaleFromMm } from '@/lib/textStampMockup';
 
 const abecedarioCompleto = abecedarios[0];
@@ -91,6 +94,8 @@ function TipoOptionMobile({
   footer?: string;
   recommended?: boolean;
 }) {
+  const { market } = useMarket();
+
   return (
     <button
       type="button"
@@ -116,7 +121,9 @@ function TipoOptionMobile({
         </div>
         <div className="shrink-0 text-right">
           <span className="craft-label block text-[9px]">Desde</span>
-          <span className="text-sm font-bold leading-tight text-neutral-900">{formatArs(priceFrom)}</span>
+          <span className="text-sm font-bold leading-tight text-neutral-900">
+            {formatCatalogPriceFromLinkArs(priceFrom, market)}
+          </span>
         </div>
       </div>
       <ul className="space-y-1.5">
@@ -174,6 +181,8 @@ function QtyStepper({ value, onChange, min, max, label }: QtyStepperProps) {
 export default function AbecedarioConfigurator() {
   const router = useRouter();
   const { addItem } = useCart();
+  const { market } = useMarket();
+  const formatPrice = (linkArs: number) => formatCatalogPriceFromLinkArs(linkArs, market);
   const [tipo, setTipo] = useState<AbecedarioTipo>('completo');
   const [personalizado, setPersonalizado] = useState<AbecedarioPersonalizadoState>(DEFAULT_PERSONALIZADO_STATE);
   const [completoTamanoMm, setCompletoTamanoMm] = useState<AbecedarioTamanoMm>(5);
@@ -264,7 +273,7 @@ export default function AbecedarioConfigurator() {
 
   const handleComprar = () => {
     handleAgregarAlCarrito();
-    router.push('/checkout');
+    router.push(marketPath(market, '/checkout'));
   };
 
   return (
@@ -328,7 +337,7 @@ export default function AbecedarioConfigurator() {
           </IncludesList>
           <p className="text-base text-neutral-900 md:text-lg">
             <span className="craft-label mr-2">Desde</span>
-            {formatArs(ABECEDARIO_COMPLETO_PRECIO_DESDE)}
+            {formatPrice(ABECEDARIO_COMPLETO_PRECIO_DESDE)}
           </p>
         </SelectableCard>
 
@@ -343,23 +352,23 @@ export default function AbecedarioConfigurator() {
             <ul className="space-y-1 md:space-y-1.5">
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Abecedario en Mayúscula</span>
-                <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.mayuscula)}</span>
+                <span className="text-neutral-500">desde {formatPrice(ABECEDARIO_PRECIOS_DESDE.mayuscula)}</span>
               </li>
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Abecedario en Minúscula</span>
-                <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.minuscula)}</span>
+                <span className="text-neutral-500">desde {formatPrice(ABECEDARIO_PRECIOS_DESDE.minuscula)}</span>
               </li>
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Números (0 al 9)</span>
-                <span className="text-neutral-500">{formatArs(ABECEDARIO_PRECIOS_DESDE.numero)}</span>
+                <span className="text-neutral-500">{formatPrice(ABECEDARIO_PRECIOS_DESDE.numero)}</span>
               </li>
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Caracteres extra</span>
-                <span className="text-neutral-500">desde {formatArs(ABECEDARIO_PRECIOS_DESDE.extra)}</span>
+                <span className="text-neutral-500">desde {formatPrice(ABECEDARIO_PRECIOS_DESDE.extra)}</span>
               </li>
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:text-sm">
                 <span>Soporte de Bronce</span>
-                <span className="text-neutral-500">{formatArs(ABECEDARIO_PRECIOS_DESDE.soporte)}</span>
+                <span className="text-neutral-500">{formatPrice(ABECEDARIO_PRECIOS_DESDE.soporte)}</span>
               </li>
               <li className="flex items-center justify-between gap-2 text-[13px] text-neutral-700 md:gap-3 md:text-sm">
                 <span>Caja contenedora</span>
@@ -377,7 +386,7 @@ export default function AbecedarioConfigurator() {
           </IncludesList>
           <p className="text-base text-neutral-900 md:text-lg">
             <span className="craft-label mr-2">Desde</span>
-            {formatArs(PERSONALIZADO_MIN_PRECIO)}
+            {formatPrice(PERSONALIZADO_MIN_PRECIO)}
           </p>
         </SelectableCard>
       </div>
@@ -525,7 +534,7 @@ export default function AbecedarioConfigurator() {
                           <dt className="text-neutral-600">
                             {l.qty}x {l.label}
                           </dt>
-                          <dd className="font-medium text-neutral-900">{formatArs(l.subtotal)}</dd>
+                          <dd className="font-medium text-neutral-900">{formatPrice(l.subtotal)}</dd>
                         </div>
                       ))}
                     {presupuesto.lineas.every((l) => l.qty === 0) && (
@@ -666,11 +675,13 @@ function TamanoFuenteSelects({
 }
 
 function ConfigRow({ label, price, children }: { label: string; price: number; children: React.ReactNode }) {
+  const { market } = useMarket();
+
   return (
     <div className="flex items-center justify-between gap-3">
       <div>
         <p className="text-sm font-medium text-neutral-900">{label}</p>
-        <p className="text-xs text-neutral-500">{formatArs(price)}</p>
+        <p className="text-xs text-neutral-500">{formatCatalogPriceFromLinkArs(price, market)}</p>
       </div>
       {children}
     </div>
@@ -690,15 +701,27 @@ function PrecioYAcciones({
   addedToCart: boolean;
   habilitado: boolean;
 }) {
+  const { market } = useMarket();
+  const isArgentina = market === 'ar';
+  const currency = getMarketConfig(market).currency;
+
   return (
     <div>
       <p className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 md:text-3xl">
-        {formatArs(precio)}{' '}
-        <span className="text-sm font-semibold text-neutral-700 md:text-base">(3 cuotas sin interés)</span>
+        {formatCatalogPriceFromLinkArs(precio, market)}{' '}
+        {isArgentina && (
+          <span className="text-sm font-semibold text-neutral-700 md:text-base">(3 cuotas sin interés)</span>
+        )}
       </p>
-      <p className="mt-1 text-sm font-semibold text-green-600">
-        Transferencia: {formatArs(precioTransferencia(precio))}
-      </p>
+      {isArgentina ? (
+        <p className="mt-1 text-sm font-semibold text-green-600">
+          Transferencia: {formatCatalogPriceFromLinkArs(precioTransferencia(precio), market)}
+        </p>
+      ) : (
+        <p className="mt-1 text-sm text-neutral-600">
+          Precio en {currency}. El envío DHL se suma en el checkout.
+        </p>
+      )}
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <button

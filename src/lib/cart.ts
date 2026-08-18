@@ -26,6 +26,7 @@ export interface CartState {
   clearCart: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
+  getDisplaySubtotal: () => number;
 }
 
 // Helper para generar ID único

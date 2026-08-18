@@ -3,15 +3,16 @@
 import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketBuyPath, marketCatalogPath, marketPath } from '@/lib/markets/paths';
+import { formatMarketMoney } from '@/lib/markets/money';
 import Link from 'next/link';
 import CartItemRow from '@/components/cart/CartItemRow';
 import CartSummary from '@/components/cart/CartSummary';
 import ActionButton from '@/components/ActionButton';
 
 export default function CartPage() {
-  const { items, getSubtotal, clearCart } = useCart();
+  const { items, getDisplaySubtotal, clearCart } = useCart();
   const { market } = useMarket();
-  const subtotal = getSubtotal();
+  const subtotal = getDisplaySubtotal();
   const hasItems = items.length > 0;
 
   if (!hasItems) {
@@ -118,7 +119,7 @@ export default function CartPage() {
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">Subtotal</span>
             <span className="text-base font-semibold text-neutral-900 truncate">
-              ${subtotal.toLocaleString('es-AR')}
+              {formatMarketMoney(subtotal, market)}
             </span>
           </div>
           <Link

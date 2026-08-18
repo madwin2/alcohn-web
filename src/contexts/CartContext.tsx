@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { CartItem, CartState, generateCartItemId, loadCartFromStorage, saveCartToStorage } from '@/lib/cart';
 import { useMarket } from '@/contexts/MarketContext';
 import { trackMetaAddToCart } from '@/lib/analytics/metaPixel';
+import { displayCatalogPriceFromLinkArs } from '@/lib/markets/pricing';
 
 const CartContext = createContext<CartState | undefined>(undefined);
 
@@ -112,6 +113,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return items.reduce((sum, item) => sum + item.price * item.qty, 0);
   };
 
+  const getDisplaySubtotal = () => {
+    return items.reduce(
+      (sum, item) => sum + displayCatalogPriceFromLinkArs(item.price, market) * item.qty,
+      0
+    );
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -124,6 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         getTotalItems,
         getSubtotal,
+        getDisplaySubtotal,
       }}
     >
       {children}

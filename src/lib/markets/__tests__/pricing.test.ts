@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { convertTransferArsToMarketPrice } from '../pricing';
+import {
+  convertTransferArsToMarketPrice,
+  displayCatalogPriceFromLinkArs,
+  formatCatalogPriceFromLinkArs,
+} from '../pricing';
 
 describe('international pricing', () => {
   it('does not convert Argentina prices', () => {
@@ -19,5 +23,12 @@ describe('international pricing', () => {
     const price = convertTransferArsToMarketPrice(115000, 'cl');
     expect(price).toBeGreaterThan(0);
     expect(price % 1000).toBe(0);
+  });
+
+  it('converts catalog link prices for international display', () => {
+    expect(displayCatalogPriceFromLinkArs(115000, 'ar')).toBe(115000);
+    const mx = displayCatalogPriceFromLinkArs(115000, 'mx');
+    expect(mx).toBeGreaterThan(0);
+    expect(formatCatalogPriceFromLinkArs(115000, 'mx')).toContain('MXN');
   });
 });

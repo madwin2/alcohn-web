@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
 import { CartItem } from '@/lib/cart';
 import { formatMarketMoney } from '@/lib/markets/money';
+import { displayCatalogPriceFromLinkArs } from '@/lib/markets/pricing';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -76,7 +77,7 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
             </button>
           </div>
           <p className="text-sm font-semibold text-neutral-900">
-            {formatMarketMoney(item.price * item.qty, market)}
+            {formatMarketMoney(displayCatalogPriceFromLinkArs(item.price, market) * item.qty, market)}
           </p>
         </div>
       </div>

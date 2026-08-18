@@ -1,5 +1,5 @@
 import { getMarketConfig } from './config';
-import { roundToIncrement } from './money';
+import { formatMarketMoney, roundToIncrement } from './money';
 import type { MarketCode, MarketPricingConfig } from './types';
 
 export function convertTransferArsToMarketPrice(
@@ -39,5 +39,15 @@ export function displayWizardProductPrice(
         ? linkArs / 1.15
         : 0;
   return convertTransferArsToMarketPrice(transfer, market);
+}
+
+/** Precio de catálogo (link ARS) listo para mostrar en UI según mercado. */
+export function displayCatalogPriceFromLinkArs(linkArs: number, market: MarketCode): number {
+  if (market === 'ar') return Math.round(linkArs);
+  return convertPublicArsToMarketPrice(linkArs, market);
+}
+
+export function formatCatalogPriceFromLinkArs(linkArs: number, market: MarketCode): string {
+  return formatMarketMoney(displayCatalogPriceFromLinkArs(linkArs, market), market);
 }
 

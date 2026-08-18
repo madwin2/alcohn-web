@@ -18,8 +18,8 @@ export default function InternationalCartPage() {
       : null
   ) as InternationalMarketCode | null;
 
-  const { items, getSubtotal, clearCart } = useCart();
-  const subtotal = getSubtotal();
+  const { items, getDisplaySubtotal, clearCart } = useCart();
+  const displaySubtotal = getDisplaySubtotal();
   const hasItems = items.length > 0;
 
   if (!market) {
@@ -78,7 +78,7 @@ export default function InternationalCartPage() {
             <div className="lg:sticky lg:top-24">
               <div className="technical-sheet space-y-5 p-5 md:space-y-6 md:p-6">
                 <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Resumen</h2>
-                <CartSummary subtotal={subtotal} />
+                <CartSummary subtotal={displaySubtotal} />
                 <div className="hidden border-t border-neutral-200 pt-4 md:block">
                   <Link
                     href={marketPath(market, '/checkout')}
