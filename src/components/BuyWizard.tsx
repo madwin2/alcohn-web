@@ -48,7 +48,6 @@ import WizardMobileHeader from '@/components/buy/WizardMobileHeader';
 import WizardSizeCompareScale from '@/components/buy/WizardSizeCompareScale';
 import {
   WizardSizePickerRow,
-  WizardSizeSummaryPanel,
   type WizardSizeTierOption,
 } from '@/components/buy/WizardSizeStepMobile';
 import { cotizarMm, parseSizeMm } from '@/lib/cotizador/fetchCotizacion';
@@ -2343,25 +2342,10 @@ export default function BuyWizard({
                               customSize: prev.customSize ?? { width: 0, height: 0 },
                             }));
                           }}
-                          className="wizard-cta-btn wizard-cta-btn--secondary"
+                          className="wizard-cta-btn"
                         >
                           Necesito una medida personalizada
                         </button>
-                        {(data.selectedSize ||
-                          (data.customSize &&
-                            data.customSize.width > 0 &&
-                            data.customSize.height > 0)) && (
-                          <WizardSizeSummaryPanel
-                            options={tierOptions}
-                            selectedSize={data.selectedSize}
-                            selectedPrice={data.selectedPrice}
-                            selectedTransferPrice={data.selectedTransferPrice}
-                            customSize={data.customSize}
-                            logoUrl={logoForScale}
-                            compactRows
-                            className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
-                          />
-                        )}
                       </>
                     ) : (
                       <>
@@ -2392,20 +2376,6 @@ export default function BuyWizard({
                         >
                           ← Volver a Pequeño / Mediano / Grande
                         </button>
-                        {data.customSize &&
-                          data.customSize.width > 0 &&
-                          data.customSize.height > 0 && (
-                            <WizardSizeSummaryPanel
-                              options={tierOptions}
-                              selectedSize={data.selectedSize}
-                              selectedPrice={data.selectedPrice}
-                              selectedTransferPrice={data.selectedTransferPrice}
-                              customSize={data.customSize}
-                              logoUrl={logoForScale}
-                              compactRows
-                              className="border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)]"
-                            />
-                          )}
                       </>
                     )}
                   </div>
@@ -2546,33 +2516,53 @@ export default function BuyWizard({
           </div>
 
           {(() => {
-            const tierOptions = buildWizardSizeTierOptions(data.sizeOptions);
-            const logoForScale =
-              data.logoOptimized || data.logoPreview || data.thumbnailUrl || null;
+            const usingCustom =
+              Boolean(data.customSize && data.customSize.width > 0 && data.customSize.height > 0);
+            const sizeLabel = usingCustom
+              ? `${data.customSize!.width}×${data.customSize!.height} mm`
+              : data.selectedSize?.replace(/mm$/i, ' mm') ?? '';
+            const localPrice = displayWizardProductPrice(
+              data.selectedPrice ?? 0,
+              data.selectedTransferPrice ?? 0,
+              market
+            );
+            const localCuota = localPrice > 0 ? Math.round(localPrice / 3) : 0;
+            const showSummary = Boolean(sizeLabel && localPrice > 0);
 
             return (
               <div className="wizard-mobile-cta shrink-0 border-t border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] shadow-[0_-10px_24px_rgba(17,16,14,0.07)] md:hidden">
-                {(data.selectedSize ||
-                  (data.customSize &&
-                    data.customSize.width > 0 &&
-                    data.customSize.height > 0)) &&
-                  data.selectedPrice && (
-                  <div className="flex items-baseline justify-between gap-2.5 px-4 pb-1 pt-2.5">
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-neutral-500">
-                      {(data.customSize &&
-                      data.customSize.width > 0 &&
-                      data.customSize.height > 0
-                        ? `${data.customSize.width}×${data.customSize.height} mm`
-                        : data.selectedSize?.replace(/mm$/i, ' mm')) ?? ''}
-                    </span>
-                    <span className="text-right text-[15px] font-bold tabular-nums text-neutral-950">
-                      ${data.selectedPrice.toLocaleString('es-AR')}
-                      {data.selectedTransferPrice != null && (
-                        <small className="mt-0.5 block text-[11px] font-medium text-emerald-700">
-                          Transferencia: ${data.selectedTransferPrice.toLocaleString('es-AR')}
-                        </small>
-                      )}
-                    </span>
+                {showSummary && (
+                  <div className="px-4 pb-1 pt-2.5">
+                    <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px]">
+                      <span className="text-neutral-600">Medida</span>
+                      <span className="font-semibold tabular-nums text-neutral-950">{sizeLabel}</span>
+                    </div>
+                    {isInternationalMarket ? (
+                      <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px] text-emerald-700">
+                        <span>Precio</span>
+                        <span className="font-semibold tabular-nums">
+                          {formatMarketMoney(localPrice, market)}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px]">
+                          <span className="text-neutral-600">3 cuotas sin interés</span>
+                          <span className="text-right font-semibold tabular-nums text-neutral-950">
+                            {formatMarketMoney(localPrice, market)}
+                            <small className="mt-0.5 block text-[11px] font-medium text-neutral-500">
+                              3 × {formatMarketMoney(localCuota, market)}
+                            </small>
+                          </span>
+                        </div>
+                        <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px] text-emerald-700">
+                          <span>Pagando por transferencia</span>
+                          <span className="font-semibold tabular-nums">
+                            {formatMarketMoney(data.selectedTransferPrice ?? 0, market)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 <div className="px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
