@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
@@ -24,6 +25,14 @@ function OpenpaySuccessContent() {
     const snapshot = consumePurchaseSnapshot(ordenId);
     if (!snapshot) return;
     purchaseTrackedRef.current = true;
+
+    pushGtmEvent('purchase', {
+      transaction_id: snapshot.orderId,
+      value: snapshot.value,
+      currency: 'ARS',
+      market: 'ar',
+      items: snapshot.items,
+    });
     trackMetaPurchase(snapshot);
   }, [ordenId]);
 
