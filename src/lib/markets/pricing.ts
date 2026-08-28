@@ -1,4 +1,8 @@
 import { getMarketConfig } from './config';
+import {
+  internationalBaselinePublicArs,
+  internationalBaselineTransferArs,
+} from './internationalBaseline';
 import { formatMarketMoney, roundToIncrement } from './money';
 import type { MarketCode, MarketPricingConfig } from './types';
 
@@ -11,7 +15,8 @@ export function convertTransferArsToMarketPrice(
   if (market === 'ar') return Math.round(transferArs);
 
   const pricing = overridePricing ?? getMarketConfig(market).pricing;
-  const raw = transferArs * pricing.arsToLocalRate * pricing.internationalMarkup;
+  const base = internationalBaselineTransferArs(transferArs);
+  const raw = base * pricing.arsToLocalRate * pricing.internationalMarkup;
   return roundToIncrement(raw, pricing.roundingIncrement);
 }
 
@@ -21,7 +26,8 @@ export function convertPublicArsToMarketPrice(publicArs: number, market: MarketC
   if (market === 'ar') return Math.round(publicArs);
 
   const pricing = getMarketConfig(market).pricing;
-  const raw = publicArs * pricing.arsToLocalRate;
+  const base = internationalBaselinePublicArs(publicArs);
+  const raw = base * pricing.arsToLocalRate;
   return roundToIncrement(raw, pricing.roundingIncrement);
 }
 
