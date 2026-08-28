@@ -3,7 +3,7 @@ import { products } from '@/data/products';
 import { STANDARD_STAMP_PRICE_FROM_ARS } from '@/lib/catalog';
 
 /** Precio público "desde" para sellos personalizados con logo (referencia en web). */
-export const CUSTOM_STAMP_PRICE_FROM_ARS = 69500;
+export const CUSTOM_STAMP_PRICE_FROM_ARS = 76000;
 
 export function getCustomStampMinPrice(): number {
   return CUSTOM_STAMP_PRICE_FROM_ARS;

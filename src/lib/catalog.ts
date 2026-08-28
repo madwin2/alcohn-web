@@ -37,7 +37,7 @@ export interface Abecedario {
 }
 
 /** Precio "desde" de referencia para listados (tamaño S, grupo chicos). */
-export const STANDARD_STAMP_PRICE_FROM_ARS = 69500;
+export const STANDARD_STAMP_PRICE_FROM_ARS = 76000;
 
 function toStandardDesign(design: StandardStampDesign): StandardDesign {
   return {
