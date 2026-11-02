@@ -24,7 +24,7 @@ export default function CookieConsentBanner() {
     updateGtmConsent(accepted, accepted);
 
     if (accepted) {
-      loadGtmContainer(true);
+      loadGtmContainer(true, true);
       grantMetaPixelConsent();
       await trackEvent('cookie_consent_accepted', {
         metadata: { analytics: true, marketing: true },

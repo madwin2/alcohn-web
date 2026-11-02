@@ -22,6 +22,7 @@ import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout } from '@/lib/analytics/metaPixel';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
+import { trackEvent } from '@/lib/analytics/client';
 import { trackWizardStep, WIZARD_STEPS, getWizardStepIndex, type WizardStepKey } from '@/lib/analytics/wizardStep';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
 import {
@@ -1861,6 +1862,30 @@ export default function BuyWizard({
     }, 0);
   };
 
+  /**
+   * "No tengo logo": por ahora lo atiende un vendedor por WhatsApp, que asesora y arma
+   * un diseño simple. Más adelante este botón se reemplaza por un generador de logos.
+   */
+  const noLogoWhatsappUrl = (() => {
+    const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
+    const material = wizardUsoDisplayLabel(data);
+    const text = [
+      'Hola Alcohn 👋 Quiero un sello de bronce personalizado pero no tengo logo.',
+      material ? `Lo voy a usar en: ${material}.` : null,
+      '¿Me ayudan a armar el diseño?',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  })();
+
+  const handleNoLogoWhatsappClick = () => {
+    pushGtmEvent('click_whatsapp', { ubicacion: 'wizard_sin_logo', market });
+    void trackEvent('whatsapp_click', {
+      metadata: { ubicacion: 'wizard_sin_logo', material: data.material ?? null },
+    });
+  };
+
   const handleRequestPreviewCorrection = async () => {
     if (isRequestingCorrection) return;
     setIsRequestingCorrection(true);
@@ -2057,13 +2082,60 @@ export default function BuyWizard({
                         Tocá para subir tu logo
                       </p>
                       <p className="mt-1 font-mono text-[10.5px] text-neutral-500">
-                        PNG, JPG, SVG · también podés sacarle una foto
+                        PNG, JPG o SVG
                       </p>
                     </div>
                   </div>
                 )}
               </label>
             </div>
+            {!data.logoPreview && (
+              <div className="md:hidden">
+                {/* `capture` abre la cámara directo: para quien tiene el logo impreso (etiqueta, tarjeta, bolsa). */}
+                <input
+                  type="file"
+                  id="logo-camera"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                  disabled={isApplyingLogoCrop}
+                />
+                <label
+                  htmlFor="logo-camera"
+                  className={`flex min-h-[48px] items-center justify-center gap-2 border border-[var(--alcohn-line-strong)] bg-white px-4 text-[14px] font-semibold text-neutral-900 ${
+                    isApplyingLogoCrop ? 'cursor-wait opacity-50' : 'cursor-pointer'
+                  }`}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2.5h6L17 8h3v11H4z" />
+                    <circle cx="12" cy="13" r="3.5" />
+                  </svg>
+                  Sacarle una foto a tu logo
+                </label>
+                <p className="mt-2 text-[12px] leading-snug text-neutral-500">
+                  ¿Lo tenés en una etiqueta, tarjeta o bolsa? Sacale una foto de frente, con buena luz
+                  y sobre fondo claro. Después podés recortarla.
+                </p>
+              </div>
+            )}
+            {!data.logoPreview && (
+              <div className="border-t border-[var(--alcohn-line)] pt-3 md:pt-4">
+                <p className="text-[13.5px] font-semibold text-neutral-900 md:text-sm">¿No tenés logo?</p>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-neutral-600 md:text-sm">
+                  Escribinos y te ayudamos a armar un diseño simple con tu nombre o tu marca.
+                </p>
+                <a
+                  href={noLogoWhatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleNoLogoWhatsappClick}
+                  className="mt-2 inline-flex min-h-[44px] items-center gap-2 text-[13.5px] font-semibold text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-4 md:text-sm"
+                >
+                  Armar mi diseño por WhatsApp →
+                </a>
+              </div>
+            )}
             {data.logoPreview && (
               <div className="wizard-notice wizard-notice--green md:rounded-lg md:border-solid md:border-blue-200 md:bg-blue-50 md:text-blue-800">
                 <span className="md:hidden" aria-hidden>✓</span>

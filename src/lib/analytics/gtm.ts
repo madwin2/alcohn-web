@@ -48,7 +48,11 @@ export function updateGtmConsent(analytics: boolean, marketing = false): void {
   });
 }
 
-export function loadGtmContainer(analyticsGranted = true): void {
+/**
+ * Carga GTM. Al terminar de cargar re-aplica el consentimiento elegido (analítica y
+ * publicidad); antes forzaba publicidad en "denied" y Google Ads medía sin cookies.
+ */
+export function loadGtmContainer(analyticsGranted = true, marketingGranted = false): void {
   if (typeof window === 'undefined') return;
 
   const gtmId = getGtmId();
@@ -65,9 +69,7 @@ export function loadGtmContainer(analyticsGranted = true): void {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
   script.onload = () => {
-    if (analyticsGranted) {
-      updateGtmConsent(true, false);
-    }
+    updateGtmConsent(analyticsGranted, marketingGranted);
   };
   document.head.appendChild(script);
 }
