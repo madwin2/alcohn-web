@@ -10,12 +10,15 @@ export default function GoogleTagManager() {
     const gtmId = getGtmId();
     if (!gtmId) return;
 
+    // Opt-out: sin elección se mide completo. Si rechazó, GTM igual se carga con el
+    // consentimiento en "denied" (modo avanzado: Google solo recibe señales sin cookies).
     const consent = getConsentState();
-    if (!consent?.analytics) return;
+    const analytics = consent ? consent.analytics : true;
+    const marketing = consent ? consent.marketing : true;
 
-    updateGtmConsent(consent.analytics, consent.marketing);
-    loadGtmContainer(consent.analytics, consent.marketing);
-    if (consent.marketing) {
+    updateGtmConsent(analytics, marketing);
+    loadGtmContainer(analytics, marketing);
+    if (marketing) {
       grantMetaPixelConsent();
     }
   }, []);

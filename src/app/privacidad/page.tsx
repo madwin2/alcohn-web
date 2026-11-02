@@ -39,25 +39,32 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
     ],
   },
   {
-    title: '5. Conservación de la información',
+    title: '5. Cookies y medición del sitio',
+    paragraphs: [
+      'Usamos cookies y herramientas de medición propias, de Google (Tag Manager, Analytics y Ads) y de Meta para saber cómo se usa el sitio y medir nuestras campañas. Si seguís navegando sin elegir, consideramos que las aceptás.',
+      'Podés rechazarlas desde el aviso de cookies. En ese caso no usamos cookies de analítica ni de publicidad: solo registramos de forma anónima qué páginas y pasos se visitan, sin identificador de visitante ni dirección IP, para contar el uso general del sitio.',
+    ],
+  },
+  {
+    title: '6. Conservación de la información',
     paragraphs: [
       'Conservamos los datos personales únicamente durante el tiempo necesario para cumplir con las finalidades para las que fueron recopilados, atender obligaciones administrativas o legales y mantener el historial necesario para brindar soporte a nuestros clientes.',
     ],
   },
   {
-    title: '6. Seguridad',
+    title: '7. Seguridad',
     paragraphs: [
       'Adoptamos medidas razonables de seguridad para proteger la información contra accesos no autorizados, pérdida, modificación o divulgación indebida.',
     ],
   },
   {
-    title: '7. Derechos del usuario',
+    title: '8. Derechos del usuario',
     paragraphs: [
       'Los usuarios pueden solicitar acceso, rectificación, actualización o eliminación de sus datos personales comunicándose con nosotros.',
     ],
   },
   {
-    title: '8. Eliminación de datos',
+    title: '9. Eliminación de datos',
     paragraphs: [
       'Para solicitar la eliminación de información personal asociada a una conversación, consulta o pedido, el usuario puede contactarnos a:',
       SITE_CONTACT.email,
@@ -65,7 +72,7 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
     ],
   },
   {
-    title: '9. Contacto',
+    title: '10. Contacto',
     paragraphs: [
       'Para consultas relacionadas con esta Política de Privacidad:',
       'Alcohn Sellos',
@@ -75,7 +82,7 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
     ],
   },
   {
-    title: '10. Cambios en esta política',
+    title: '11. Cambios en esta política',
     paragraphs: [
       'Podemos actualizar esta Política de Privacidad cuando sea necesario. Las modificaciones serán publicadas en esta misma página junto con la fecha de última actualización.',
     ],

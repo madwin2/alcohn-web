@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { setConsentState, getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
 import { loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
-import { grantMetaPixelConsent } from '@/lib/analytics/metaPixel';
+import { grantMetaPixelConsent, revokeMetaPixelConsent } from '@/lib/analytics/metaPixel';
 
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
@@ -21,16 +21,19 @@ export default function CookieConsentBanner() {
     });
     setVisible(false);
 
+    // GTM ya está cargado (sin elección se mide completo); acá solo se actualiza el permiso.
     updateGtmConsent(accepted, accepted);
+    loadGtmContainer(accepted, accepted);
 
     if (accepted) {
-      loadGtmContainer(true, true);
       grantMetaPixelConsent();
-      await trackEvent('cookie_consent_accepted', {
-        metadata: { analytics: true, marketing: true },
-      });
-      await trackEvent('page_view');
+    } else {
+      revokeMetaPixelConsent();
     }
+    // Se registra la elección en los dos casos; si rechazó, el evento va anónimo.
+    await trackEvent(accepted ? 'cookie_consent_accepted' : 'cookie_consent_rejected', {
+      metadata: { analytics: accepted, marketing: accepted },
+    });
   };
 
   if (!visible) return null;
@@ -45,8 +48,8 @@ export default function CookieConsentBanner() {
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-6">
         <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
-          Usamos cookies necesarias para el sitio y, con tu permiso, de analítica y publicidad
-          para medir y mejorar nuestras campañas.
+          Usamos cookies para medir y mejorar el sitio y nuestras campañas. Si seguís navegando,
+          lo aceptás. Si preferís, podés rechazarlas.
         </p>
         <div className="flex shrink-0 gap-2">
           <button
@@ -56,7 +59,7 @@ export default function CookieConsentBanner() {
               void handleChoice(false);
             }}
           >
-            Solo necesarias
+            Rechazar
           </button>
           <button
             type="button"
@@ -65,7 +68,7 @@ export default function CookieConsentBanner() {
               void handleChoice(true);
             }}
           >
-            Aceptar
+            Entendido
           </button>
         </div>
       </div>

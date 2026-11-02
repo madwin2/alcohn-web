@@ -37,8 +37,12 @@ export function getGtmId(): string | null {
   return id || null;
 }
 
+/** Última elección aplicada; GTM la re-aplica al terminar de cargar. */
+let lastConsent = { analytics: false, marketing: false };
+
 export function updateGtmConsent(analytics: boolean, marketing = false): void {
   if (typeof window === 'undefined') return;
+  lastConsent = { analytics, marketing };
 
   ensureGtag()('consent', 'update', {
     analytics_storage: analytics ? 'granted' : 'denied',
@@ -54,6 +58,7 @@ export function updateGtmConsent(analytics: boolean, marketing = false): void {
  */
 export function loadGtmContainer(analyticsGranted = true, marketingGranted = false): void {
   if (typeof window === 'undefined') return;
+  if (!gtmLoaded) lastConsent = { analytics: analyticsGranted, marketing: marketingGranted };
 
   const gtmId = getGtmId();
   if (!gtmId || gtmLoaded) return;
@@ -69,7 +74,8 @@ export function loadGtmContainer(analyticsGranted = true, marketingGranted = fal
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
   script.onload = () => {
-    updateGtmConsent(analyticsGranted, marketingGranted);
+    // Si la persona eligió algo mientras cargaba el script, gana esa elección.
+    updateGtmConsent(lastConsent.analytics, lastConsent.marketing);
   };
   document.head.appendChild(script);
 }

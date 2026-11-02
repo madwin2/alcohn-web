@@ -1,9 +1,10 @@
 'use client';
 
 import {
-  getConsentState,
+  getConsentLabel,
   getOrCreateSessionId,
   getOrCreateVisitorId,
+  getTrackingMode,
 } from './cookies';
 import type { ClientTrackingEvent } from './types';
 import { pushGtmEvent } from './gtm';
@@ -32,12 +33,17 @@ export async function trackEvent(
 ): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  const consent = getConsentState();
-  if (!consent?.analytics) return;
-
+  // Se mide siempre. Si la persona rechazó, el evento va sin visitante persistente
+  // (solo la sesión de la pestaña) y el servidor no guarda la IP.
+  const mode = getTrackingMode();
   const currentUrl = new URL(window.location.href);
-  const visitorId = getOrCreateVisitorId();
-  const sessionId = getOrCreateSessionId();
+  const visitorId = mode === 'full' ? getOrCreateVisitorId() : null;
+  let sessionId: string | null = null;
+  try {
+    sessionId = getOrCreateSessionId();
+  } catch {
+    // sessionStorage bloqueado: el evento se cuenta igual, sin sesión.
+  }
 
   const payload: ClientTrackingEvent = {
     eventName,
@@ -47,7 +53,7 @@ export async function trackEvent(
     visitorId,
     sessionId,
     ...collectUtmParams(currentUrl),
-    metadata: options.metadata ?? {},
+    metadata: { ...(options.metadata ?? {}), consent: getConsentLabel() },
   };
 
   pushGtmEvent(eventName, {

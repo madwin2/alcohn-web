@@ -78,8 +78,11 @@ export async function POST(request: Request) {
   }
 
   const supabase = getSupabaseAdmin();
+  const metadata = sanitizeMetadata(body.metadata);
+  // Quien rechazó cookies se cuenta igual, pero sin IP (solo conteo anónimo).
+  const anonymous = metadata.consent === 'denied';
   const userAgent = request.headers.get('user-agent');
-  const clientIp = getClientIp(request);
+  const clientIp = anonymous ? null : getClientIp(request);
 
   const { error } = await supabase.from('web_analytics_events').insert({
     event_name: eventName,
@@ -91,9 +94,9 @@ export async function POST(request: Request) {
     utm_campaign: asNullableString(body.utmCampaign),
     utm_term: asNullableString(body.utmTerm),
     utm_content: asNullableString(body.utmContent),
-    visitor_id: asNullableString(body.visitorId),
+    visitor_id: anonymous ? null : asNullableString(body.visitorId),
     session_id: asNullableString(body.sessionId),
-    metadata: sanitizeMetadata(body.metadata),
+    metadata,
     ip: clientIp,
     user_agent: userAgent,
   });

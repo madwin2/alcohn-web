@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
 
 export default function AnalyticsProvider() {
@@ -11,9 +10,7 @@ export default function AnalyticsProvider() {
   const hasTrackedInitialPageView = useRef(false);
 
   useEffect(() => {
-    const consent = getConsentState();
-    if (!consent?.analytics) return;
-
+    // Se mide aunque no haya elección o haya rechazo; `trackEvent` decide si va anónimo.
     const query = searchParams?.toString();
     const fullPath = query ? `${pathname}?${query}` : pathname;
 

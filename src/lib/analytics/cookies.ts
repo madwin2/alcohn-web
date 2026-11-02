@@ -75,6 +75,31 @@ export function setConsentState(
   return withTimestamp;
 }
 
+/**
+ * Criterio de medición (opt-out):
+ * - Sin elección todavía → se mide completo (el aviso dice "si seguís navegando, lo aceptás").
+ * - Aceptó → completo.
+ * - Rechazó → solo conteo anónimo propio: sin cookie de visitante ni IP guardada.
+ */
+export type TrackingMode = 'full' | 'anonymous';
+
+export function getTrackingMode(): TrackingMode {
+  return getConsentState()?.analytics === false ? 'anonymous' : 'full';
+}
+
+/** Publicidad (GTM ad_storage, Meta): permitida salvo que la persona la haya rechazado. */
+export function isMarketingAllowed(): boolean {
+  const consent = getConsentState();
+  return consent ? consent.marketing : true;
+}
+
+/** Estado de la elección para guardar junto a cada evento. */
+export function getConsentLabel(): 'granted' | 'denied' | 'pending' {
+  const consent = getConsentState();
+  if (!consent) return 'pending';
+  return consent.analytics ? 'granted' : 'denied';
+}
+
 export function getOrCreateVisitorId(): string {
   const existing = readCookie(VISITOR_COOKIE_KEY);
   if (existing) return existing;

@@ -182,8 +182,10 @@ export function grantMetaPixelConsent(): void {
   if (isFbqReady()) window.fbq!('consent', 'grant');
 }
 
-/** @deprecated Ya no usamos consent API de Meta. */
-export function revokeMetaPixelConsent(): void {}
+/** Si la persona rechaza las cookies, el pixel deja de mandar eventos con cookies. */
+export function revokeMetaPixelConsent(): void {
+  if (isFbqReady()) window.fbq!('consent', 'revoke');
+}
 
 /** @deprecated Ya no bloqueamos eventos por cookie de marketing. */
 export function hasMarketingConsent(): boolean {
