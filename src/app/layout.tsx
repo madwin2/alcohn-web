@@ -93,15 +93,13 @@ export default function RootLayout({
         {META_PIXEL_BASE_SCRIPT ? (
           <>
             <script dangerouslySetInnerHTML={{ __html: META_PIXEL_BASE_SCRIPT }} />
-            <noscript>
-              <img
-                height="1"
-                width="1"
-                style={{ display: 'none' }}
-                src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
-                alt=""
-              />
-            </noscript>
+            {/* Como HTML crudo: si React ve el <img>, lo precarga en el head y Meta
+                recibe un PageView extra en cada carga, aun con cookies rechazadas. */}
+            <noscript
+              dangerouslySetInnerHTML={{
+                __html: `<img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1" />`,
+              }}
+            />
           </>
         ) : null}
       </head>
