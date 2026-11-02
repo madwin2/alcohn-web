@@ -4,7 +4,7 @@ import {
   getAccessoryLinkPrice,
   getAccessoryTransferPrice,
 } from '@/data/accessories';
-import { precioTransferencia } from '@/lib/abecedarioConfigurator';
+import { cotizarAbecedarioDesdeVariante } from '@/lib/abecedarioConfigurator';
 import { cotizarRectangular, type CotizadorCatalog } from '@/lib/cotizador';
 import { getMarketConfig } from '@/lib/markets/config';
 import { convertTransferArsToMarketPrice } from '@/lib/markets/pricing';
@@ -28,48 +28,44 @@ function sumCartSubtotal(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
+/**
+ * Precio de una línea calculado SOLO con datos del servidor (catálogo de accesorios,
+ * cotizador, tabla de abecedarios). Nunca usa `item.price`, que viene del navegador
+ * y se puede editar. Devuelve null si la línea no se puede cotizar.
+ */
 function resolveLinePrices(
   item: CartItem,
   catalog: CotizadorCatalog | null
-): { link: number; transfer: number } {
+): { link: number; transfer: number } | null {
   const accessory = getAccessoryBySlug(item.designSlug);
   if (accessory) {
+    if (accessory.variants?.length) {
+      const variant =
+        accessory.variants.find((v) => v.label === item.variantSize) ??
+        (isAccessoryCartLine(item) ? accessory.variants.find((v) => !v.outOfStock) : undefined);
+      if (!variant || variant.outOfStock || variant.linkPrice <= 0) return null;
+      return { link: variant.linkPrice, transfer: variant.transferPrice };
+    }
     return {
       link: getAccessoryLinkPrice(accessory),
       transfer: getAccessoryTransferPrice(accessory),
     };
   }
 
-  if (isAccessoryCartLine(item)) {
-    return {
-      link: item.price,
-      transfer: precioTransferencia(item.price),
-    };
-  }
+  if (isAccessoryCartLine(item)) return null;
 
   if (isAbecedarioCartLine(item)) {
-    return {
-      link: item.price,
-      transfer: precioTransferencia(item.price),
-    };
+    return cotizarAbecedarioDesdeVariante(item.designSlug, item.variantSize);
   }
 
-  if (catalog) {
-    const dims = parseVariantSizeToCm(item.variantSize);
-    if (dims.ancho_real != null && dims.largo_real != null) {
-      const quote = cotizarRectangular(catalog, dims.ancho_real, dims.largo_real);
-      if (quote) {
-        return {
-          link: quote.precio_link_ars,
-          transfer: quote.precio_transferencia_ars,
-        };
-      }
-    }
-  }
-
+  if (!catalog) return null;
+  const dims = parseVariantSizeToCm(item.variantSize);
+  if (dims.ancho_real == null || dims.largo_real == null) return null;
+  const quote = cotizarRectangular(catalog, dims.ancho_real, dims.largo_real);
+  if (!quote) return null;
   return {
-    link: item.price,
-    transfer: precioTransferencia(item.price),
+    link: quote.precio_link_ars,
+    transfer: quote.precio_transferencia_ars,
   };
 }
 
@@ -78,6 +74,8 @@ export interface CheckoutPricing {
   transferSubtotal: number;
   linkItems: CartItem[];
   transferItems: CartItem[];
+  /** Líneas que el servidor no pudo cotizar: el checkout no debe cobrarlas. */
+  unpricedItems: CartItem[];
 }
 
 export interface MarketCheckoutPricing {
@@ -85,6 +83,7 @@ export interface MarketCheckoutPricing {
   currency: string;
   marketSubtotal: number;
   marketItems: CartItem[];
+  unpricedItems: CartItem[];
 }
 
 export function computeMarketCheckoutPricing(
@@ -94,23 +93,7 @@ export function computeMarketCheckoutPricing(
 ): MarketCheckoutPricing {
   const currency = getMarketConfig(market).currency;
 
-  if (market !== 'ar') {
-    const alreadyLocal = items.every(
-      (item) => item.currency === currency && Number.isFinite(item.price) && item.price > 0
-    );
-    if (alreadyLocal) {
-      const marketItems = items
-        .filter((item) => !isNonSelloCartLine(item))
-        .map((item) => ({ ...item, market, currency }));
-      return {
-        market,
-        currency,
-        marketItems,
-        marketSubtotal: marketItems.reduce((sum, item) => sum + item.price * item.qty, 0),
-      };
-    }
-  }
-
+  // Siempre se re-cotiza en el servidor: el precio local que trae el carrito es solo de muestra.
   const base = computeCheckoutPricing(items, catalog);
   const sourceItems = market === 'ar' ? base.linkItems : base.transferItems;
 
@@ -127,6 +110,7 @@ export function computeMarketCheckoutPricing(
     currency,
     marketItems,
     marketSubtotal: marketItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+    unpricedItems: base.unpricedItems,
   };
 }
 
@@ -137,11 +121,16 @@ export function computeCheckoutPricing(
   const productItems = items.filter((item) => !isNonSelloCartLine(item));
   const linkItems: CartItem[] = [];
   const transferItems: CartItem[] = [];
+  const unpricedItems: CartItem[] = [];
 
   for (const item of productItems) {
-    const { link, transfer } = resolveLinePrices(item, catalog);
-    linkItems.push({ ...item, price: link });
-    transferItems.push({ ...item, price: transfer });
+    const prices = resolveLinePrices(item, catalog);
+    if (!prices) {
+      unpricedItems.push(item);
+      continue;
+    }
+    linkItems.push({ ...item, price: prices.link });
+    transferItems.push({ ...item, price: prices.transfer });
   }
 
   return {
@@ -149,5 +138,6 @@ export function computeCheckoutPricing(
     transferSubtotal: sumCartSubtotal(transferItems),
     linkItems,
     transferItems,
+    unpricedItems,
   };
 }

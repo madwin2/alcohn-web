@@ -4,45 +4,23 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackMetaPageView } from '@/lib/analytics/metaPixel';
 
-function patchHistoryForSpaTracking(): void {
-  if (typeof window === 'undefined') return;
-  const w = window as Window & { __alcohnHistoryPatched?: boolean };
-  if (w.__alcohnHistoryPatched) return;
-  w.__alcohnHistoryPatched = true;
-
-  const notify = () => {
-    window.dispatchEvent(new Event('alcohn:navigation'));
-  };
-
-  const originalPushState = history.pushState.bind(history);
-  const originalReplaceState = history.replaceState.bind(history);
-
-  history.pushState = (...args) => {
-    originalPushState(...args);
-    notify();
-  };
-
-  history.replaceState = (...args) => {
-    originalReplaceState(...args);
-    notify();
-  };
-
-  window.addEventListener('popstate', notify);
-}
-
+/**
+ * Único origen del PageView de Meta: uno por ruta. El head solo inicializa el
+ * pixel. `alcohn:navigation` queda para PageViews virtuales explícitos (por
+ * ejemplo, el paso de pago del diseñador); cambios de query no cuentan.
+ */
 export default function MetaPixel() {
   const pathname = usePathname();
 
   useEffect(() => {
-    patchHistoryForSpaTracking();
-  }, []);
+    trackMetaPageView();
+  }, [pathname]);
 
   useEffect(() => {
     const fire = () => trackMetaPageView();
-    fire();
     window.addEventListener('alcohn:navigation', fire);
     return () => window.removeEventListener('alcohn:navigation', fire);
-  }, [pathname]);
+  }, []);
 
   return null;
 }

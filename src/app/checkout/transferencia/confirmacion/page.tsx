@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
-import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
+import { trackMetaCustomEvent } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
 function TransferenciaConfirmacionContent() {
@@ -25,7 +25,13 @@ function TransferenciaConfirmacionContent() {
       market: 'ar',
       items: snapshot.items,
     });
-    trackMetaPurchase(snapshot);
+    // El Purchase de Meta lo manda Alcohn AI por la API de Conversiones cuando el
+    // equipo confirma la transferencia; acá solo se avisa que llegó el comprobante.
+    trackMetaCustomEvent('ComprobanteTransferencia', {
+      value: snapshot.value,
+      currency: 'ARS',
+      order_id: snapshot.orderId,
+    });
   }, [ordenId]);
 
   return (

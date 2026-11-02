@@ -30,7 +30,7 @@ import {
 import { computeCheckoutPricing } from '@/lib/checkout/pricing';
 import { getCotizadorCatalog } from '@/lib/cotizador';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
-import { saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
+import { resolveShippingCostServer, saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 
 export const runtime = 'nodejs';
@@ -126,9 +126,27 @@ export async function POST(req: Request) {
     );
   }
 
+  // Los precios del carrito vienen del navegador y se pueden editar: se re-cotiza todo acá.
   const catalog = await getCotizadorCatalog();
   const pricing = computeCheckoutPricing(items, catalog);
+  if (pricing.unpricedItems.length > 0) {
+    console.error(
+      '[checkout/intent] líneas sin cotizar',
+      pricing.unpricedItems.map((i) => `${i.designSlug} · ${i.variantSize}`)
+    );
+    return NextResponse.json(
+      {
+        error:
+          'No pudimos confirmar el precio de uno de los productos. Volvé a armar el carrito o escribinos por WhatsApp.',
+        items_sin_precio: pricing.unpricedItems.map((i) => i.id),
+      },
+      { status: 409 }
+    );
+  }
   items = metodoPago === 'Transferencia' ? pricing.transferItems : pricing.linkItems;
+  if (items.length === 0) {
+    return NextResponse.json({ error: 'El carrito está vacío' }, { status: 400 });
+  }
 
   const c = body.cliente;
   const hasClienteForm =
@@ -221,15 +239,14 @@ export async function POST(req: Request) {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const webCheckoutRef = randomUUID().replace(/-/g, '').slice(0, 32);
 
-  const envioCostoRaw = body.envio_costo;
-  const envioCosto =
-    typeof envioCostoRaw === 'number' && envioCostoRaw > 0
-      ? envioCostoRaw
-      : typeof envioCostoRaw === 'string'
-        ? Number(envioCostoRaw)
-        : 0;
+  // El costo de envío también se calcula acá; `body.envio_costo` se ignora.
   const envioMetodoRaw =
     typeof body.envio_metodo === 'string' ? body.envio_metodo.trim() : '';
+  const envioMetodoCobro =
+    parseEnvioMetodo(envioMetodoRaw) ?? parseEnvioMetodo(body.envio?.metodo);
+  const envioCosto = envioMetodoCobro
+    ? await resolveShippingCostServer(supabase, envioMetodoCobro)
+    : 0;
 
   const notasWeb: Record<string, unknown> = {
     provincia: typeof body.provincia === 'string' ? body.provincia.trim() : '',
@@ -237,7 +254,7 @@ export async function POST(req: Request) {
     notas: typeof body.notas === 'string' ? body.notas.trim() : '',
     subtotal_carrito: subtotal,
     items_count: items.reduce((n, i) => n + i.qty, 0),
-    envio_costo: Number.isFinite(envioCosto) && envioCosto > 0 ? envioCosto : 0,
+    envio_costo: envioCosto,
     envio_metodo: envioMetodoRaw || undefined,
   };
 

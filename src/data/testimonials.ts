@@ -1,7 +1,8 @@
 export interface Testimonial {
   name: string;
   quote: string;
-  image: string;
+  /** Foto de perfil real de Google. Sin foto, se muestran las iniciales. */
+  image?: string;
   /** Origen de la reseña (casos-reales / Google Business). */
   source?: 'Google';
   /** Valoración 1–5 (reseñas de Google Business Profile). */
@@ -49,16 +50,12 @@ export function toProductReviewInputs(items: Testimonial[] = testimonials): Prod
 
 const avatar = (filename: string) => `/images/testimonials/${filename}`;
 
-/** Retratos genéricos de Unsplash (testimonios sin foto propia aún). */
-const portrait = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=80&h=80&q=80`;
 
 export const testimonials: Testimonial[] = [
   {
     name: 'Leandro Muñoz',
     quote:
       'Destaco el excelente trabajo, la responsabilidad, la puntualidad y la calidad. Con una atención llena de calidez y amabilidad.',
-    image: portrait('photo-1507003211169-0a1dd7228f2d'),
     source: 'Google',
     rating: 5,
   },
@@ -66,7 +63,6 @@ export const testimonials: Testimonial[] = [
     name: 'Juan Ví',
     quote:
       'Excelente atención y asesoramiento para el proceso de armar la matriz de tu marca o logo, la mejor calidad y terminación.',
-    image: portrait('photo-1500648767791-00dcc994a43e'),
     source: 'Google',
     rating: 5,
   },
@@ -74,7 +70,6 @@ export const testimonials: Testimonial[] = [
     name: 'Emanuel Naval',
     quote:
       'Excelente empresa, muy buena atención, siempre respondieron a mis consultas. Cumplen con los tiempos de fabricación y entrega. El producto tiene muy buena calidad y terminación.',
-    image: portrait('photo-1472099645785-5658abf4ff4e'),
     source: 'Google',
     rating: 5,
   },
@@ -82,7 +77,6 @@ export const testimonials: Testimonial[] = [
     name: 'Lucas Vega',
     quote:
       '100% recomendable. Desde el primer mensaje hasta la entrega, se tomaron el tiempo para explicar y sacar todas las dudas.',
-    image: portrait('photo-1519345182560-3f2917c472ef'),
     source: 'Google',
     rating: 5,
   },
@@ -90,7 +84,6 @@ export const testimonials: Testimonial[] = [
     name: 'Guillermo Berasategui',
     quote:
       'Excelente todo, absolutamente todo. Desde la atención inicial hasta la post venta. Muy profesionales, vale la pena trabajar con ellos.',
-    image: portrait('photo-1438761681033-6461ffad8d80'),
     source: 'Google',
     rating: 5,
   },
@@ -98,7 +91,6 @@ export const testimonials: Testimonial[] = [
     name: 'Estela Burgos',
     quote:
       'Realmente excelente. En el diseño, dedicación, atención y rapidez en el envío. Gracias Alcohn, altamente recomendable.',
-    image: portrait('photo-1544005313-94ddf0286df2'),
     source: 'Google',
     rating: 5,
   },
@@ -106,7 +98,6 @@ export const testimonials: Testimonial[] = [
     name: 'Andrea Leone',
     quote:
       'Increíble el sello que me enviaron, me encantó cómo queda en mis calzados. Ahora mi marca tiene un toque de distinción más.',
-    image: portrait('photo-1534528741775-53994a69daeb'),
     source: 'Google',
     rating: 5,
   },
@@ -114,7 +105,6 @@ export const testimonials: Testimonial[] = [
     name: 'Diego Ríos Pérez',
     quote:
       'Súper recomendable. Muy buena calidad del material y acabado del sello. Con gran profesionalismo te indican cómo usarlo.',
-    image: portrait('photo-1506794778202-cad84cf45f1d'),
     source: 'Google',
     rating: 5,
   },
@@ -122,7 +112,6 @@ export const testimonials: Testimonial[] = [
     name: 'Rosario Plaza',
     quote:
       'Excelente atención, resolvieron mis dudas y realizaron el trabajo en tiempo y forma. Muy recomendable, le da a mis bolsos un toque de distinción.',
-    image: portrait('photo-1527980965255-d3b416303d12'),
     source: 'Google',
     rating: 5,
   },

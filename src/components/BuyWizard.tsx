@@ -20,7 +20,7 @@ import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
-import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
+import { trackMetaInitiateCheckout } from '@/lib/analytics/metaPixel';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { trackWizardStep, WIZARD_STEPS, getWizardStepIndex, type WizardStepKey } from '@/lib/analytics/wizardStep';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
@@ -1248,7 +1248,6 @@ export default function BuyWizard({
     wizardPaymentTrackedRef.current = true;
 
     window.dispatchEvent(new Event('alcohn:navigation'));
-    trackMetaPageView();
     trackMetaInitiateCheckout({
       value: data.selectedPrice + shippingCost,
       contentIds: [`wizard-${data.selectedSize || 'personalizado'}`],

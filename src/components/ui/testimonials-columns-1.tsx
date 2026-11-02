@@ -4,9 +4,18 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 export type TestimonialColumnItem = {
   text: string;
-  image: string;
+  image?: string;
   name: string;
 };
+
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join('');
+}
 
 const HOVER_PLAYBACK_RATE = 0.5;
 
@@ -110,13 +119,22 @@ export const TestimonialsColumn = (props: {
               >
                 <p className="text-sm italic leading-relaxed text-neutral-700 md:text-[15px]">{text}</p>
                 <div className="mt-5 flex items-center gap-3 border-t border-[var(--alcohn-line)] pt-4">
-                  <img
-                    width={40}
-                    height={40}
-                    src={image}
-                    alt=""
-                    className="h-10 w-10 shrink-0 border border-[var(--alcohn-line)] object-cover"
-                  />
+                  {image ? (
+                    <img
+                      width={40}
+                      height={40}
+                      src={image}
+                      alt=""
+                      className="h-10 w-10 shrink-0 border border-[var(--alcohn-line)] object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center border border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] text-xs font-semibold tracking-wide text-[var(--alcohn-bronze)]"
+                    >
+                      {initialsOf(name)}
+                    </span>
+                  )}
                   <div className="flex min-w-0 flex-col">
                     <div className="text-sm font-semibold leading-5 tracking-tight text-neutral-900">
                       {name}

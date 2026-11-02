@@ -12,7 +12,7 @@ function OpenpaySuccessContent() {
   const searchParams = useSearchParams();
   const ordenId = searchParams.get('orden_id');
   const { clearCart } = useCart();
-  const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [syncState, setSyncState] = useState<'idle' | 'loading' | 'ok' | 'pending' | 'error'>('idle');
   const confirmSentRef = useRef(false);
   const purchaseTrackedRef = useRef(false);
 
@@ -20,8 +20,9 @@ function OpenpaySuccessContent() {
     clearCart();
   }, [clearCart]);
 
+  // Se mide la compra solo cuando el servidor verificó el cobro con Openpay.
   useEffect(() => {
-    if (!ordenId || purchaseTrackedRef.current) return;
+    if (!ordenId || syncState !== 'ok' || purchaseTrackedRef.current) return;
     const snapshot = consumePurchaseSnapshot(ordenId);
     if (!snapshot) return;
     purchaseTrackedRef.current = true;
@@ -34,7 +35,7 @@ function OpenpaySuccessContent() {
       items: snapshot.items,
     });
     trackMetaPurchase(snapshot);
-  }, [ordenId]);
+  }, [ordenId, syncState]);
 
   useEffect(() => {
     if (!ordenId) return;
@@ -52,7 +53,8 @@ function OpenpaySuccessContent() {
           setSyncState('error');
           return;
         }
-        setSyncState('ok');
+        const data = (await res.json().catch(() => ({}))) as { pending?: boolean };
+        setSyncState(data.pending ? 'pending' : 'ok');
       })
       .catch(() => {
         if (!cancelled) setSyncState('error');
@@ -66,13 +68,19 @@ function OpenpaySuccessContent() {
     <div className="min-h-screen bg-white py-16">
       <div className="container mx-auto px-4 md:px-8 max-w-2xl text-center py-16">
         <h1 className="text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
-          Pago recibido
+          {syncState === 'pending' ? 'Pago en proceso' : 'Pago recibido'}
         </h1>
         <p className="text-sm text-neutral-600 mb-4">
           Muchas gracias por tu compra. Te vamos a contactar por WhatsApp para confirmarte la compra y por ese medio te vamos a mantener al tanto del estado de fabricacion de tu sello.
         </p>
         {ordenId && syncState === 'loading' && (
           <p className="text-xs text-neutral-500 mb-4">Registrando tu pedido…</p>
+        )}
+        {ordenId && syncState === 'pending' && (
+          <p className="text-xs text-neutral-600 bg-neutral-50 border border-neutral-200 px-3 py-2 mb-4">
+            Estamos esperando la confirmación del pago de Openpay. Cuando se acredite, el pedido
+            se registra solo y te escribimos por WhatsApp.
+          </p>
         )}
         {ordenId && syncState === 'error' && (
           <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 mb-4">

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { trackMetaInitiateCheckout, trackMetaPageView } from '@/lib/analytics/metaPixel';
+import { trackMetaInitiateCheckout } from '@/lib/analytics/metaPixel';
 
 export default function CheckoutPixelEvents() {
   const { items, isHydrated, getSubtotal } = useCart();
@@ -12,7 +12,6 @@ export default function CheckoutPixelEvents() {
     if (!isHydrated || trackedRef.current || items.length === 0) return;
 
     trackedRef.current = true;
-    trackMetaPageView();
     trackMetaInitiateCheckout({
       value: getSubtotal(),
       contentIds: items.map((item) => item.id),

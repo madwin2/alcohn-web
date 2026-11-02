@@ -75,6 +75,19 @@ export async function POST(req: Request) {
 
   const catalog = await getCotizadorCatalog();
   const pricing = computeMarketCheckoutPricing(parsedItems, catalog, market);
+  if (pricing.unpricedItems.length > 0 || pricing.marketItems.length === 0) {
+    console.error(
+      '[checkout/international/intent] líneas sin cotizar',
+      pricing.unpricedItems.map((i) => `${i.designSlug} · ${i.variantSize}`)
+    );
+    return NextResponse.json(
+      {
+        error: 'No pudimos confirmar el precio de uno de los productos. Volvé a armar el carrito.',
+        items_sin_precio: pricing.unpricedItems.map((i) => i.id),
+      },
+      { status: 409 }
+    );
+  }
   const dhlShipping = getDhlShippingAmount(market);
   const total = pricing.marketSubtotal + dhlShipping;
   const marketConfig = getMarketConfig(market);

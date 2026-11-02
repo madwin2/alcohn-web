@@ -1,4 +1,5 @@
 import 'server-only';
+import { config } from '@/lib/config';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildShippingCatalog } from './catalog';
 import type { CorreoSucursalRow, ShippingFormData, ShippingMetodoUi } from './types';
@@ -58,6 +59,26 @@ export async function fetchShippingCostServer(
   }
   const costo = data?.costo;
   return typeof costo === 'number' ? costo : costo != null ? Number(costo) : null;
+}
+
+/**
+ * Costo de envío que corresponde cobrar, calculado en el servidor (tabla
+ * `costos_de_envio` o el valor de respaldo de `config`). Retiro no tiene costo.
+ */
+export async function resolveShippingCostServer(
+  supabase: AdminClient,
+  metodo: ShippingMetodoUi
+): Promise<number> {
+  if (metodo === 'retiro') return 0;
+  const tipo = metodo === 'domicilio' ? 'Domicilio' : 'Sucursal';
+  let costo: number | null = null;
+  try {
+    costo = await fetchShippingCostServer(supabase, tipo);
+  } catch (e) {
+    console.error('[shipping/cost]', e);
+  }
+  const fallback = tipo === 'Domicilio' ? config.shipping.domicilio : config.shipping.sucursal;
+  return costo != null && Number.isFinite(costo) && costo >= 0 ? costo : fallback;
 }
 
 export async function saveShippingForOrder(

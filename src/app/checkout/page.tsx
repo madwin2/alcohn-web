@@ -346,11 +346,13 @@ export default function CheckoutPage() {
 
   const persistPurchaseForTracking = (
     ordenId: string,
-    cartItems: typeof items
+    cartItems: typeof items,
+    metodo: 'Openpay' | 'Transferencia'
   ) => {
     savePurchaseSnapshot({
       orderId: ordenId,
-      value: openpaySubtotal + shippingCost,
+      // Lo que paga el cliente según el medio: la transferencia no lleva el +15 % de tarjeta.
+      value: metodo === 'Transferencia' ? transferTotalConEnvio : openpayTotalConEnvio,
       items: cartItems.map((item) => ({
         id: item.id,
         title: item.title,
@@ -375,7 +377,7 @@ export default function CheckoutPage() {
       setOrderId(intent.orden_id);
 
       if (openpaySimulateSuccess) {
-        persistPurchaseForTracking(intent.orden_id, [...items]);
+        persistPurchaseForTracking(intent.orden_id, [...items], 'Openpay');
         clearCart();
         clearWizardSupabaseSession();
         window.location.href = `/checkout/openpay/success?orden_id=${encodeURIComponent(intent.orden_id)}`;
@@ -394,7 +396,7 @@ export default function CheckoutPage() {
         return;
       }
       if (data.checkoutUrl) {
-        persistPurchaseForTracking(intent.orden_id, [...items]);
+        persistPurchaseForTracking(intent.orden_id, [...items], 'Openpay');
         clearCart();
         window.location.href = data.checkoutUrl;
         return;
@@ -483,7 +485,7 @@ export default function CheckoutPage() {
     try {
       await uploadComprobante(orderId, file);
       const currentItems = orderData?.items || items;
-      persistPurchaseForTracking(orderId, currentItems);
+      persistPurchaseForTracking(orderId, currentItems, 'Transferencia');
       clearWizardSupabaseSession();
       router.push(
         `/checkout/transferencia/confirmacion?orden_id=${encodeURIComponent(orderId)}`

@@ -132,35 +132,44 @@ export function getFontOption(key: AbecedarioFontKey): AbecedarioFontOption {
   return ABECEDARIO_FONTS.find((f) => f.key === key) ?? ABECEDARIO_FONTS[0];
 }
 
+/** Etiquetas de cada pieza del personalizado; también se usan para re-cotizar el carrito en el servidor. */
+export const ABECEDARIO_PIEZA_LABELS: Record<keyof AbecedarioPrecios, string> = {
+  mayuscula: 'Abecedario en Mayúscula',
+  minuscula: 'Abecedario en Minúscula',
+  numero: 'Números (0 al 9)',
+  extra: 'Caracteres extra',
+  soporte: 'Soporte de Bronce',
+};
+
 export function calcularPresupuestoPersonalizado(state: AbecedarioPersonalizadoState): Presupuesto {
   const precios = getAbecedarioPrecios(state.tamanoMm);
   const lineas: PresupuestoLinea[] = [
     {
-      label: 'Abecedario en Mayúscula',
+      label: ABECEDARIO_PIEZA_LABELS.mayuscula,
       qty: state.mayusculas,
       unitPrice: precios.mayuscula,
       subtotal: state.mayusculas * precios.mayuscula,
     },
     {
-      label: 'Abecedario en Minúscula',
+      label: ABECEDARIO_PIEZA_LABELS.minuscula,
       qty: state.minusculas,
       unitPrice: precios.minuscula,
       subtotal: state.minusculas * precios.minuscula,
     },
     {
-      label: 'Números (0 al 9)',
+      label: ABECEDARIO_PIEZA_LABELS.numero,
       qty: state.numeros,
       unitPrice: precios.numero,
       subtotal: state.numeros * precios.numero,
     },
     {
-      label: 'Caracteres extra',
+      label: ABECEDARIO_PIEZA_LABELS.extra,
       qty: state.extrasQty,
       unitPrice: precios.extra,
       subtotal: state.extrasQty * precios.extra,
     },
     {
-      label: 'Soporte de Bronce',
+      label: ABECEDARIO_PIEZA_LABELS.soporte,
       qty: state.soportes,
       unitPrice: precios.soporte,
       subtotal: state.soportes * precios.soporte,
@@ -169,6 +178,62 @@ export function calcularPresupuestoPersonalizado(state: AbecedarioPersonalizadoS
 
   const total = lineas.reduce((acc, l) => acc + l.subtotal, 0);
   return { lineas, total };
+}
+
+const QTY_LIMIT_BY_PIEZA: Record<keyof AbecedarioPrecios, keyof typeof ABECEDARIO_QTY_LIMITS> = {
+  mayuscula: 'mayuscula',
+  minuscula: 'minuscula',
+  numero: 'numero',
+  extra: 'extra',
+  soporte: 'soporte',
+};
+
+/**
+ * Re-cotiza una línea de abecedario a partir de su `variantSize`, sin confiar en el
+ * precio que manda el navegador. Formatos que arma el configurador:
+ * - Completo: "Completo (A-Z, a-z, 0-9) · Arial · 5mm"
+ * - Personalizado: "1x Abecedario en Mayúscula, 2x Números (0 al 9) · Arial · 5mm"
+ * Devuelve null si el texto no se puede interpretar o pide más piezas que el máximo.
+ */
+export function cotizarAbecedarioDesdeVariante(
+  designSlug: string,
+  variantSize: string
+): { link: number; transfer: number } | null {
+  const sizes = [...variantSize.matchAll(/(\d+)\s*mm/gi)];
+  const tamano = Number(sizes[sizes.length - 1]?.[1]);
+  if (!(ABECEDARIO_TAMANOS_MM as readonly number[]).includes(tamano)) return null;
+  const tamanoMm = tamano as AbecedarioTamanoMm;
+
+  const isCompleto =
+    designSlug.toLowerCase().includes('completo') || /^\s*completo/i.test(variantSize);
+  if (isCompleto) {
+    return {
+      link: getAbecedarioCompletoPrecio(tamanoMm),
+      transfer: getAbecedarioCompletoPrecioTransferencia(tamanoMm),
+    };
+  }
+
+  const detalle = variantSize.split('·')[0] ?? '';
+  const link = getAbecedarioPrecios(tamanoMm);
+  const transfer = getAbecedarioPreciosTransferencia(tamanoMm);
+  const piezas = Object.keys(ABECEDARIO_PIEZA_LABELS) as Array<keyof AbecedarioPrecios>;
+  let totalLink = 0;
+  let totalTransfer = 0;
+
+  for (const parte of detalle.split(',')) {
+    const match = /^\s*(\d+)\s*x\s+(.+?)\s*$/i.exec(parte);
+    if (!match) continue;
+    const qty = Number(match[1]);
+    const pieza = piezas.find((key) => ABECEDARIO_PIEZA_LABELS[key] === match[2]);
+    if (!pieza) return null;
+    const { max } = ABECEDARIO_QTY_LIMITS[QTY_LIMIT_BY_PIEZA[pieza]];
+    if (!Number.isInteger(qty) || qty < 0 || qty > max) return null;
+    totalLink += qty * link[pieza];
+    totalTransfer += qty * transfer[pieza];
+  }
+
+  if (totalLink <= 0) return null;
+  return { link: totalLink, transfer: totalTransfer };
 }
 
 /** Convierte un precio de link de pago al precio por transferencia. */

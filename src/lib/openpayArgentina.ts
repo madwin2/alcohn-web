@@ -209,7 +209,81 @@ export interface CreateOpenpayCheckoutInput {
 
 export interface CreateOpenpayCheckoutResult {
   checkoutUrl: string;
+  /** UUID de la orden en Openpay; se guarda en `ordenes.openpay_order_id` para verificar el pago. */
+  openpayOrderId: string | null;
   rawOrder?: unknown;
+}
+
+/** URL del webhook de Openpay. Solo https: la pasarela no notifica a http/localhost. */
+export function buildOpenpayWebhookUrl(): string | null {
+  const base = getSiteBaseUrl();
+  if (!base.startsWith('https://')) return null;
+  return `${base}/api/checkout/openpay/webhook`;
+}
+
+function extractOpenpayOrderId(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null;
+  const data = (body as { data?: { id?: unknown; attributes?: { uuid?: unknown } } }).data;
+  const uuid = data?.attributes?.uuid ?? data?.id;
+  return typeof uuid === 'string' && uuid.length > 0 ? uuid : null;
+}
+
+export interface OpenpayOrderStatus {
+  orderStatus: string | null;
+  paymentStatuses: string[];
+  paid: boolean;
+}
+
+/**
+ * Consulta el estado real de una orden en Openpay (`GET /api/v2/orders/{uuid}`).
+ * Se considera pagada si la orden está `SUCCESS` o algún pago figura `APPROVED`.
+ */
+export async function getOpenpayOrderStatus(openpayOrderId: string): Promise<OpenpayOrderStatus> {
+  const env = getOpenpayEnv();
+  const token = await fetchAccessToken(env);
+  const { checkoutApiBase } = getEndpoints(env);
+
+  const res = await fetch(
+    `${checkoutApiBase}/api/v2/orders/${encodeURIComponent(openpayOrderId)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/vnd.api+json',
+        Accept: 'application/vnd.api+json',
+        Authorization: `Bearer ${token}`,
+      },
+      cache: 'no-store',
+    }
+  );
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Openpay consultar orden falló (${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  let json: unknown;
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`Openpay consultar orden: respuesta no JSON (${res.status})`);
+  }
+
+  const attrs =
+    (json as { data?: { attributes?: Record<string, unknown> } }).data?.attributes ?? {};
+  const orderStatus = typeof attrs.status === 'string' ? attrs.status.toUpperCase() : null;
+
+  const paymentStatuses: string[] = [];
+  const pushStatus = (p: unknown) => {
+    const s = p && typeof p === 'object' ? (p as { status?: unknown }).status : null;
+    if (typeof s === 'string') paymentStatuses.push(s.toUpperCase());
+  };
+  pushStatus(attrs.payment);
+  if (Array.isArray(attrs.payments)) attrs.payments.forEach(pushStatus);
+
+  return {
+    orderStatus,
+    paymentStatuses,
+    paid: orderStatus === 'SUCCESS' || paymentStatuses.includes('APPROVED'),
+  };
 }
 
 export async function createOpenpayCheckoutOrder(
@@ -245,6 +319,8 @@ export async function createOpenpayCheckoutOrder(
     items,
     redirect_urls: redirectUrls,
   };
+  const webhookUrl = buildOpenpayWebhookUrl();
+  if (webhookUrl) attributes.webhookUrl = webhookUrl;
 
   const res = await fetch(`${checkoutApiBase}/api/v2/orders`, {
     method: 'POST',
@@ -281,7 +357,7 @@ export async function createOpenpayCheckoutOrder(
   }
   checkoutUrl = absolutizeCheckoutUrl(checkoutUrl, checkoutApiBase);
 
-  return { checkoutUrl, rawOrder: json };
+  return { checkoutUrl, openpayOrderId: extractOpenpayOrderId(json), rawOrder: json };
 }
 
 export function sumLinesSubtotal(lines: OpenpayCartLine[]): number {

@@ -10,10 +10,16 @@
  *
  * Idempotente: reclama el pago con un UPDATE atómico para evitar sellos duplicados
  * si el navegador llama dos veces (React Strict Mode / refresh).
+ *
+ * Solo marca `pagado` si Openpay confirma el cobro (ver `verifyPaymentBeforeConfirm`).
+ * Si todavía no está confirmado responde 202 `{ pending: true }`; el webhook de
+ * Openpay vuelve a llamar esta ruta cuando el pago se acredita.
  */
 
 import { NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/admin';
+import { getOpenpayOrderStatus, isOpenpaySimulateSuccessEnabled } from '@/lib/openpayArgentina';
 import {
   buildSellosInsertsFromCart,
   enrichCartItemsWithItemType,
@@ -71,6 +77,50 @@ function existingSelloKey(row: {
   return null;
 }
 
+/**
+ * El navegador llama a esta ruta, así que no se le cree: antes de marcar `pagado`
+ * se verifica el cobro en Openpay. Transferencias e internacionales no se confirman
+ * desde acá (las confirma el equipo en Alcohn AI o el webhook de dLocal); si ya están
+ * `pagado`, se sigue para completar ítems faltantes.
+ * Devuelve una respuesta para cortar, o null para continuar.
+ */
+async function verifyPaymentBeforeConfirm(
+  supabase: SupabaseClient,
+  ordenId: string
+): Promise<NextResponse | null> {
+  const { data, error } = await supabase
+    .from('ordenes')
+    .select('metodo_pago, estado_pago_web, openpay_order_id')
+    .eq('id', ordenId)
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
+
+  const row = data as {
+    metodo_pago: string | null;
+    estado_pago_web: string | null;
+    openpay_order_id: string | null;
+  };
+  if (row.estado_pago_web === 'pagado') return null;
+
+  const pending = (reason: string) =>
+    NextResponse.json({ ok: false, pending: true, reason }, { status: 202 });
+
+  if (row.metodo_pago !== 'Openpay') return pending('pago_a_verificar');
+  if (isOpenpaySimulateSuccessEnabled()) return null;
+  if (!row.openpay_order_id) return pending('sin_openpay_order_id');
+
+  try {
+    const status = await getOpenpayOrderStatus(row.openpay_order_id);
+    if (status.paid) return null;
+    return pending(`openpay_${(status.orderStatus ?? 'sin_estado').toLowerCase()}`);
+  } catch (e) {
+    console.error('[confirmar-pago] verificar Openpay', e instanceof Error ? e.message : e);
+    return pending('openpay_no_disponible');
+  }
+}
+
 interface RouteContext {
   params: { id: string };
 }
@@ -92,6 +142,10 @@ export async function POST(_req: Request, { params }: RouteContext) {
   }
 
   const supabase = getSupabaseAdmin();
+
+  const blocked = await verifyPaymentBeforeConfirm(supabase, params.id);
+  if (blocked) return blocked;
+
   const now = new Date().toISOString();
 
   const { data: claimed, error: claimErr } = await supabase
