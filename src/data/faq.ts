@@ -62,7 +62,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿Cuánto tarda la fabricación?',
     answer:
-      'El plazo habitual de producción es de 72 horas habiles desde que la muestra y el pago quedan confirmados. El envío se suma según destino y forma de despacho.',
+      'El plazo habitual de producción es de 72 horas hábiles desde que la muestra y el pago quedan confirmados. El envío se suma según destino y forma de despacho.',
   },
   {
     question: '¿Cuánto sale el envío?',

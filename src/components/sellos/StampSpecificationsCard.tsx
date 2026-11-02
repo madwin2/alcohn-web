@@ -5,7 +5,7 @@ const STANDARD_STAMP_SPECS = [
   { label: 'Proceso', value: 'CNC alta precisión' },
   { label: 'Profundidad', value: '3mm' },
   { label: 'Uso', value: 'Cuero y madera' },
-  { label: 'Tiempo', value: '72hs habiles' },
+  { label: 'Tiempo', value: '72hs hábiles' },
 ] as const;
 
 type StampSpecificationsCardProps = {

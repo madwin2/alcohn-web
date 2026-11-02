@@ -13,7 +13,7 @@ export const config = {
     sucursal: 5000, // TODO: Confirmar precio exacto
   },
   production: {
-    days: 10, // Días hábiles de producción
+    days: 3, // Días hábiles de fabricación: la web promete 72 hs hábiles desde muestra y pago confirmados
   },
   seña: {
     amount: 30000, // Seña inicial
