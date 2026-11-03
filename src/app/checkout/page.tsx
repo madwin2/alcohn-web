@@ -823,7 +823,7 @@ export default function CheckoutPage() {
                       >
                         <span className="block font-semibold text-neutral-900 mb-1">Transferencia bancaria</span>
                         <span className="block text-xs text-neutral-600">
-                          Seña ${config.seña.amount.toLocaleString('es-AR')} · resto al retirar
+                          Seña ${config.seña.amount.toLocaleString('es-AR')} hoy · el resto cuando el sello está listo, antes del envío
                         </span>
                         <span className="block mt-2 text-base font-bold text-emerald-700">
                           ${transferTotalConEnvio.toLocaleString('es-AR')}
@@ -1162,7 +1162,7 @@ export default function CheckoutPage() {
                   </p>
                   <ul className="text-xs text-neutral-600 space-y-1">
                     <li>• Pago total con tarjeta (Openpay)</li>
-                    <li>• Seña ${config.seña.amount.toLocaleString('es-AR')} por transferencia (resto al retirar)</li>
+                    <li>• Transferencia: seña de ${config.seña.amount.toLocaleString('es-AR')} hoy. El resto, cuando el sello está listo: te mandamos la foto y pagás antes del envío.</li>
                     <li>• Factura C disponible</li>
                   </ul>
                 </div>
