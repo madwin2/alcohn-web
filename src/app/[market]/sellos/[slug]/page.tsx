@@ -11,7 +11,6 @@ import SalesCtaBand from '@/components/SalesCtaBand';
 import StampProductCarousel from '@/components/sellos/StampProductCarousel';
 import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
 import StampUsageGuideSection from '@/components/sellos/StampUsageGuideSection';
-import { getAggregateRating, toProductReviewInputs } from '@/data/testimonials';
 import {
   getStampUseCaseBySlug,
   getStampPriceFrom,
@@ -101,8 +100,6 @@ export default function InternationalStampUseCasePage({ params }: PageParams) {
       { name: 'Material de uso', value: useCase.material },
       { name: 'Oficio', value: useCase.oficio },
     ],
-    aggregateRating: getAggregateRating(),
-    reviews: toProductReviewInputs(),
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([

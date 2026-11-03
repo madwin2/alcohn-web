@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { products, getProductBySlug } from '@/data/products';
 import ProductSheet from '@/components/ProductSheet';
 import { buildBreadcrumbJsonLd, buildProductJsonLd, createPageMetadata } from '@/lib/seo';
-import { getAggregateRating, toProductReviewInputs } from '@/data/testimonials';
 
 interface ProductPageProps {
   params: {
@@ -60,8 +59,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     sku: product.id,
     category: product.category,
     price: priceValue,
-    aggregateRating: getAggregateRating(),
-    reviews: toProductReviewInputs(),
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([

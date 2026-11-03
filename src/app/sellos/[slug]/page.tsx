@@ -24,7 +24,6 @@ import {
   buildProductJsonLd,
   createPageMetadata,
 } from '@/lib/seo';
-import { getAggregateRating, toProductReviewInputs } from '@/data/testimonials';
 import { getStampPriceFrom } from '@/data/stampUseCases';
 
 type PageParams = {
@@ -88,8 +87,6 @@ export default function SelloUseCasePage({ params }: PageParams) {
       { name: 'Material de uso', value: useCase.material },
       { name: 'Oficio', value: useCase.oficio },
     ],
-    aggregateRating: getAggregateRating(),
-    reviews: toProductReviewInputs(),
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([

@@ -1,6 +1,7 @@
 import PageIntro from '@/components/PageIntro';
 import SectionHeader from '@/components/SectionHeader';
 import TestimonialsColumnsSection from '@/components/TestimonialsColumnsSection';
+import GoogleReviewsBadge from '@/components/GoogleReviewsBadge';
 import RecognizedBrandsMarquee from '@/components/RecognizedBrandsMarquee';
 import ClienteGallery from '@/components/ClienteGallery';
 import SalesCtaBand from '@/components/SalesCtaBand';
@@ -63,8 +64,11 @@ export default function CasosRealesPageContent({ market }: CasosRealesPageConten
           <SectionHeader
             title="Lo que dicen nuestros clientes"
             subtitle="Artesanos, emprendedores y profesionales que confiaron en Alcohn para darle distinción a su marca."
-            className="mb-6 md:mb-10"
+            className="mb-3 md:mb-4"
           />
+          <div className="mb-6 flex justify-center md:mb-10">
+            <GoogleReviewsBadge />
+          </div>
           <TestimonialsColumnsSection />
         </section>
 

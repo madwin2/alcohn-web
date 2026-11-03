@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { getStandardDesignBySlug } from '@/lib/catalog';
 import { buildBreadcrumbJsonLd, buildProductJsonLd, createPageMetadata } from '@/lib/seo';
-import { getAggregateRating, toProductReviewInputs } from '@/data/testimonials';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -56,8 +55,6 @@ export default function StandardDesignLayout({ children, params }: LayoutProps) 
     image: design.image,
     category: 'Sellos estándar de bronce',
     price: design.startingPrice,
-    aggregateRating: getAggregateRating(),
-    reviews: toProductReviewInputs(),
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([

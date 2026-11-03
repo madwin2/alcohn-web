@@ -19,34 +19,8 @@ export function toReviewJsonLdInputs(items: Testimonial[]) {
   }));
 }
 
-export type ProductReviewInput = {
-  author: string;
-  ratingValue: number;
-  reviewBody: string;
-  datePublished?: string;
-};
-
-/** Promedio y conteo desde testimonios con rating (schema Product). */
-export function getAggregateRating(items: Testimonial[] = testimonials) {
-  const rated = items.filter((t): t is Testimonial & { rating: number } => t.rating != null);
-  if (rated.length === 0) return undefined;
-  const reviewCount = rated.length;
-  const ratingValue =
-    Math.round((rated.reduce((sum, t) => sum + t.rating, 0) / reviewCount) * 10) / 10;
-  return { ratingValue, reviewCount };
-}
-
-/** Reseñas para schema Product (subset con rating explícito). */
-export function toProductReviewInputs(items: Testimonial[] = testimonials): ProductReviewInput[] {
-  return items
-    .filter((t) => t.rating != null)
-    .map((t) => ({
-      author: t.name,
-      ratingValue: t.rating!,
-      reviewBody: t.quote,
-      ...(t.datePublished ? { datePublished: t.datePublished } : {}),
-    }));
-}
+// Sin aggregateRating ni review en el schema de producto: son reseñas de Google sobre el
+// negocio, y Google no permite marcarlas como propias del producto. Ver `googleReviews.ts`.
 
 const avatar = (filename: string) => `/images/testimonials/${filename}`;
 

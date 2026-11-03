@@ -7,6 +7,7 @@ import ReactCrop, { type Crop, type PercentCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import Stepper from './Stepper';
 import ContactStep from './buy/ContactStep';
+import GoogleReviewsBadge from './GoogleReviewsBadge';
 import PurchaseInclusions from './PurchaseInclusions';
 import { config } from '@/lib/config';
 import { useCart } from '@/contexts/CartContext';
@@ -2377,6 +2378,9 @@ export default function BuyWizard({
               <span>Muestra gratis</span>
               <span>Bronce macizo</span>
               <span>Envíos a todo el país</span>
+            </div>
+            <div className="mt-1 flex justify-center md:mt-4 md:justify-start">
+              <GoogleReviewsBadge />
             </div>
           </div>
         )}

@@ -8,6 +8,7 @@ import { useMarket } from '@/contexts/MarketContext';
 import { formatMarketMoney } from '@/lib/markets/money';
 import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 import AutoImageCarousel from './AutoImageCarousel';
+import GoogleReviewsBadge from './GoogleReviewsBadge';
 import { prefersReducedMotion } from '@/lib/motion';
 
 gsap.registerPlugin(useGSAP);
@@ -133,6 +134,9 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
               )}
             </div>
           )}
+          <div data-hero-reveal className="mt-4 md:mt-6">
+            <GoogleReviewsBadge tone="dark" />
+          </div>
         </div>
       </div>
     </section>
