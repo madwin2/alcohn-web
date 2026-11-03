@@ -109,14 +109,16 @@ export async function syncWizardLogos(
   mockupId: string,
   logoOriginal: string,
   logoOptimized?: string
-): Promise<void> {
+): Promise<string | null> {
   try {
-    await uploadMockupImage(mockupId, 'logo_original', logoOriginal);
+    const original = await uploadMockupImage(mockupId, 'logo_original', logoOriginal);
     if (logoOptimized && logoOptimized !== logoOriginal) {
       await uploadMockupImage(mockupId, 'logo_optimizado', logoOptimized);
     }
+    return original.url;
   } catch (err) {
     console.error('[wizard] upload logos', err);
+    return null;
   }
 }
 

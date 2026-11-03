@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import ReactCrop, { type Crop, type PercentCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -25,6 +25,15 @@ import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { trackEvent } from '@/lib/analytics/client';
 import { trackWizardStep, WIZARD_STEPS, getWizardStepIndex, type WizardStepKey } from '@/lib/analytics/wizardStep';
 import { getOrCreateWebSessionId, peekWizardSupabaseSession } from '@/lib/wizardSupabaseSession';
+import {
+  buildWizardEntryKey,
+  clearWizardDraft,
+  isWizardDraftWorthResuming,
+  loadWizardDraft,
+  saveWizardDraft,
+  type WizardDraft,
+} from '@/lib/wizardDraft';
+import { getBrowserKind, isInAppBrowser, type BrowserKind } from '@/lib/browserKind';
 import {
   syncWizardContact,
   ensureMockupSolicitud,
@@ -915,6 +924,7 @@ export default function BuyWizard({
 }: BuyWizardProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { market } = useMarket();
   const isInternationalMarket = market !== 'ar';
   const { addItem, clearCart } = useCart();
@@ -954,12 +964,21 @@ export default function BuyWizard({
   const clienteIdRef = useRef<string | null>(null);
   const mockupSolicitudIdRef = useRef<string | null>(null);
   const lastTrackedWizardStepRef = useRef<number | null>(null);
+  /** URL firmada del logo subido a la muestra: es lo que se guarda en el avance. */
+  const [draftLogoUrl, setDraftLogoUrl] = useState<string | null>(null);
+  /** No guardar el avance hasta haber intentado restaurar uno (si no, se pisa). */
+  const [draftChecked, setDraftChecked] = useState(false);
+  const resumeAttemptedRef = useRef(false);
+  const [resumedFrom, setResumedFrom] = useState<'draft' | 'link' | null>(null);
+  const [browserKind, setBrowserKind] = useState<BrowserKind>('desktop');
+  const entryKey = buildWizardEntryKey(pathname ?? '/buy', new URLSearchParams(searchParams.toString()));
 
   useEffect(() => {
     webSessionIdRef.current = getOrCreateWebSessionId();
     const session = peekWizardSupabaseSession();
     if (session?.cliente_id) clienteIdRef.current = session.cliente_id;
     if (session?.mockup_solicitud_id) mockupSolicitudIdRef.current = session.mockup_solicitud_id;
+    setBrowserKind(getBrowserKind());
   }, []);
 
   useEffect(() => {
@@ -1103,6 +1122,166 @@ export default function BuyWizard({
   const goToPreviousStep = useCallback(() => {
     setStep((prev) => Math.max(0, prev - 1));
   }, []);
+
+  /** Eventos del paso del logo: analítica propia + GTM, con el navegador de origen. */
+  const trackWizardDetail = useCallback(
+    (eventName: string, metadata: Record<string, unknown> = {}) => {
+      const payload = { ...metadata, navegador: getBrowserKind(), market };
+      void trackEvent(eventName, { metadata: payload });
+      pushGtmEvent(eventName, payload);
+    },
+    [market]
+  );
+
+  const restoreWizardDraft = useCallback(
+    async (draft: WizardDraft, source: 'draft' | 'link') => {
+      if (draft.mockupSolicitudId) mockupSolicitudIdRef.current = draft.mockupSolicitudId;
+      if (draft.clienteId) clienteIdRef.current = draft.clienteId;
+
+      let target: WizardStepKey = draft.step === 'material' ? 'logo' : draft.step;
+      let logoPatch: Partial<BuyWizardData> = {};
+      if (draft.logoUrl) {
+        try {
+          const res = await fetch(draft.logoUrl);
+          if (!res.ok) throw new Error(`logo ${res.status}`);
+          const blob = await res.blob();
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+          });
+          const file = new File([blob], draft.logoName || 'logo.png', {
+            type: blob.type || 'image/png',
+          });
+          const aspectRatio = await measureLogoContentAspectRatioFromDataUrl(dataUrl);
+          logoPatch = {
+            logoFile: file,
+            logoOriginal: dataUrl,
+            logoPreview: dataUrl,
+            logoAnalysis: { aspectRatio },
+          };
+          setDraftLogoUrl(draft.logoUrl);
+        } catch {
+          // La URL firmada venció o no se pudo bajar: vuelve a pedir el logo.
+          target = 'logo';
+        }
+      } else {
+        target = 'logo';
+      }
+
+      setData((prev) => ({
+        ...prev,
+        material: draft.material as WizardMaterial,
+        usoSlug: draft.usoSlug ?? prev.usoSlug,
+        nombre: draft.nombre ?? prev.nombre,
+        whatsapp: draft.whatsapp ?? prev.whatsapp,
+        email: draft.email ?? prev.email,
+        ...logoPatch,
+      }));
+      goToStepKey(target);
+      setResumedFrom(source);
+      trackWizardDetail('wizard_resumed', {
+        origen: source,
+        paso: target,
+        con_logo: Boolean(logoPatch.logoPreview),
+        material: draft.material,
+      });
+    },
+    [goToStepKey, trackWizardDetail]
+  );
+
+  // Retomar: primero el avance guardado en este navegador; si no hay, el link de
+  // "Terminar más tarde" (?retomar=<id de la muestra>), que puede abrirse en otro.
+  useEffect(() => {
+    // Una sola vez por montaje real (en desarrollo React monta dos veces).
+    if (resumeAttemptedRef.current) return;
+    resumeAttemptedRef.current = true;
+    const retomarId = searchParams.get('retomar');
+    void (async () => {
+      try {
+        let draft = loadWizardDraft(entryKey);
+        let source: 'draft' | 'link' = 'draft';
+        if (!draft && retomarId && /^[0-9a-f-]{36}$/i.test(retomarId)) {
+          const res = await fetch(`/api/mockups/solicitudes/${retomarId}`);
+          if (res.ok) {
+            const s = (await res.json()) as {
+              id?: string;
+              origen?: string;
+              orden_id?: string | null;
+              material?: string | null;
+              archivo_base_url?: string | null;
+            };
+            if (s.id && s.origen === 'web' && !s.orden_id && s.material) {
+              draft = {
+                v: 1,
+                savedAt: Date.now(),
+                entryKey,
+                step: s.archivo_base_url ? 'contact' : 'logo',
+                material: s.material,
+                mockupSolicitudId: s.id,
+                logoUrl: s.archivo_base_url ?? undefined,
+              };
+              source = 'link';
+            }
+          }
+        }
+        if (!draft || !isWizardDraftWorthResuming(draft)) return;
+        await restoreWizardDraft(draft, source);
+      } catch (err) {
+        console.info('[wizard] no se pudo retomar el avance', err);
+      } finally {
+        setDraftChecked(true);
+      }
+    })();
+    // Solo al entrar: retomar no debe repetirse al cambiar de paso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Guardar el avance en los pasos previos a la muestra. Después de enviar los datos
+  // queda guardado el paso de contacto, así quien vuelve no repite logo ni datos.
+  useEffect(() => {
+    if (!draftChecked || !data.material) return;
+    if (currentStepKey !== 'material' && currentStepKey !== 'logo' && currentStepKey !== 'contact') {
+      return;
+    }
+    saveWizardDraft({
+      entryKey,
+      step: currentStepKey,
+      material: data.material,
+      usoSlug: data.usoSlug,
+      mockupSolicitudId: mockupSolicitudIdRef.current ?? undefined,
+      clienteId: clienteIdRef.current ?? undefined,
+      logoUrl: data.logoPreview && draftLogoUrl ? draftLogoUrl : undefined,
+      logoName: data.logoFile?.name,
+      nombre: data.nombre,
+      whatsapp: data.whatsapp,
+      email: data.email,
+    });
+  }, [
+    draftChecked,
+    entryKey,
+    currentStepKey,
+    data.material,
+    data.usoSlug,
+    data.logoPreview,
+    data.logoFile,
+    data.nombre,
+    data.whatsapp,
+    data.email,
+    draftLogoUrl,
+  ]);
+
+  const handleStartOver = () => {
+    clearWizardDraft();
+    mockupSolicitudIdRef.current = null;
+    setDraftLogoUrl(null);
+    setResumedFrom(null);
+    setAnalysisError(null);
+    setData(initialMaterial ? { material: initialMaterial } : {});
+    setStep(0);
+    trackWizardDetail('wizard_start_over');
+  };
 
   useEffect(() => {
     if (lastTrackedWizardStepRef.current === step) return;
@@ -1494,12 +1673,19 @@ export default function BuyWizard({
       });
       if (mid) mockupSolicitudIdRef.current = mid;
     }
+    setDraftLogoUrl(null);
     if (mid) {
-      void syncWizardLogos(mid, imageUrl);
+      void syncWizardLogos(mid, imageUrl).then((url) => {
+        if (url) setDraftLogoUrl(url);
+      });
     }
 
+    trackWizardDetail('logo_uploaded', {
+      tipo: file.type || null,
+      kb: Math.round(file.size / 1024),
+    });
     goToStepKey('contact');
-  }, [goToStepKey]);
+  }, [goToStepKey, trackWizardDetail]);
 
   const runLogoProcessing = useCallback(async (file: File, imageUrl: string) => {
     const logoContentAspectRatio =
@@ -1621,11 +1807,25 @@ export default function BuyWizard({
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const fuente = e.target.id === 'logo-camera' ? 'camara' : 'galeria';
     e.target.value = '';
-    if (!file) return;
+    if (!file) {
+      trackWizardDetail('logo_picker_cancel', { fuente });
+      return;
+    }
+    if (file.type && !file.type.startsWith('image/')) {
+      trackWizardDetail('logo_upload_error', { fuente, motivo: 'tipo', tipo: file.type });
+      setAnalysisError('Ese archivo no es una imagen. Subí tu logo en PNG, JPG o SVG.');
+      return;
+    }
     const reader = new FileReader();
+    reader.onerror = () => {
+      trackWizardDetail('logo_upload_error', { fuente, motivo: 'lectura', tipo: file.type || null });
+      setAnalysisError('No pudimos leer la imagen. Probá con otra o sacale una foto.');
+    };
     reader.onloadend = () => {
-      const imageUrl = reader.result as string;
+      if (reader.error || typeof reader.result !== 'string') return;
+      const imageUrl = reader.result;
       setLogoCrop({
         unit: '%',
         x: 2,
@@ -1653,6 +1853,7 @@ export default function BuyWizard({
     const pending = pendingLogoUpload;
     setPendingLogoUpload(null);
     setPendingLogoAspectRatio(1);
+    trackWizardDetail('logo_crop', { accion: 'sin_recortar' });
     await handleLogoUploaded(pending.file, pending.imageUrl);
   };
 
@@ -1678,6 +1879,7 @@ export default function BuyWizard({
         : pendingLogoUpload.file;
       setPendingLogoUpload(null);
       setPendingLogoAspectRatio(1);
+      trackWizardDetail('logo_crop', { accion: hasValidCrop ? 'recortar' : 'sin_recortar' });
       await handleLogoUploaded(logoFile, croppedImageUrl);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'No se pudo recortar el logo.';
@@ -1857,6 +2059,7 @@ export default function BuyWizard({
     if (mid) {
       void markCheckoutStarted(mid, [cartLine]);
     }
+    clearWizardDraft();
     window.setTimeout(() => {
       router.push(isInternationalMarket ? marketPath(market, '/checkout') : '/checkout');
     }, 0);
@@ -1878,6 +2081,35 @@ export default function BuyWizard({
       .join(' ');
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   })();
+
+  /**
+   * "Terminar más tarde": abre WhatsApp con un link para retomar. Sirve aunque se abra
+   * en otro navegador (lo restaura `?retomar=`), y la persona queda como contacto.
+   */
+  const saveLaterWhatsappUrl = (() => {
+    const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
+    const params = new URLSearchParams();
+    for (const key of ['mode', 'product', 'material', 'uso', 'variant']) {
+      const value = searchParams.get(key);
+      if (value) params.set(key, value);
+    }
+    if (!params.get('mode') && !params.get('product')) params.set('mode', 'custom');
+    if (mockupSolicitudIdRef.current) params.set('retomar', mockupSolicitudIdRef.current);
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.alcohnsellos.com';
+    const link = `${origin}${pathname ?? '/buy'}?${params.toString()}`;
+    const material = wizardUsoDisplayLabel(data);
+    const text = [
+      `Hola Alcohn 👋 Estoy armando mi sello${material ? ` para ${material}` : ''} en la web y no tengo el logo a mano.`,
+      `Lo sigo más tarde desde acá: ${link}`,
+      'Si prefieren, les mando el logo por este chat.',
+    ].join('\n');
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  })();
+
+  const handleSaveLaterClick = () => {
+    trackWizardDetail('wizard_save_later', { material: data.material ?? null });
+    pushGtmEvent('click_whatsapp', { ubicacion: 'wizard_terminar_mas_tarde', market });
+  };
 
   const handleNoLogoWhatsappClick = () => {
     pushGtmEvent('click_whatsapp', { ubicacion: 'wizard_sin_logo', market });
@@ -2032,6 +2264,19 @@ export default function BuyWizard({
           </div>
         )}
 
+        {resumedFrom && (currentStepKey === 'logo' || currentStepKey === 'contact') && (
+          <div className="mb-3 flex items-center justify-between gap-3 border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-3 py-2 text-[12.5px] text-neutral-700">
+            <span>Seguís donde lo dejaste.</span>
+            <button
+              type="button"
+              onClick={handleStartOver}
+              className="min-h-[36px] shrink-0 font-semibold text-neutral-900 underline underline-offset-2"
+            >
+              Empezar de nuevo
+            </button>
+          </div>
+        )}
+
         {/* Logo */}
         {currentStepKey === 'logo' && (
           <div className="wizard-step h-full overflow-y-auto md:space-y-6 md:[animation:none]">
@@ -2055,6 +2300,7 @@ export default function BuyWizard({
               />
               <label
                 htmlFor="logo-upload"
+                onClick={() => trackWizardDetail('logo_picker_open', { fuente: 'galeria' })}
                 className={`block ${isApplyingLogoCrop ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
               >
                 {data.logoPreview ? (
@@ -2103,6 +2349,7 @@ export default function BuyWizard({
                 />
                 <label
                   htmlFor="logo-camera"
+                  onClick={() => trackWizardDetail('logo_picker_open', { fuente: 'camara' })}
                   className={`flex min-h-[48px] items-center justify-center gap-2 border border-[var(--alcohn-line-strong)] bg-white px-4 text-[14px] font-semibold text-neutral-900 ${
                     isApplyingLogoCrop ? 'cursor-wait opacity-50' : 'cursor-pointer'
                   }`}
@@ -2117,6 +2364,33 @@ export default function BuyWizard({
                   ¿Lo tenés en una etiqueta, tarjeta o bolsa? Sacale una foto de frente, con buena luz
                   y sobre fondo claro. Después podés recortarla.
                 </p>
+              </div>
+            )}
+            {!data.logoPreview && analysisError && (
+              <p role="alert" className="text-[13px] text-red-700">
+                {analysisError}
+              </p>
+            )}
+            {/* Navegador interno de Instagram/Facebook: el logo suele estar en otra app. */}
+            {!data.logoPreview && isInAppBrowser(browserKind) && (
+              <div className="border border-dashed border-[var(--alcohn-line-strong)] bg-[var(--alcohn-surface)] p-3 md:hidden">
+                <p className="text-[13.5px] font-semibold text-neutral-900">
+                  ¿Tu logo está en WhatsApp o en el mail?
+                </p>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-neutral-600">
+                  Guardalo en la galería sin cerrar esta ventana y volvé a Instagram: seguís donde
+                  estabas.
+                </p>
+                <a
+                  href={saveLaterWhatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleSaveLaterClick}
+                  className="mt-2 inline-flex min-h-[44px] items-center gap-2 text-[13.5px] font-semibold text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-4"
+                >
+                  Terminar más tarde por WhatsApp →
+                </a>
+                <p className="text-[11.5px] text-neutral-500">Te guardamos el link en el chat.</p>
               </div>
             )}
             {!data.logoPreview && (
@@ -2210,6 +2484,7 @@ export default function BuyWizard({
                       onClick={() => {
                         setPendingLogoUpload(null);
                         setPendingLogoAspectRatio(1);
+                        trackWizardDetail('logo_crop', { accion: 'cancelar' });
                       }}
                       disabled={isApplyingLogoCrop}
                       className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
