@@ -191,7 +191,7 @@ export default function AccessoryProductPage({
 
                   {canPurchase && showTransferPrice ? (
                     <p className="min-h-[1.25rem] text-sm font-semibold leading-snug text-green-600">
-                      {formatMarketMoney(displayTransferPrice, market)} c/ transferencia
+                      {formatMarketMoney(displayTransferPrice, market)} con transferencia (15% off)
                     </p>
                   ) : canPurchase ? null : (
                     <p className="min-h-[1.25rem] text-sm font-semibold leading-snug text-neutral-500">

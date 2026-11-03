@@ -176,7 +176,7 @@ export function WizardSizeSummaryPanel({
           </div>
         )}
         <div className="flex items-baseline justify-between gap-2 py-1 text-[13.5px] text-emerald-700">
-          <span>{isInternational ? 'Precio' : 'Pagando por transferencia'}</span>
+          <span>{isInternational ? 'Precio' : 'Transferencia (15% off)'}</span>
           <span className="font-semibold tabular-nums">
             {formatMarketMoney(
               isInternational ? localPrice : summary.transfer,
@@ -229,7 +229,7 @@ export function WizardSizeSummaryPanel({
                   )}
                 </div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <dt className="text-emerald-800">Transferencia</dt>
+                  <dt className="text-emerald-800">Transferencia (15% off)</dt>
                   <dd className="font-semibold tabular-nums text-emerald-700">
                     {formatMarketMoney(summary.transfer, market)}
                   </dd>

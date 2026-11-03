@@ -72,7 +72,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿Cómo pago?',
     answer:
-      `Podés pagar online con tarjeta en el checkout de tu pedido, o por transferencia bancaria (seña de $${config.seña.amount.toLocaleString('es-AR')} y el resto cuando el sello está listo).`,
+      `Podés pagar online con tarjeta en el checkout de tu pedido, o por transferencia bancaria con 15% de descuento (seña de $${config.seña.amount.toLocaleString('es-AR')} y el resto cuando el sello está listo, antes del envío).`,
   },
   {
     question: '¿Hacen factura?',

@@ -244,7 +244,7 @@ export default function StandardDesignPage({ params }: PageProps) {
                     ].join(' ')}
                     aria-hidden={selectedTransferPrice == null}
                   >
-                    Transferencia: $
+                    Transferencia (15% off): $
                     {(selectedTransferPrice ?? design.startingPrice).toLocaleString('es-AR')}
                   </p>
                 </div>

@@ -2589,7 +2589,7 @@ export default function BuyWizard({
               <p className="mt-1 text-[13.5px] text-neutral-600 md:hidden">
                 {isInternationalMarket
                   ? 'Precio del producto en tu moneda local. El envío DHL se suma en el checkout.'
-                  : 'Precio final, sin sorpresas. Transferencia tiene 10% de descuento.'}
+                  : 'Precio final, sin sorpresas. 15% de descuento pagando por transferencia.'}
               </p>
               <p className="hidden text-sm text-gray-600 md:block md:text-base">
                 {data.selectedSize
@@ -2813,7 +2813,7 @@ export default function BuyWizard({
                                   {formatMarketMoney(Math.round(localPrice / 3), market)}
                                 </div>
                                 <div className="text-xs font-medium text-green-600">
-                                  Transferencia: {formatMarketMoney(transfer, market)}
+                                  Transferencia (15% off): {formatMarketMoney(transfer, market)}
                                 </div>
                               </>
                             )}
@@ -2883,7 +2883,7 @@ export default function BuyWizard({
                             {formatMarketMoney(Math.round(data.selectedPrice / 3), market)}
                           </p>
                           <p className="text-xs text-green-600 font-medium">
-                            Transferencia:{' '}
+                            Transferencia (15% off):{' '}
                             {formatMarketMoney(data.selectedTransferPrice ?? 0, market)}
                           </p>
                         </>
@@ -2943,7 +2943,7 @@ export default function BuyWizard({
                           </span>
                         </div>
                         <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px] text-emerald-700">
-                          <span>Pagando por transferencia</span>
+                          <span>Transferencia (15% off)</span>
                           <span className="font-semibold tabular-nums">
                             {formatMarketMoney(data.selectedTransferPrice ?? 0, market)}
                           </span>
@@ -3463,7 +3463,7 @@ export default function BuyWizard({
                   >
                     {cardTotal > transferTotal && (
                       <span className="absolute -top-2.5 right-3 bg-emerald-700 px-2 py-0.5 font-mono text-[8.5px] font-semibold uppercase tracking-wide text-white md:hidden">
-                        Ahorrás ${(cardTotal - transferTotal).toLocaleString('es-AR')}
+                        15% de descuento
                       </span>
                     )}
                     <div className="mb-2 flex items-center justify-between gap-2 md:mb-3">
@@ -3484,7 +3484,7 @@ export default function BuyWizard({
                       <div className="text-[12px] text-neutral-600 md:text-sm md:text-green-600 md:font-medium">
                         <span className="md:hidden">Señás ${config.seña.amount.toLocaleString('es-AR')} ahora · el resto cuando el sello está listo</span>
                         <span className="hidden md:inline">
-                          10% de descuento · Seña ${config.seña.amount.toLocaleString('es-AR')}
+                          15% de descuento · Seña ${config.seña.amount.toLocaleString('es-AR')}
                         </span>
                       </div>
                     </div>
@@ -3567,8 +3567,7 @@ export default function BuyWizard({
                 <div className="space-y-6">
                   <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] p-4">
                     <p className="text-sm text-gray-800">
-                      Pagá por transferencia y ahorrá{' '}
-                      <strong>${Math.max(0, cardTotal - transferTotal).toLocaleString('es-AR')}</strong>.
+                      Pagá por transferencia con <strong>15% de descuento</strong>.
                       En el próximo paso confirmás tus datos de envío y te mostramos los datos
                       bancarios para transferir y subir el comprobante.
                     </p>

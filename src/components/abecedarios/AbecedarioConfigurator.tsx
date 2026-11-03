@@ -715,7 +715,7 @@ function PrecioYAcciones({
       </p>
       {isArgentina ? (
         <p className="mt-1 text-sm font-semibold text-green-600">
-          Transferencia: {formatCatalogPriceFromLinkArs(precioTransferencia(precio), market)}
+          Transferencia (15% off): {formatCatalogPriceFromLinkArs(precioTransferencia(precio), market)}
         </p>
       ) : (
         <p className="mt-1 text-sm text-neutral-600">
