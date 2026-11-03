@@ -830,7 +830,7 @@ export default function CheckoutPage() {
                         </span>
                         {openpayTotalConEnvio > transferTotalConEnvio && (
                           <span className="mt-2 block text-xs font-medium text-emerald-800">
-                            Ahorrá ${(openpayTotalConEnvio - transferTotalConEnvio).toLocaleString('es-AR')} vs. tarjeta
+                            15% de descuento
                           </span>
                         )}
                       </button>
@@ -1018,9 +1018,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex justify-between gap-3">
                         <span className="text-neutral-600">Titular:</span>
-                        <span className="text-right text-neutral-900 font-medium">
-                          Julián Moreno <span className="font-normal text-neutral-500">(fundador de Alcohn)</span>
-                        </span>
+                        <span className="text-right text-neutral-900 font-medium">Julián Moreno</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-neutral-600">CUIT:</span>

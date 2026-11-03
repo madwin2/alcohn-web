@@ -37,6 +37,6 @@ Fecha: 2026-11-02 · Lo que quedó fuera del plan de la web porque lo resuelvo y
 - [x] Horario: 9 a 16 h (variable).
 - [x] Hielo → Alimento. Jabón, cerámica y cartón → Clásico.
 - [x] Precios: comunicar "15 % de descuento por transferencia".
-- [ ] Confirmar la dirección exacta como figura en la ficha de Google (hoy la web dice "Alberti y Martín Miguel de Güemes").
+- [x] Dirección: queda la de la ficha de Google ("Alberti y Martín Miguel de Güemes"), no se toca.
 - [ ] Mail con dominio propio (@alcohnsellos.com), si se quiere cambiar el de Gmail.
 - [ ] Crear cuenta en un monitor de caídas gratuito (UptimeRobot o Better Stack) con aviso por WhatsApp o mail.
