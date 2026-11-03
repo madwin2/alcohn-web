@@ -22,7 +22,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿No tengo logo, ustedes me lo diseñan?',
     answer:
-      'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso podes contactarnos por whatsapp y te asesoramos.',
+      'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso podés escribirnos por WhatsApp y te asesoramos.',
   },
   {
     question: '¿Puedo marcar metales?',
@@ -86,7 +86,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿Qué pasa si el mockup no sale bien?',
     answer:
-      'Podes contactarnos por whatsapp y te hacemos la muestra o correcciones de la muestra que necesites.',
+      'Podés escribirnos por WhatsApp y te hacemos la muestra o correcciones de la muestra que necesites.',
   },
   {
     question: '¿Sirve para marcar cuchillos o fundas?',
@@ -125,7 +125,7 @@ export function getFaqs(market: MarketCode): FAQ[] {
     '¿Qué pasa si el mockup no sale bien?':
       'Puedes contactarnos por WhatsApp y te hacemos la muestra o correcciones de la muestra que necesites.',
     '¿Sirve para marcar cuchillos o fundas?':
-      'Sí. En cuchillería suele usarse sobre cuero, madera o packaging vinculado al producto. Si necesitas marcar metal directamente, el sello de bronce no es lo recomendado.',
+      'Sí. En cuchillería suele usarse sobre cuero, madera o packaging vinculado al producto. Si necesitás marcar metal directamente, el sello de bronce no es lo recomendado.',
     '¿No tengo logo, ustedes me lo diseñan?':
       'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso puedes contactarnos por WhatsApp y te asesoramos.',
   };

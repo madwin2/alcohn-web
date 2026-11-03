@@ -38,7 +38,7 @@ export default function FaqPageContent({ market }: FaqPageContentProps) {
         <PageIntro
           label="FAQ de compra"
           title="Respuestas a preguntas comunes"
-          description="Reunimos las dudas que suelen repetirse comunmente. Para que tengas toda la informacion de la manera mas rapida y simple posible."
+          description="Reunimos las dudas más frecuentes para que tengas toda la información de la forma más rápida y simple posible."
           mobileDescription="Respuestas rápidas sobre materiales, medidas, tiempos y compra."
           primaryCta={marketBuyCta(market, 'Diseñar mi sello')}
           secondaryCta={secondaryCta}

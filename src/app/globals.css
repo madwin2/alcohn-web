@@ -589,10 +589,10 @@ main,
   }
 }
 
+/* El hero ([data-hero-reveal]) no se oculta: con 4G flojo se veía solo la foto hasta hidratar. */
 @media (prefers-reduced-motion: no-preference) {
   [data-scroll-intro],
-  [data-scroll-card],
-  [data-hero-reveal] {
+  [data-scroll-card] {
     opacity: 0;
   }
 }

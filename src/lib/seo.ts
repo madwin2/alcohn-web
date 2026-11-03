@@ -211,6 +211,14 @@ const localBusinessNode = {
   image: absoluteUrl(DEFAULT_OG_IMAGE),
   telephone: SITE_CONTACT.phoneTel,
   priceRange: '$$',
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      opens: '09:00',
+      closes: '16:00',
+    },
+  ],
   address: {
     '@type': 'PostalAddress',
     streetAddress: SITE_CONTACT.streetAddress,

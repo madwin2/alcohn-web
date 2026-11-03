@@ -1016,6 +1016,12 @@ export default function CheckoutPage() {
                         <span className="text-neutral-600">Alias:</span>
                         <span className="text-neutral-900 font-medium">{config.bank.alias}</span>
                       </div>
+                      <div className="flex justify-between gap-3">
+                        <span className="text-neutral-600">Titular:</span>
+                        <span className="text-right text-neutral-900 font-medium">
+                          Julián Moreno <span className="font-normal text-neutral-500">(fundador de Alcohn)</span>
+                        </span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-neutral-600">CUIT:</span>
                         <span className="text-neutral-900 font-medium font-mono">{config.bank.cuit}</span>

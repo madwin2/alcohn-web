@@ -45,7 +45,9 @@ function TeamMemberCard({ member }: { member: (typeof teamMembers)[number] }) {
         ) : (
           <h3 className="text-lg font-semibold tracking-tight text-neutral-950">{member.role}</h3>
         )}
-        <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-700">{member.bio}</p>
+        {member.bio ? (
+          <p className="mt-3 flex-1 text-sm leading-relaxed text-neutral-700">{member.bio}</p>
+        ) : null}
       </div>
     </article>
   );

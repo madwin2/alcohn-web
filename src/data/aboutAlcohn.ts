@@ -43,27 +43,27 @@ export const whyChooseReasons: WhyChooseReason[] = [
 
 export const teamMembers: TeamMember[] = [
   {
-    name: '',
-    role: 'Dirección y diseño',
-    bio: 'Visión de producto, criterio estético y relación con cada marca.',
+    name: 'Julián',
+    role: 'Fundador',
+    bio: '',
     image: '/images/equipo/Juli%20M.jpeg',
   },
   {
-    name: '',
-    role: 'Producción y CNC',
-    bio: 'Mecanizado, control de calidad y terminación de cada pieza.',
+    name: 'Federico',
+    role: 'Producción CNC',
+    bio: '',
     image: '/images/equipo/Fede.jpeg',
   },
   {
-    name: '',
-    role: 'Operaciones',
-    bio: 'Logística, plazos y que cada pedido salga en tiempo y forma.',
+    name: 'Lautaro',
+    role: 'Ventas y logística',
+    bio: '',
     image: '/images/equipo/Cachi.jpeg',
   },
   {
-    name: '',
-    role: 'Atención al cliente',
-    bio: 'Asesoramiento, seguimiento y resolución en cada consulta.',
+    name: 'Julián',
+    role: 'Ventas',
+    bio: '',
     image: '/images/equipo/Juli%20B.jpeg',
   },
 ];

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Hero from '@/components/Hero';
 import ActionButton from '@/components/ActionButton';
@@ -5,7 +6,6 @@ import LogoCloud from '@/components/LogoCloud';
 import TrustStatsStrip from '@/components/TrustStatsStrip';
 import BeforeAfterStrip from '@/components/BeforeAfterStrip';
 import HomeScrollShell from '@/components/animations/HomeScrollShell';
-import DossInspiredSections from '@/components/DossInspiredSections';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 import InternationalBuySteps from '@/components/market/InternationalBuySteps';
@@ -56,20 +56,20 @@ const materialProofs = [
 
 const craftStoryImages = [
   {
-    label: 'Produccion Local',
-    title: 'Industria Argentina',
+    label: 'Producción local',
+    title: 'Industria argentina',
     image: '/images/scroll/madera-firma-repetible.webp',
     alt: 'Piezas de madera con firma repetible',
   },
   {
     label: 'Mecanizado CNC',
-    title: 'Precision Industrial',
+    title: 'Precisión industrial',
     image: '/images/nosotros/mecanizado-cnc-precision.webp',
     alt: 'Mecanizado CNC de precisión industrial',
   },
   {
-    label: 'Experiencia Unica',
-    title: 'Atencion Personalizada',
+    label: 'Experiencia única',
+    title: 'Atención personalizada',
     image: '/images/sobre%20alcohn/atencion%20personalizada.jpeg',
     alt: 'Atención personalizada en el taller Alcohn con diseño y asesoramiento',
   },
@@ -200,12 +200,12 @@ export default function HomeLanding({ market }: HomeLandingProps) {
                         className={`mobile-snap-card group md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
                       >
                         <div className="material-frame relative aspect-[4/3] overflow-hidden">
-                          <img
+                          <Image
                             src={item.image}
                             alt={item.alt}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                            loading="lazy"
-                            decoding="async"
+                            fill
+                            sizes="(min-width: 768px) 33vw, 85vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                           />
                         </div>
                         <div className="pt-4">
@@ -274,10 +274,6 @@ export default function HomeLanding({ market }: HomeLandingProps) {
           </div>
         </section>
 
-        <div className="hidden" aria-hidden="true">
-          <DossInspiredSections />
-        </div>
-
         <section className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:py-24">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">
             <div
@@ -299,7 +295,7 @@ export default function HomeLanding({ market }: HomeLandingProps) {
                         Un mismo sello te sirve para todos los materiales y usos.
                       </span>
                       <span className="hidden md:inline">
-                        Un mismo sello puede resolver usos muy distintos: cuero, madera, pan, lacre, hielo, cerámica, jabón o packaging. Con un mismo sello podes resolver varias partes de un producto.
+                        Un mismo sello puede resolver usos muy distintos: cuero, madera, pan, lacre, hielo, cerámica, jabón o packaging. Con un mismo sello podés resolver varias partes de un producto.
                       </span>
                     </p>
                   </div>
@@ -341,12 +337,13 @@ export default function HomeLanding({ market }: HomeLandingProps) {
                       data-scroll-card
                       className="mobile-snap-card group relative min-h-[220px] overflow-hidden border border-[var(--alcohn-line)] p-6 text-white md:min-w-0 md:border-b md:border-r"
                     >
-                      <img
+                      <Image
                         src={block.image}
                         alt={block.alt}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-                        loading={index < 3 ? 'eager' : 'lazy'}
-                        decoding="async"
+                        fill
+                        sizes="(min-width: 768px) 25vw, 85vw"
+                        priority={index < 1}
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
                       />
                       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,16,14,0.12)_0%,rgba(17,16,14,0.48)_65%,rgba(17,16,14,0.68)_100%)]" />
                       <div className="absolute inset-0 opacity-35 mix-blend-screen [background-image:linear-gradient(to_right,rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:64px_64px]" />
@@ -432,12 +429,12 @@ export default function HomeLanding({ market }: HomeLandingProps) {
                         className={`mobile-snap-card group md:min-w-0 md:border-0 md:bg-transparent md:p-4 ${index < 2 ? 'md:border-b' : ''} ${index % 2 === 0 ? 'md:border-r' : ''}`}
                       >
                         <div className="material-frame relative aspect-[4/3] overflow-hidden">
-                          <img
+                          <Image
                             src={item.image}
                             alt={item.alt}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                            loading="lazy"
-                            decoding="async"
+                            fill
+                            sizes="(min-width: 768px) 33vw, 85vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                           />
                         </div>
                         <div className="pt-4">

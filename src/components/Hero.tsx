@@ -39,14 +39,13 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
       const targets = sectionRef.current?.querySelectorAll('[data-hero-reveal]');
       if (!targets?.length) return;
 
-      gsap.set(targets, { y: 32, opacity: 0 });
-      gsap.to(targets, {
-        y: 0,
-        opacity: 1,
-        duration: 0.95,
-        stagger: 0.11,
+      // Solo un desplazamiento corto: el texto y los botones quedan visibles desde el HTML.
+      // Con opacidad 0 hasta hidratar, en 4G flojo se veía varios segundos solo la foto.
+      gsap.from(targets, {
+        y: 16,
+        duration: 0.7,
+        stagger: 0.08,
         ease: 'power3.out',
-        delay: 0.12,
       });
 
       const bgImage = sectionRef.current?.querySelector('.hero-bg-image');

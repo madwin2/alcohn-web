@@ -33,8 +33,8 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
       <div className="container mx-auto px-4 md:px-8 max-w-7xl">
         <PageIntro
           label="Contacto"
-          title="Si tenes dudas, contactanos"
-          description="La web está pensada para resolver la mayoría de los pedidos sin esperar respuesta: subís logo, elegís uso, ves muestra, precio y pagás. Pero si hay algo que no te quedo claro o necesitas alguna ayuda especifica, contactanos por whtasapp."
+          title="Si tenés dudas, contactanos"
+          description="La web está pensada para resolver la mayoría de los pedidos sin esperar respuesta: subís logo, elegís uso, ves muestra, precio y pagás. Pero si hay algo que no te quedó claro o necesitás ayuda con algo específico, escribinos por WhatsApp."
           primaryCta={buyCta}
           secondaryCta={{
             label: 'Contactar por WhatsApp',
@@ -56,9 +56,9 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
                   Evitá esperar una respuesta si ya sabés qué querés
                 </h2>
                 <p className="text-sm leading-relaxed text-neutral-700 mb-6">
-                  Si tenes el logo y queres ver como quedaria podes usar el diseñador online.
+                  Si tenés el logo y querés ver cómo quedaría, podés usar el diseñador online.
                   {market === 'ar'
-                    ? ' Para diseños estandar, podes entrar a sellos estándar.'
+                    ? ' Para diseños estándar, podés entrar a sellos estándar.'
                     : ' Para ver opciones disponibles, entrá al catálogo.'}{' '}
                   Para dudas técnicas, revisá FAQ.
                 </p>
@@ -143,7 +143,7 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
                     <dt className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                       Horario de atención
                     </dt>
-                    <dd>Lunes a viernes, de 8:00 a 16:00hs. Respondemos por WhatsApp y email.</dd>
+                    <dd>Lunes a viernes, de 9 a 16 h. Respondemos por WhatsApp y email.</dd>
                   </div>
                 </dl>
               </div>

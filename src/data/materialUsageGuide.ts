@@ -119,10 +119,10 @@ export const materialUsageGuide: MaterialUsageGuide[] = [
         content: {
           paragraphs: [
             'Se calienta el sello a fuego directo (entre 5 y 15 minutos según tamaño de sello y la dureza de la madera).',
-            'Antes de marcarlo, podes humedecer la zona de marcado con un spray, para que el diseño quede más definido.',
+            'Antes de marcarlo, podés humedecer la zona de marcado con un spray, para que el diseño quede más definido.',
             'Apoyo de 1 a 2 segundos sobre la superficie.',
             'El apoyo es perpendicular a la superficie y debe ser firme, sin mover ni correr el sello durante el contacto, para evitar marcas desprolijas.',
-            'En caso que quede muy oscura la marca, podes pasarle una lijada para eliminar el excedente.',
+            'Si la marca queda muy oscura, podés pasarle una lijada para eliminar el excedente.',
           ],
           videoSrc: videoPath('Manual', 'Manual Madera.mp4'),
           posterSrc: `${USO_RAPIDO}/madera calorRecurso 4.png`,
