@@ -512,6 +512,22 @@ export const wizardMaterialOptions: WizardMaterialOption[] = stampUseCases.map((
 /** Primer paso del generador: cuero y madera (la mayoría de los pedidos) van solos y con foto. */
 export const WIZARD_MAIN_USO_SLUGS: readonly WizardUsoSlug[] = ['para-cuero', 'para-madera'];
 
+/**
+ * `process` del ítem del carrito según el uso: el taller fabrica distinto los sellos para
+ * alimentos y para lacre (`resolveTipo` en sellosFromCart lo pasa a `sellos.tipo`).
+ */
+export function wizardStampProcess(
+  usoSlug: string | null | undefined,
+  material: WizardMaterial | null | undefined
+): 'Alimento' | 'Lacre' | 'CNC' {
+  if (usoSlug === 'para-lacre') return 'Lacre';
+  if (usoSlug === 'para-pan' || usoSlug === 'para-fruta' || usoSlug === 'para-hielo') {
+    return 'Alimento';
+  }
+  if (!usoSlug && material === 'alimentos') return 'Alimento';
+  return 'CNC';
+}
+
 export function getStampUseCaseBySlug(slug: string) {
   return stampUseCases.find((useCase) => useCase.slug === slug);
 }

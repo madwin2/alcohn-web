@@ -51,6 +51,7 @@ import {
   getWizardOptionBySlug,
   WIZARD_MAIN_USO_SLUGS,
   wizardMaterialOptions,
+  wizardStampProcess,
   type WizardMaterialOption,
 } from '@/data/stampUseCases';
 import StampSizeScalePreview from '@/components/buy/StampSizeScalePreview';
@@ -2058,7 +2059,7 @@ export default function BuyWizard({
       title: `Sello personalizado (${materialLabel}, ${variantSize})`,
       collection: 'Personalizado',
       material: 'Bronce',
-      process: 'CNC',
+      process: wizardStampProcess(data.usoSlug, data.material),
       variantSize,
       price,
       image: wizardCartImageUrl(data),
