@@ -497,6 +497,7 @@ export type WizardMaterialOption = {
   materialLabel: string;
   buyMaterial: WizardMaterial;
   shortDescription: string;
+  image: string;
 };
 
 export const wizardMaterialOptions: WizardMaterialOption[] = stampUseCases.map((useCase) => ({
@@ -505,7 +506,11 @@ export const wizardMaterialOptions: WizardMaterialOption[] = stampUseCases.map((
   materialLabel: useCase.material,
   buyMaterial: useCase.buyMaterial,
   shortDescription: WIZARD_OPTION_SHORT_COPY[useCase.slug],
+  image: useCase.heroImage,
 }));
+
+/** Primer paso del generador: cuero y madera (la mayoría de los pedidos) van solos y con foto. */
+export const WIZARD_MAIN_USO_SLUGS: readonly WizardUsoSlug[] = ['para-cuero', 'para-madera'];
 
 export function getStampUseCaseBySlug(slug: string) {
   return stampUseCases.find((useCase) => useCase.slug === slug);

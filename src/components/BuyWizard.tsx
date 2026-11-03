@@ -48,6 +48,7 @@ import {
 import { patchMockupSolicitud, uploadMockupImage } from '@/lib/supabase/mockupApiClient';
 import {
   getWizardOptionBySlug,
+  WIZARD_MAIN_USO_SLUGS,
   wizardMaterialOptions,
   type WizardMaterialOption,
 } from '@/data/stampUseCases';
@@ -971,6 +972,16 @@ export default function BuyWizard({
   const resumeAttemptedRef = useRef(false);
   const [resumedFrom, setResumedFrom] = useState<'draft' | 'link' | null>(null);
   const [browserKind, setBrowserKind] = useState<BrowserKind>('desktop');
+  const [showOtherUses, setShowOtherUses] = useState(false);
+  const mainMaterialOptions = WIZARD_MAIN_USO_SLUGS.map((slug) =>
+    wizardMaterialOptions.find((o) => o.slug === slug)
+  ).filter((o): o is WizardMaterialOption => Boolean(o));
+  const otherMaterialOptions = wizardMaterialOptions.filter(
+    (o) => !WIZARD_MAIN_USO_SLUGS.includes(o.slug)
+  );
+  const otherUseSelected = Boolean(
+    data.usoSlug && !WIZARD_MAIN_USO_SLUGS.includes(data.usoSlug as WizardMaterialOption['slug'])
+  );
   const entryKey = buildWizardEntryKey(pathname ?? '/buy', new URLSearchParams(searchParams.toString()));
 
   useEffect(() => {
@@ -2272,27 +2283,95 @@ export default function BuyWizard({
                 </span>
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-              {wizardMaterialOptions.map((option) => {
+            {/* Cuero y Madera solos y con foto; el resto de los usos, dentro de "Otros". */}
+            <div className="grid grid-cols-2 gap-2.5 md:gap-4">
+              {mainMaterialOptions.map((option) => {
                 const isSelected = data.usoSlug === option.slug;
                 return (
                   <button
                     key={option.slug}
                     type="button"
                     onClick={() => handleMaterialSelect(option)}
-                    className={`wizard-opt-card flex min-h-[76px] flex-col justify-center gap-0.5 border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-3 py-3.5 text-left md:min-h-0 md:px-6 md:py-6 ${
-                      isSelected ? 'is-selected border-[var(--alcohn-ink)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]' : 'hover:border-neutral-400 hover:bg-white'
+                    className={`group flex flex-col justify-start overflow-hidden border bg-[var(--alcohn-surface)] text-left transition-colors ${
+                      isSelected
+                        ? 'border-[var(--alcohn-ink)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]'
+                        : 'border-[var(--alcohn-line)] hover:border-neutral-400'
                     }`}
                   >
-                    <span className="wizard-opt-card__title text-[15px] font-semibold leading-tight text-neutral-950 md:text-base">
-                      {option.materialLabel}
+                    <span className="relative block aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+                      <Image
+                        src={option.image}
+                        alt={`Sello marcado en ${option.materialLabel.toLowerCase()}`}
+                        fill
+                        sizes="(min-width: 768px) 320px, 45vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                        priority
+                      />
                     </span>
-                    <span className="wizard-opt-card__hint text-[11.5px] leading-snug text-neutral-500 md:mt-1 md:text-sm">
-                      {option.shortDescription}
+                    <span className="block px-3 py-3 md:px-5 md:py-4">
+                      <span className="block text-[16px] font-semibold leading-tight text-neutral-950 md:text-lg">
+                        {option.materialLabel}
+                      </span>
+                      <span className="mt-0.5 block text-[11.5px] leading-snug text-neutral-500 md:text-sm">
+                        {option.shortDescription}
+                      </span>
                     </span>
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-2.5 md:mt-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOtherUses((open) => {
+                    if (!open) trackWizardDetail('wizard_otros_open');
+                    return !open;
+                  });
+                }}
+                aria-expanded={showOtherUses || otherUseSelected}
+                className={`flex min-h-[64px] w-full items-center justify-between gap-3 border bg-[var(--alcohn-surface)] px-3 py-3 text-left md:px-5 ${
+                  otherUseSelected
+                    ? 'border-[var(--alcohn-ink)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]'
+                    : 'border-[var(--alcohn-line)] hover:border-neutral-400'
+                }`}
+              >
+                <span className="min-w-0">
+                  <span className="block text-[16px] font-semibold leading-tight text-neutral-950 md:text-lg">
+                    Otros
+                  </span>
+                  <span className="mt-0.5 block text-[11.5px] leading-snug text-neutral-500 md:text-sm">
+                    {otherMaterialOptions.map((o) => o.materialLabel).join(', ')}.
+                  </span>
+                </span>
+                <span aria-hidden className="shrink-0 text-lg text-neutral-500">
+                  {showOtherUses || otherUseSelected ? '−' : '+'}
+                </span>
+              </button>
+              {(showOtherUses || otherUseSelected) && (
+                <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3">
+                  {otherMaterialOptions.map((option) => {
+                    const isSelected = data.usoSlug === option.slug;
+                    return (
+                      <button
+                        key={option.slug}
+                        type="button"
+                        onClick={() => handleMaterialSelect(option)}
+                        className={`wizard-opt-card flex min-h-[64px] flex-col justify-center gap-0.5 border border-[var(--alcohn-line)] bg-[var(--alcohn-surface)] px-3 py-3 text-left md:px-5 md:py-4 ${
+                          isSelected ? 'is-selected border-[var(--alcohn-ink)] shadow-[inset_0_0_0_1px_var(--alcohn-ink)]' : 'hover:border-neutral-400 hover:bg-white'
+                        }`}
+                      >
+                        <span className="wizard-opt-card__title text-[14.5px] font-semibold leading-tight text-neutral-950 md:text-base">
+                          {option.materialLabel}
+                        </span>
+                        <span className="wizard-opt-card__hint text-[11px] leading-snug text-neutral-500 md:mt-1 md:text-sm">
+                          {option.shortDescription}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div className="wizard-trust-strip md:hidden">
               <span>Muestra gratis</span>
