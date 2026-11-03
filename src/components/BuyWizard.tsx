@@ -2108,6 +2108,42 @@ export default function BuyWizard({
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   })();
 
+  /**
+   * Paso medida: primera vez que se ve el precio. Para quien duda, una salida a
+   * WhatsApp con lo que eligió, así el equipo responde sin volver a preguntar.
+   */
+  const sizeDoubtsWhatsappUrl = (sizeLabel: string, price: number) => {
+    const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
+    const material = wizardUsoDisplayLabel(data);
+    const text = [
+      'Hola Alcohn 👋 Hice mi muestra en la web y tengo una duda antes de comprar.',
+      material ? `Material: ${material}.` : null,
+      sizeLabel ? `Medida: ${sizeLabel}.` : null,
+      price > 0 ? `Precio: ${formatMarketMoney(price, market)}.` : null,
+      data.nombre ? `Soy ${data.nombre}.` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleSizeDoubtsClick = (sizeLabel: string) => {
+    pushGtmEvent('click_whatsapp', { ubicacion: 'wizard_medida', market });
+    void trackEvent('whatsapp_click', {
+      metadata: {
+        ubicacion: 'wizard_medida',
+        material: data.material ?? null,
+        medida: sizeLabel || null,
+        navegador: getBrowserKind(),
+        mockup_solicitud_id: mockupSolicitudIdRef.current,
+      },
+    });
+  };
+
+  const sizeTrustLine = isInternationalMarket
+    ? 'Bronce macizo · Garantía de por vida · Envío DHL con seguimiento'
+    : `Bronce macizo · Garantía de por vida · Listo en ${config.production.days * 24} hs hábiles · Factura C`;
+
   const handleSaveLaterClick = () => {
     trackWizardDetail('wizard_save_later', { material: data.material ?? null });
     pushGtmEvent('click_whatsapp', { ubicacion: 'wizard_terminar_mas_tarde', market });
@@ -2914,6 +2950,9 @@ export default function BuyWizard({
                         </div>
                       </>
                     )}
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-neutral-500">
+                      {sizeTrustLine}
+                    </p>
                   </div>
                 )}
                 <div className="px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
@@ -2936,6 +2975,15 @@ export default function BuyWizard({
                       Elegí una medida para continuar
                     </button>
                   )}
+                  <a
+                    href={sizeDoubtsWhatsappUrl(sizeLabel, showSummary ? localPrice : 0)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => handleSizeDoubtsClick(sizeLabel)}
+                    className="mt-1 flex min-h-[40px] items-center justify-center text-[12.5px] font-medium text-neutral-600 underline decoration-[var(--alcohn-bronze)] underline-offset-4"
+                  >
+                    ¿Dudas? Consultanos por WhatsApp
+                  </a>
                 </div>
               </div>
             );
