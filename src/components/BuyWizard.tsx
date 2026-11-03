@@ -1915,7 +1915,8 @@ export default function BuyWizard({
     const viewportWidth = cropViewport.width || 1280;
     const viewportHeight = cropViewport.height || 800;
 
-    const modalOuterMaxWidth = Math.min(viewportWidth * 0.95, cropModalMaxWidthPx);
+    // El overlay tiene p-4 (32 px): en un celular de 375 px el modal no puede pasar de 343.
+    const modalOuterMaxWidth = Math.min(viewportWidth - 32, viewportWidth * 0.95, cropModalMaxWidthPx);
     const modalHorizontalPadding = 40; // padding + borde del modal
     const previewMaxWidth = Math.max(220, modalOuterMaxWidth - modalHorizontalPadding);
     const previewMaxHeight = Math.max(220, Math.min(viewportHeight * 0.62, viewportHeight - 260));
@@ -1931,7 +1932,8 @@ export default function BuyWizard({
     return {
       modalWidthPx: Math.ceil(Math.min(modalOuterMaxWidth, previewWidth + modalHorizontalPadding)),
       previewWidthPx: Math.max(220, Math.floor(previewWidth)),
-      previewHeightPx: Math.max(220, Math.floor(previewHeight)),
+      // Mínimo bajo: con un 220 fijo, un logo apaisado dejaba franja vacía en el recorte.
+      previewHeightPx: Math.max(140, Math.floor(previewHeight)),
     };
   }, [cropViewport.height, cropViewport.width, cropModalMaxWidthPx, pendingLogoAspectRatio]);
 
@@ -2445,7 +2447,7 @@ export default function BuyWizard({
                       Recortar logo (opcional)
                     </h3>
                     <p className="text-xs text-gray-600 md:text-sm">
-                      Mové y deformá el recorte directo sobre la imagen. Si preferís, podés seguir sin recortar.
+                      Si tu imagen tiene bordes o fondo de más, ajustá el recuadro. Si no, seguí sin recortar.
                     </p>
                   </div>
 
@@ -2478,7 +2480,24 @@ export default function BuyWizard({
                     </ReactCrop>
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-2 md:flex-row md:justify-end">
+                  {/* Lo habitual es seguir sin recortar: va primero en celular y a la derecha en desktop. */}
+                  <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
+                    <button
+                      type="button"
+                      onClick={handleUseLogoWithoutCrop}
+                      disabled={isApplyingLogoCrop}
+                      className="inline-flex min-h-[48px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-70 md:order-last md:min-h-[44px]"
+                    >
+                      Usar sin recortar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApplyLogoCrop}
+                      disabled={isApplyingLogoCrop}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isApplyingLogoCrop ? 'Aplicando recorte...' : 'Aplicar recorte'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -2487,25 +2506,9 @@ export default function BuyWizard({
                         trackWizardDetail('logo_crop', { accion: 'cancelar' });
                       }}
                       disabled={isApplyingLogoCrop}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[40px] items-center justify-center px-4 py-2 text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 md:order-first"
                     >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleUseLogoWithoutCrop}
-                      disabled={isApplyingLogoCrop}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-[var(--alcohn-line)] px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Usar sin recortar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleApplyLogoCrop}
-                      disabled={isApplyingLogoCrop}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {isApplyingLogoCrop ? 'Aplicando recorte...' : 'Aplicar recorte'}
+                      Elegir otra imagen
                     </button>
                   </div>
                 </div>
@@ -2531,6 +2534,8 @@ export default function BuyWizard({
             whatsapp={data.whatsapp || ''}
             email={data.email || ''}
             onSubmit={handleContactSubmit}
+            logoUrl={data.logoPreview}
+            onChangeLogo={() => goToStepKey('logo')}
             isProcessing={isContactProcessing || data.isAnalyzing || data.isOptimizing}
             processingMessage={contactProcessingMessage}
           />

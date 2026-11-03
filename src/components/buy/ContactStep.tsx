@@ -8,6 +8,9 @@ interface ContactStepProps {
   whatsapp: string;
   email: string;
   onSubmit: (nombre: string, whatsapp: string, email: string) => void;
+  /** Logo ya subido: se muestra arriba para que se note que falta poco. */
+  logoUrl?: string;
+  onChangeLogo?: () => void;
   isProcessing?: boolean;
   processingMessage?: string;
 }
@@ -17,6 +20,8 @@ export default function ContactStep({
   whatsapp: initialWhatsapp,
   email: initialEmail,
   onSubmit,
+  logoUrl,
+  onChangeLogo,
   isProcessing = false,
   processingMessage = 'Optimizando tu logo… Generando tu muestra…',
 }: ContactStepProps) {
@@ -98,6 +103,29 @@ export default function ContactStep({
 
   return (
     <div className="wizard-step md:space-y-6 md:[animation:none]">
+      {logoUrl && (
+        <div className="mb-3 flex items-center gap-3 border border-[var(--alcohn-line)] bg-white p-2 pr-3 md:mb-0">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-[var(--alcohn-surface)] p-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt="Tu logo" className="max-h-full max-w-full object-contain" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] font-semibold text-neutral-900">
+              <span className="text-emerald-700" aria-hidden>✓ </span>Tu logo está listo
+            </p>
+            <p className="text-[12px] text-neutral-500">Solo falta a dónde mandarte la muestra.</p>
+          </div>
+          {onChangeLogo && (
+            <button
+              type="button"
+              onClick={onChangeLogo}
+              className="min-h-[40px] shrink-0 text-[12.5px] font-medium text-neutral-600 underline underline-offset-2"
+            >
+              Cambiar
+            </button>
+          )}
+        </div>
+      )}
       <div className="wizard-step-heading">
         <h2 className="text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
           <span className="md:hidden">¿A dónde te enviamos la muestra?</span>
@@ -105,7 +133,8 @@ export default function ContactStep({
         </h2>
         <p className="mt-1 text-[13.5px] leading-relaxed text-neutral-600 md:text-base">
           <span className="md:hidden">
-            Es gratis y sin compromiso. Te la mandamos también por WhatsApp para que la tengas a mano.
+            En segundos ves tu muestra, las medidas y el precio. Es gratis y sin compromiso, y te
+            la mandamos también por WhatsApp.
           </span>
           <span className="hidden md:inline">
             Ya elegiste material y subiste tu logo. Dejanos tus datos y en segundos generamos la muestra digital, medidas y precio.
