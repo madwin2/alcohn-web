@@ -31,11 +31,12 @@ Fecha: 2026-11-02 · Lo que quedó fuera del plan de la web porque lo resuelvo y
 - [ ] 16/11: revisar el embudo del generador contra el de antes (Instagram/Facebook vs. resto).
 - [ ] Confirmar con quien lleve lo legal el aviso de cookies ("si seguís navegando, lo aceptás").
 
-## Datos que necesito pasar para el plan
-- [ ] Calificación y cantidad actuales de reseñas en la ficha de Google.
-- [ ] Nombre, rol y una frase de cada integrante del equipo.
-- [ ] Horario de atención.
-- [ ] Hielo, jabón, cerámica y cartón: ¿qué tipo de sello son en el taller?
-- [ ] Decisión de precios tarjeta / transferencia (opción A, B o C del plan).
+## Datos para el plan
+- [x] Reseñas de Google: más de 100, todas de 5 estrellas.
+- [x] Equipo: Julián (fundador), Federico (CNC), Lautaro (ventas y logística), Julián (ventas). Sin frases.
+- [x] Horario: 9 a 16 h (variable).
+- [x] Hielo → Alimento. Jabón, cerámica y cartón → Clásico.
+- [x] Precios: comunicar "15 % de descuento por transferencia".
+- [ ] Confirmar la dirección exacta como figura en la ficha de Google (hoy la web dice "Alberti y Martín Miguel de Güemes").
 - [ ] Mail con dominio propio (@alcohnsellos.com), si se quiere cambiar el de Gmail.
 - [ ] Crear cuenta en un monitor de caídas gratuito (UptimeRobot o Better Stack) con aviso por WhatsApp o mail.
