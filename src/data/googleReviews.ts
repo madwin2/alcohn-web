@@ -6,8 +6,8 @@ export const GOOGLE_REVIEWS = {
   rating: 5,
   /** Cantidad redondeada hacia abajo, para que no quede desactualizada entre revisiones. */
   countLabel: '+100',
-  /** Reemplazar por el link "Compartir" de la ficha cuando esté a mano. */
-  url: 'https://www.google.com/maps/search/?api=1&query=Alcohn%20Sellos%20Mar%20del%20Plata',
+  /** Link "Compartir" de la ficha de Google. */
+  url: 'https://share.google/Zd0wLzEHF42vomsjv',
   updatedAt: '2026-11-03',
 } as const;
 
