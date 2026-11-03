@@ -2729,9 +2729,9 @@ export default function BuyWizard({
                               customSize: prev.customSize ?? { width: 0, height: 0 },
                             }));
                           }}
-                          className="wizard-cta-btn"
+                          className="flex min-h-[44px] w-full items-center justify-center border border-[var(--alcohn-line-strong)] bg-white px-4 text-[13.5px] font-semibold text-neutral-900"
                         >
-                          Necesito una medida personalizada
+                          Quiero otra medida
                         </button>
                       </>
                     ) : (
@@ -2968,7 +2968,7 @@ export default function BuyWizard({
                       }
                       className="wizard-cta-btn"
                     >
-                      Continuar →
+                      Elegir cómo pagar →
                     </button>
                   ) : (
                     <button type="button" disabled className="wizard-cta-btn">
@@ -3182,7 +3182,7 @@ export default function BuyWizard({
                           </svg>
                           {isRequestingCorrection
                             ? 'Abriendo WhatsApp...'
-                            : 'Mandar WhatsApp'}
+                            : 'Pedir un ajuste por WhatsApp'}
                         </button>
                       </div>
                     </div>
@@ -3320,7 +3320,7 @@ export default function BuyWizard({
                   onClick={() => handleAddWizardToCheckout()}
                   className="w-full border border-neutral-900 bg-neutral-900 px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
                 >
-                  {checkoutNavigateBusy ? 'Agregando al carrito...' : 'Continuar al checkout internacional'}
+                  {checkoutNavigateBusy ? 'Agregando al carrito...' : 'Ir a pagar →'}
                 </button>
               </div>
             );
@@ -3334,7 +3334,7 @@ export default function BuyWizard({
                   <span className="hidden md:inline">Método de pago</span>
                 </h2>
                 <p className="text-[13.5px] text-neutral-600 md:text-base">
-                  <span className="md:hidden">Elegí ahora, pagás al final del checkout.</span>
+                  <span className="md:hidden">Elegí una opción. Después confirmás el envío y pagás.</span>
                   <span className="hidden md:inline">
                     Elegí cómo querés pagar tu sello personalizado.
                   </span>
@@ -3470,7 +3470,7 @@ export default function BuyWizard({
                       <h3 className="text-[15px] font-semibold text-neutral-950 md:text-base">
                         Transferencia bancaria
                       </h3>
-                      <span className="hidden h-5 w-5 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)] md:block" aria-hidden />
+                      <span className="block h-5 w-5 shrink-0 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)]" aria-hidden />
                     </div>
                     <div className="space-y-1">
                       <div className="text-[20px] font-bold tabular-nums text-neutral-950 md:text-2xl">
@@ -3482,9 +3482,9 @@ export default function BuyWizard({
                         ${transferTotal.toLocaleString('es-AR')}
                       </div>
                       <div className="text-[12px] text-neutral-600 md:text-sm md:text-green-600 md:font-medium">
-                        <span className="md:hidden">Señás $20.000 ahora · el resto cuando el sello está listo</span>
+                        <span className="md:hidden">Señás ${config.seña.amount.toLocaleString('es-AR')} ahora · el resto cuando el sello está listo</span>
                         <span className="hidden md:inline">
-                          10% de descuento · Seña $20.000
+                          10% de descuento · Seña ${config.seña.amount.toLocaleString('es-AR')}
                         </span>
                       </div>
                     </div>
@@ -3497,10 +3497,10 @@ export default function BuyWizard({
                   >
                     <div className="mb-2 flex items-center justify-between gap-2 md:mb-3">
                       <h3 className="text-[15px] font-semibold text-neutral-950 md:text-base">
-                        <span className="md:hidden">Tarjeta (Openpay)</span>
+                        <span className="md:hidden">Tarjeta</span>
                         <span className="hidden md:inline">Pagar con tarjeta</span>
                       </h3>
-                      <span className="hidden h-5 w-5 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)] md:block" aria-hidden />
+                      <span className="block h-5 w-5 shrink-0 rounded-full border-[1.5px] border-[var(--alcohn-line-strong)]" aria-hidden />
                     </div>
                     <div className="space-y-1">
                       <div className="text-[20px] font-bold tabular-nums text-neutral-950 md:text-2xl">
@@ -3527,16 +3527,15 @@ export default function BuyWizard({
                 <div className="space-y-6">
                   <div className="border border-[var(--alcohn-line)] bg-[var(--alcohn-paper)] p-4">
                     <p className="text-sm text-gray-800">
-                      Pagá de forma segura con Open Pay. 3 cuotas sin interés disponibles.
+                      Pago seguro con tarjeta, en hasta 3 cuotas sin interés.
                     </p>
                   </div>
                   
                   {/* Aquí iría el formulario de Open Pay */}
                   <div className="bg-white border border-[var(--alcohn-line)] p-6">
                     <p className="text-sm text-gray-600 mb-4">
-                      Agregamos tu sello (material, medida y precio que viste) al pedido y te llevamos
-                      al checkout. Ahí podés completar tus datos y elegir &quot;Pagar con tarjeta
-                      (Openpay)&quot;.
+                      En el próximo paso confirmás tus datos de envío y pagás con tarjeta. Tu sello
+                      va con el material, la medida y el precio que elegiste.
                     </p>
                     <button
                       type="button"
@@ -3548,9 +3547,9 @@ export default function BuyWizard({
                         'Preparando pedido…'
                       ) : (
                         <>
-                          <span className="md:hidden">Continuar al checkout (Openpay)</span>
+                          <span className="md:hidden">Seguir con tarjeta →</span>
                           <span className="hidden md:inline">
-                            Continuar al checkout y pagar con Openpay
+                            Seguir con tarjeta →
                           </span>
                         </>
                       )}
@@ -3570,8 +3569,8 @@ export default function BuyWizard({
                     <p className="text-sm text-gray-800">
                       Pagá por transferencia y ahorrá{' '}
                       <strong>${Math.max(0, cardTotal - transferTotal).toLocaleString('es-AR')}</strong>.
-                      Te llevamos al checkout para completar tus datos de envío; al confirmar verás
-                      los datos bancarios y podrás subir el comprobante.
+                      En el próximo paso confirmás tus datos de envío y te mostramos los datos
+                      bancarios para transferir y subir el comprobante.
                     </p>
                   </div>
 
@@ -3595,9 +3594,9 @@ export default function BuyWizard({
                         'Preparando pedido…'
                       ) : (
                         <>
-                          <span className="md:hidden">Continuar al checkout (Transferencia)</span>
+                          <span className="md:hidden">Seguir con transferencia →</span>
                           <span className="hidden md:inline">
-                            Continuar al checkout y pagar por transferencia
+                            Seguir con transferencia →
                           </span>
                         </>
                       )}
@@ -3641,7 +3640,7 @@ export default function BuyWizard({
                   onClick={() => goToStepKey('size')}
                   className="inline-flex min-h-[52px] flex-1 items-center justify-center bg-[var(--alcohn-ink)] px-5 py-2 text-[12.5px] font-semibold uppercase tracking-[0.06em] text-white transition-colors hover:bg-[var(--alcohn-ink-soft)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:translate-y-px md:min-h-[44px] md:rounded-md md:bg-primary md:text-sm md:tracking-wider md:hover:bg-primary-light"
                 >
-                  Continuar →
+                  Ver precios →
                 </button>
               )}
             {currentStepKey === 'size' && data.selectedSize && data.selectedPrice && (
@@ -3655,7 +3654,7 @@ export default function BuyWizard({
                 }
                 className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-md border border-primary bg-primary px-5 py-2 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
-                Continuar
+                Elegir cómo pagar →
               </button>
             )}
           </div>
