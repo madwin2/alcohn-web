@@ -18,6 +18,7 @@ import {
 } from '@/data/accessories';
 import { formatMarketMoney } from '@/lib/markets/money';
 import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface AccessoryProductPageProps {
   accessory: Accessory;
@@ -27,7 +28,7 @@ interface AccessoryProductPageProps {
   showTransferPrice?: boolean;
 }
 
-export default function AccessoryProductPage({
+function AccessoryProductPageContent({
   accessory,
   backHref = '/accesorios',
   checkoutHref = '/checkout',
@@ -241,7 +242,7 @@ export default function AccessoryProductPage({
         </div>
 
         <div className="mb-12 md:mb-20">
-          <PurchaseInclusions
+          <PurchaseInclusions market={market}
             inclusionItems={inclusionItems}
             title="Qué incluye tu compra"
             copy={accessory.inclusionCopy}
@@ -272,4 +273,9 @@ export default function AccessoryProductPage({
       </div>
     </div>
   );
+}
+
+export default function AccessoryProductPage(props: AccessoryProductPageProps) {
+  const { market } = useMarket();
+  return localizeTree(AccessoryProductPageContent(props), market);
 }

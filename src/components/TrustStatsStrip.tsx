@@ -7,6 +7,7 @@ import { useGSAP } from '@gsap/react';
 import { useMarket } from '@/contexts/MarketContext';
 import { getTrustStats } from '@/data/trustStats';
 import { prefersReducedMotion, revealEase } from '@/lib/motion';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -26,7 +27,7 @@ function formatCounterValue(prefix: string, amount: number, suffix: string) {
   return `${prefix}${body}${suffix}`;
 }
 
-export default function TrustStatsStrip() {
+function TrustStatsStripContent() {
   const sectionRef = useRef<HTMLElement>(null);
   const { market } = useMarket();
   const stats = getTrustStats(market);
@@ -137,4 +138,9 @@ export default function TrustStatsStrip() {
       </div>
     </section>
   );
+}
+
+export default function TrustStatsStrip() {
+  const { market } = useMarket();
+  return localizeTree(TrustStatsStripContent(), market);
 }

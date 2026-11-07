@@ -68,6 +68,7 @@ import {
   fitProportionalStampSize,
   isValidStampSizeMm,
 } from '@/lib/cotizador/stampSizeLimits';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface BuyWizardData {
   nombre?: string;
@@ -919,7 +920,7 @@ const measureLogoOnServer = async (
   }
 };
 
-export default function BuyWizard({
+function BuyWizardContent({
   initialProduct,
   initialMaterial,
   initialUsoSlug,
@@ -2378,7 +2379,11 @@ export default function BuyWizard({
             <div className="wizard-trust-strip md:hidden">
               <span>Muestra gratis</span>
               <span>Bronce macizo</span>
-              <span>Envíos a todo el país</span>
+              <span>
+                {market === 'ar'
+                  ? 'Envíos a todo el país'
+                  : `Envío DHL a ${getMarketConfig(market).countryName}`}
+              </span>
             </div>
             <div className="mt-1 flex justify-center md:mt-4 md:justify-start">
               <GoogleReviewsBadge />
@@ -3529,7 +3534,7 @@ export default function BuyWizard({
                   </dl>
                 </div>
 
-                <PurchaseInclusions
+                <PurchaseInclusions market={market}
                   compact
                   title="Incluido con tu sello"
                   logoUrl={clientLogo}
@@ -3745,4 +3750,9 @@ export default function BuyWizard({
       </div>
     </div>
   );
+}
+
+export default function BuyWizard(props: BuyWizardProps) {
+  const { market } = useMarket();
+  return localizeTree(BuyWizardContent(props), market);
 }

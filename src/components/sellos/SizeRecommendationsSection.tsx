@@ -4,8 +4,10 @@ import { useRef } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import RecommendedSizes from '@/components/RecommendedSizes';
 import CustomSizeInput from '@/components/CustomSizeInput';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
-export default function SizeRecommendationsSection() {
+function SizeRecommendationsSectionContent() {
   const customSizeRef = useRef<HTMLDivElement>(null);
 
   const handleUnsureClick = () => {
@@ -96,3 +98,7 @@ export default function SizeRecommendationsSection() {
   );
 }
 
+export default function SizeRecommendationsSection() {
+  const { market } = useMarket();
+  return localizeTree(SizeRecommendationsSectionContent(), market);
+}

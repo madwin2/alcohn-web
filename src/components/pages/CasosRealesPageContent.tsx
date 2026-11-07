@@ -15,12 +15,13 @@ import {
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
 import { buildGoogleReviewsSchemaGraph } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type CasosRealesPageContentProps = {
   market: MarketCode;
 };
 
-export default function CasosRealesPageContent({ market }: CasosRealesPageContentProps) {
+function CasosRealesPageContentInner({ market }: CasosRealesPageContentProps) {
   const clientes = getClientes();
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
@@ -86,4 +87,8 @@ export default function CasosRealesPageContent({ market }: CasosRealesPageConten
       </div>
     </div>
   );
+}
+
+export default function CasosRealesPageContent(props: CasosRealesPageContentProps) {
+  return localizeTree(CasosRealesPageContentInner(props), props.market);
 }

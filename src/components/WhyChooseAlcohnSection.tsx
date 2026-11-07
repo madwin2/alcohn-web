@@ -1,6 +1,10 @@
-import { whyChooseReasons } from '@/data/aboutAlcohn';
+'use client';
 
-export default function WhyChooseAlcohnSection() {
+import { whyChooseReasons } from '@/data/aboutAlcohn';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
+
+function WhyChooseAlcohnSectionContent() {
   return (
     <section className="mb-20" aria-labelledby="por-que-elegirnos-heading">
       <div className="technical-sheet">
@@ -41,4 +45,9 @@ export default function WhyChooseAlcohnSection() {
       </div>
     </section>
   );
+}
+
+export default function WhyChooseAlcohnSection() {
+  const { market } = useMarket();
+  return localizeTree(WhyChooseAlcohnSectionContent(), market);
 }

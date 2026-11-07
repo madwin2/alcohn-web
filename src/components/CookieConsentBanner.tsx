@@ -5,8 +5,10 @@ import { setConsentState, getConsentState } from '@/lib/analytics/cookies';
 import { trackEvent } from '@/lib/analytics/client';
 import { loadGtmContainer, updateGtmConsent } from '@/lib/analytics/gtm';
 import { grantMetaPixelConsent, revokeMetaPixelConsent } from '@/lib/analytics/metaPixel';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
-export default function CookieConsentBanner() {
+function CookieConsentBannerContent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -74,4 +76,9 @@ export default function CookieConsentBanner() {
       </div>
     </div>
   );
+}
+
+export default function CookieConsentBanner() {
+  const { market } = useMarket();
+  return localizeTree(CookieConsentBannerContent(), market);
 }

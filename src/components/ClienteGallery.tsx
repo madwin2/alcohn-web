@@ -4,13 +4,15 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import ClienteCard from '@/components/ClienteCard';
 import { Cliente } from '@/lib/clientes';
 import MobileCarousel from './MobileCarousel';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ClienteGalleryProps {
   clientes: Cliente[];
   interval?: number;
 }
 
-export default function ClienteGallery({
+function ClienteGalleryContent({
   clientes,
   interval = 4000,
 }: ClienteGalleryProps) {
@@ -110,4 +112,9 @@ export default function ClienteGallery({
       </div>
     </>
   );
+}
+
+export default function ClienteGallery(props: ClienteGalleryProps) {
+  const { market } = useMarket();
+  return localizeTree(ClienteGalleryContent(props), market);
 }

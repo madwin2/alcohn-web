@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface UploadStepProps {
   onUpload: (file: File | null) => void;
   currentFile: File | null;
 }
 
-export default function UploadStep({ onUpload, currentFile }: UploadStepProps) {
+function UploadStepContent({ onUpload, currentFile }: UploadStepProps) {
   const [dragActive, setDragActive] = useState(false);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -88,3 +90,7 @@ export default function UploadStep({ onUpload, currentFile }: UploadStepProps) {
   );
 }
 
+export default function UploadStep(props: UploadStepProps) {
+  const { market } = useMarket();
+  return localizeTree(UploadStepContent(props), market);
+}

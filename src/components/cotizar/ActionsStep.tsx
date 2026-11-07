@@ -5,12 +5,13 @@ import { useMarket } from '@/contexts/MarketContext';
 import { marketPath } from '@/lib/markets/paths';
 import WhatsappButton from '../WhatsappButton';
 import { CotizacionData } from '@/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ActionsStepProps {
   data: CotizacionData;
 }
 
-export default function ActionsStep({ data }: ActionsStepProps) {
+function ActionsStepContent({ data }: ActionsStepProps) {
   const { market } = useMarket();
 
   return (
@@ -36,3 +37,7 @@ export default function ActionsStep({ data }: ActionsStepProps) {
   );
 }
 
+export default function ActionsStep(props: ActionsStepProps) {
+  const { market } = useMarket();
+  return localizeTree(ActionsStepContent(props), market);
+}

@@ -6,7 +6,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { standardStampDesigns } from '../src/data/standardStamps';
+import { products } from '../src/data/products';
 import { STANDARD_STAMP_PRICE_FROM_ARS } from '../src/lib/catalog';
+import { CUSTOM_STAMP_PRICE_FROM_ARS } from '../src/lib/pricing';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -14,7 +16,14 @@ const SITE_URL = 'https://www.alcohnsellos.com';
 const BRAND = 'Alcohn';
 const GOOGLE_CATEGORY = 'Herramientas y ferretería > Herramientas > Sellos y punzones';
 
-const CUSTOM_FROM = 69500;
+// Mismo "desde" que muestran las landings /sellos/para-* (getStampPriceFrom).
+const CUSTOM_FROM = CUSTOM_STAMP_PRICE_FROM_ARS;
+
+function productPriceFrom(slug: string): number {
+  const product = products.find((p) => p.slug === slug);
+  if (!product) throw new Error(`Producto no encontrado: ${slug}`);
+  return typeof product.price === 'number' ? product.price : product.price.desde;
+}
 
 type FeedRow = {
   id: string;
@@ -25,78 +34,26 @@ type FeedRow = {
   price: number;
 };
 
+// Cada fila apunta a una página que existe (sin redirecciones) y usa el mismo precio
+// que esa página muestra: Google Merchant rechaza productos si no coinciden.
 const STATIC_ROWS: FeedRow[] = [
-  {
-    id: 'prod-sello-personalizado-cuero',
-    title: 'Sello de bronce personalizado para cuero | Alcohn',
-    description:
-      'Sello de bronce CNC con tu logo para marroquinería y cuero. Incluye mango, muestra digital y envío a todo Argentina. Precio desde según medida.',
-    link: '/productos/sello-personalizado-cuero',
-    image: '/images/carousel/cuero.webp',
-    price: CUSTOM_FROM,
-  },
-  {
-    id: 'prod-sello-personalizado-madera',
-    title: 'Sello de bronce personalizado para madera | Alcohn',
-    description:
-      'Sello de bronce para carpintería y madera con tu diseño. Fabricación CNC en Argentina. Ideal para piezas de autor y packaging en madera.',
-    link: '/productos/sello-personalizado-madera',
-    image: '/images/carousel/madera.webp',
-    price: CUSTOM_FROM,
-  },
-  {
-    id: 'prod-sello-personalizado-universal',
-    title: 'Sello de bronce personalizado cuero y madera | Alcohn',
-    description:
-      'Sello versátil de bronce para cuero y madera con tu logo. Un solo sello para talleres con varios materiales. CNC, envío nacional.',
-    link: '/productos/sello-personalizado-universal',
-    image: '/images/sello/sello-personalizado-logo.webp',
-    price: CUSTOM_FROM,
-  },
-  {
-    id: 'prod-sello-para-alimentos',
-    title: 'Sello de bronce para alimentos, pan y queso | Alcohn',
-    description:
-      'Sello de bronce para pan, hamburguesas, queso y gastronomía. Forma adaptada para no marcar con la base. Fabricación CNC Argentina.',
-    link: '/productos/sello-para-alimentos',
-    image: '/images/carousel/pan.webp',
-    price: CUSTOM_FROM,
-  },
-  {
-    id: 'prod-sello-personalizado-ceramica',
-    title: 'Sello de bronce personalizado para cerámica | Alcohn',
-    description:
-      'Sello de bronce para marcar cerámica en crudo antes del horneado. Diseño con tu logo, precisión CNC, envío a todo el país.',
-    link: '/productos/sello-personalizado-ceramica',
-    image: '/images/carousel/ceramica.webp',
-    price: CUSTOM_FROM,
-  },
-  {
-    id: 'prod-sello-personalizado-lacre',
-    title: 'Sello de bronce personalizado para lacre | Alcohn',
-    description:
-      'Sello elegante de bronce para lacre en invitaciones y packaging premium. Fabricado en CNC, con tu diseño personalizado.',
-    link: '/productos/sello-personalizado-lacre',
-    image: '/images/carousel/lacre.webp',
-    price: CUSTOM_FROM,
-  },
   {
     id: 'prod-abecedario-completo',
     title: 'Abecedario de bronce completo A-Z y 0-9 | Alcohn',
     description:
       'Letras y números de bronce individuales para componer textos en cuero y madera. Incluye caja organizadora. Fabricación CNC.',
-    link: '/productos/abecedario-bronce-completo',
+    link: '/abecedarios',
     image: '/images/abecedario/abecedario.webp',
-    price: 85000,
+    price: productPriceFrom('abecedario-bronce-completo'),
   },
   {
     id: 'prod-abecedario-numeros',
     title: 'Abecedario de números en bronce 0-9 | Alcohn',
     description:
       'Números de bronce 0-9 para fechas y códigos en cuero y madera. Cada número es un sello independiente. Envío nacional.',
-    link: '/productos/abecedario-bronce-numeros',
+    link: '/abecedarios',
     image: '/images/abecedario/abecedario.webp',
-    price: 35000,
+    price: productPriceFrom('abecedario-bronce-numeros'),
   },
   {
     id: 'sello-para-madera',

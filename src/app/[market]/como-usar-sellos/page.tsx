@@ -4,6 +4,8 @@ import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 const TITLE = 'Cómo usar sellos de bronce en cuero, madera y alimentos | Alcohn';
 const DESCRIPTION =
@@ -22,7 +24,11 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalComoUsarSellosPage({ params }: PageParams) {
+function InternationalComoUsarSellosPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   return <ComoUsarSellosPageContent market={market} />;
+}
+
+export default function InternationalComoUsarSellosPage(props: PageParams) {
+  return localizeTree(InternationalComoUsarSellosPageContent(props), props.params.market as MarketCode);
 }

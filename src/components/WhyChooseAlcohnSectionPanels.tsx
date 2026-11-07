@@ -8,6 +8,8 @@ import WhyChooseIntro from '@/components/WhyChooseIntro';
 import type { WhyChooseReason } from '@/data/aboutAlcohn';
 import { whyChooseReasons } from '@/data/aboutAlcohn';
 import { bindScrollReveal, prefersReducedMotion, revealEase } from '@/lib/motion';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -163,7 +165,7 @@ function MobileAccordionItem({
   );
 }
 
-export default function WhyChooseAlcohnSectionPanels({
+function WhyChooseAlcohnSectionPanelsContent({
   embedded = false,
   playImmediately = false,
   compareMode = false,
@@ -256,4 +258,11 @@ export default function WhyChooseAlcohnSectionPanels({
       </div>
     </section>
   );
+}
+
+export default function WhyChooseAlcohnSectionPanels(
+  props: Parameters<typeof WhyChooseAlcohnSectionPanelsContent>[0]
+) {
+  const { market } = useMarket();
+  return localizeTree(WhyChooseAlcohnSectionPanelsContent(props), market);
 }

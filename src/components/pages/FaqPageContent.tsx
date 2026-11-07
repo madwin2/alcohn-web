@@ -10,12 +10,13 @@ import {
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
 import { buildFaqJsonLd } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type FaqPageContentProps = {
   market: MarketCode;
 };
 
-export default function FaqPageContent({ market }: FaqPageContentProps) {
+function FaqPageContentInner({ market }: FaqPageContentProps) {
   const marketFaqs = getFaqs(market);
   const faqJsonLd = buildFaqJsonLd(marketFaqs);
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
@@ -64,4 +65,8 @@ export default function FaqPageContent({ market }: FaqPageContentProps) {
       </div>
     </div>
   );
+}
+
+export default function FaqPageContent(props: FaqPageContentProps) {
+  return localizeTree(FaqPageContentInner(props), props.market);
 }

@@ -8,12 +8,13 @@ import WhyChooseDifferentiatorsSection from '@/components/WhyChooseDifferentiato
 import { marketBreadcrumbJsonLd } from '@/lib/markets/infoPages';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type SobreAlcohnPageContentProps = {
   market: MarketCode;
 };
 
-export default function SobreAlcohnPageContent({ market }: SobreAlcohnPageContentProps) {
+function SobreAlcohnPageContentInner({ market }: SobreAlcohnPageContentProps) {
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
     { name: 'Sobre Alcohn', path: '/sobre-alcohn' },
@@ -67,7 +68,7 @@ export default function SobreAlcohnPageContent({ market }: SobreAlcohnPageConten
         <div className="container mx-auto max-w-7xl px-4 md:px-8">
           <WhyChooseDifferentiatorsSection />
 
-          <AlcohnTeamSection />
+          <AlcohnTeamSection market={market} />
 
           <AlcohnValuesSection />
 
@@ -84,4 +85,8 @@ export default function SobreAlcohnPageContent({ market }: SobreAlcohnPageConten
       </div>
     </div>
   );
+}
+
+export default function SobreAlcohnPageContent(props: SobreAlcohnPageContentProps) {
+  return localizeTree(SobreAlcohnPageContentInner(props), props.market);
 }

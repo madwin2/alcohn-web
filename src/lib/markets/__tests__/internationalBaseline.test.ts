@@ -66,10 +66,13 @@ describe('base internacional congelada', () => {
     }
   });
 
-  it('congela tambien el precio "desde", que se publica sin recargo', () => {
+  it('muestra el "desde" igual al precio del sello más chico en el generador', () => {
     for (const market of INTERNATIONAL) {
       expect(convertPublicArsToMarketPrice(76000, market)).toBe(
-        convertirSinBaseline(69500, market, false)
+        convertTransferArsToMarketPrice(76000, market)
+      );
+      expect(convertPublicArsToMarketPrice(76000, market)).toBe(
+        convertirSinBaseline(69500, market, true)
       );
     }
   });

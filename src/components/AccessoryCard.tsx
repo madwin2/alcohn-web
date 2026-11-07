@@ -8,12 +8,13 @@ import ActionButton from '@/components/ActionButton';
 import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketPath } from '@/lib/markets/paths';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface AccessoryCardProps {
   accessory: Accessory;
 }
 
-export default function AccessoryCard({ accessory }: AccessoryCardProps) {
+function AccessoryCardContent({ accessory }: AccessoryCardProps) {
   const { addItem } = useCart();
   const { market } = useMarket();
   const [added, setAdded] = useState(false);
@@ -87,4 +88,9 @@ export default function AccessoryCard({ accessory }: AccessoryCardProps) {
       </div>
     </div>
   );
+}
+
+export default function AccessoryCard(props: AccessoryCardProps) {
+  const { market } = useMarket();
+  return localizeTree(AccessoryCardContent(props), market);
 }

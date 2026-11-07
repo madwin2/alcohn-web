@@ -8,13 +8,14 @@ import { isStampUseCaseAvailableInMarket } from '@/lib/markets/catalog';
 import { marketPath } from '@/lib/markets/paths';
 import MobileCarousel from '@/components/MobileCarousel';
 import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface StampMaterialGridProps {
   className?: string;
   onLinkClick?: () => void;
 }
 
-export default function StampMaterialGrid({ className = '', onLinkClick }: StampMaterialGridProps) {
+function StampMaterialGridContent({ className = '', onLinkClick }: StampMaterialGridProps) {
   const { market } = useMarket();
   const useCases = stampUseCases.filter((useCase) =>
     isStampUseCaseAvailableInMarket(useCase.slug, market)
@@ -80,4 +81,9 @@ export default function StampMaterialGrid({ className = '', onLinkClick }: Stamp
       </div>
     </div>
   );
+}
+
+export default function StampMaterialGrid(props: StampMaterialGridProps) {
+  const { market } = useMarket();
+  return localizeTree(StampMaterialGridContent(props), market);
 }

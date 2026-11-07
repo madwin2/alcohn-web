@@ -6,12 +6,14 @@ import ProductCard from './ProductCard';
 import ProductFilters from './ProductFilters';
 import SpecStrip from './SpecStrip';
 import MobileCarousel from './MobileCarousel';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ProductsGridProps {
   products: Product[];
 }
 
-export default function ProductsGrid({ products: initialProducts }: ProductsGridProps) {
+function ProductsGridContent({ products: initialProducts }: ProductsGridProps) {
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType | 'todos'>('todos');
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'todos'>('todos');
   const [selectedSort, setSelectedSort] = useState<'destacados' | 'menor-precio' | 'mayor-precio'>('destacados');
@@ -81,4 +83,9 @@ export default function ProductsGrid({ products: initialProducts }: ProductsGrid
       )}
     </div>
   );
+}
+
+export default function ProductsGrid(props: ProductsGridProps) {
+  const { market } = useMarket();
+  return localizeTree(ProductsGridContent(props), market);
 }

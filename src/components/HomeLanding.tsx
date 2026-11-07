@@ -26,6 +26,7 @@ import {
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode, MarketCode } from '@/lib/markets/types';
 import { getCustomStampMinPrice } from '@/lib/pricing';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 const materialProofs = [
   {
@@ -104,7 +105,7 @@ type HomeLandingProps = {
   market: MarketCode;
 };
 
-export default function HomeLanding({ market }: HomeLandingProps) {
+function HomeLandingContent({ market }: HomeLandingProps) {
   const customStampMinPrice = getCustomStampMinPrice();
   const primaryCta = getHomePrimaryCta(market);
   const secondaryCta = getHomeSecondaryCta(market);
@@ -475,4 +476,8 @@ export default function HomeLanding({ market }: HomeLandingProps) {
       </HomeScrollShell>
     </>
   );
+}
+
+export default function HomeLanding(props: HomeLandingProps) {
+  return localizeTree(HomeLandingContent(props), props.market);
 }

@@ -10,6 +10,7 @@ import ActionButton from './ActionButton';
 import PurchaseInclusions from './PurchaseInclusions';
 import MobileCarousel from './MobileCarousel';
 import { config } from '@/lib/config';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ProductSheetProps {
   product: Product;
@@ -23,7 +24,7 @@ function generateProductCode(product: Product): string {
   return `${prefix}-${categoryCode}-${number}`;
 }
 
-export default function ProductSheet({ product }: ProductSheetProps) {
+function ProductSheetContent({ product }: ProductSheetProps) {
   const { market } = useMarket();
   const priceDisplay =
     typeof product.price === 'number'
@@ -200,7 +201,7 @@ export default function ProductSheet({ product }: ProductSheetProps) {
         </div>
       </div>
 
-      <PurchaseInclusions
+      <PurchaseInclusions market={market}
         variant={product.category === 'abecedario' ? 'abecedario' : 'personalizado'}
         items={product.specs.incluye}
         title={product.category === 'abecedario' ? 'Qué incluye el set' : 'Qué incluye tu sello'}
@@ -365,4 +366,9 @@ export default function ProductSheet({ product }: ProductSheetProps) {
       </section>
     </div>
   );
+}
+
+export default function ProductSheet(props: ProductSheetProps) {
+  const { market } = useMarket();
+  return localizeTree(ProductSheetContent(props), market);
 }

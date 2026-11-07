@@ -8,6 +8,8 @@ import WhyChooseIntro from '@/components/WhyChooseIntro';
 import type { WhyChooseReason } from '@/data/aboutAlcohn';
 import { whyChooseReasons } from '@/data/aboutAlcohn';
 import { bindScrollReveal, prefersReducedMotion, revealEase } from '@/lib/motion';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -188,7 +190,7 @@ function MobilePanelCard({
   );
 }
 
-export default function WhyChooseDifferentiatorsSection() {
+function WhyChooseDifferentiatorsSectionContent() {
   const sectionRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState<number | null>(0);
 
@@ -305,4 +307,9 @@ export default function WhyChooseDifferentiatorsSection() {
       </div>
     </section>
   );
+}
+
+export default function WhyChooseDifferentiatorsSection() {
+  const { market } = useMarket();
+  return localizeTree(WhyChooseDifferentiatorsSectionContent(), market);
 }

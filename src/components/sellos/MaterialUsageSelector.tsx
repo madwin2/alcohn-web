@@ -8,6 +8,8 @@ import type {
   UsageGuideMethod,
 } from '@/data/materialUsageGuide';
 import { materialUsageGuide } from '@/data/materialUsageGuide';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 function resolveContent(
   section: MaterialUsageGuide,
@@ -277,7 +279,7 @@ function MaterialSectionBody({
   );
 }
 
-export default function MaterialUsageSelector({
+function MaterialUsageSelectorContent({
   guides = materialUsageGuide,
 }: {
   guides?: MaterialUsageGuide[];
@@ -394,4 +396,9 @@ export default function MaterialUsageSelector({
       </div>
     </>
   );
+}
+
+export default function MaterialUsageSelector(props: { guides?: MaterialUsageGuide[] }) {
+  const { market } = useMarket();
+  return localizeTree(MaterialUsageSelectorContent(props), market);
 }

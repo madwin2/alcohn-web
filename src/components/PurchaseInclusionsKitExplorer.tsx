@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import MobileCarousel from '@/components/MobileCarousel';
 import VideoShowcasePanel from '@/components/abecedarios/VideoShowcasePanel';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 export const KIT_ILLUSTRATION_SRC = '/images/sello/kit-sello-que-incluye.png';
 
@@ -51,7 +53,7 @@ interface PurchaseInclusionsKitExplorerProps {
   videoPanel?: PurchaseInclusionsVideoPanel;
 }
 
-export default function PurchaseInclusionsKitExplorer({
+function PurchaseInclusionsKitExplorerContent({
   items,
   className = '',
   illustration = SELLO_KIT_ILLUSTRATION,
@@ -309,4 +311,9 @@ export default function PurchaseInclusionsKitExplorer({
       </div>
     </section>
   );
+}
+
+export default function PurchaseInclusionsKitExplorer(props: PurchaseInclusionsKitExplorerProps) {
+  const { market } = useMarket();
+  return localizeTree(PurchaseInclusionsKitExplorerContent(props), market);
 }

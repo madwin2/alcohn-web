@@ -9,6 +9,8 @@ import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { buildBreadcrumbJsonLd, buildProductJsonLd, createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 type PageParams = {
   params: { market: string };
@@ -38,7 +40,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalMangoPage({ params }: PageParams) {
+function InternationalMangoPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   const accessory = getAccessoryBySlug(MANGO_SLUG);
 
@@ -85,4 +87,8 @@ export default function InternationalMangoPage({ params }: PageParams) {
       />
     </>
   );
+}
+
+export default function InternationalMangoPage(props: PageParams) {
+  return localizeTree(InternationalMangoPageContent(props), props.params.market as MarketCode);
 }

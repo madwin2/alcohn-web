@@ -4,6 +4,8 @@ import { getMarketLocalCopy } from '@/lib/markets/localCopy';
 import { requireInternationalMarket } from '@/lib/markets/params';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 type PageParams = {
   params: { market: string };
@@ -27,8 +29,12 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalHomePage({ params }: PageParams) {
+function InternationalHomePageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
 
   return <HomeLanding market={market} />;
+}
+
+export default function InternationalHomePage(props: PageParams) {
+  return localizeTree(InternationalHomePageContent(props), props.params.market as MarketCode);
 }

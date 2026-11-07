@@ -21,7 +21,7 @@ import { getStampUsageGuideBySlug } from '@/data/stampUsageGuides';
 import { isStampUseCaseAvailableInMarket } from '@/lib/markets/catalog';
 import { marketPath } from '@/lib/markets/paths';
 import { requireInternationalMarket } from '@/lib/markets/params';
-import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
+import { marketProductDescription, marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { getProductCarouselImages } from '@/lib/stampProductCarousel';
 import {
@@ -31,6 +31,8 @@ import {
   createPageMetadata,
 } from '@/lib/seo';
 import { INTERNATIONAL_MARKETS } from '@/lib/markets/config';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 type PageParams = {
   params: { market: string; slug: string };
@@ -67,7 +69,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalStampUseCasePage({ params }: PageParams) {
+function InternationalStampUseCasePageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   const useCase = getStampUseCaseBySlug(params.slug);
 
@@ -90,7 +92,7 @@ export default function InternationalStampUseCasePage({ params }: PageParams) {
 
   const productJsonLd = buildProductJsonLd({
     name: `Sello de bronce para ${useCase.material}`,
-    description: useCase.seoDescription ?? useCase.description,
+    description: marketProductDescription(useCase.seoDescription ?? useCase.description, market),
     path: canonical,
     image: useCase.heroImage,
     category: 'Sellos de bronce personalizados',
@@ -192,7 +194,7 @@ export default function InternationalStampUseCasePage({ params }: PageParams) {
         </section>
 
         <div className="flex flex-col gap-20">
-          <PurchaseInclusions
+          <PurchaseInclusions market={market}
             showKitIllustration
             copy="Además del sello, cada compra incluye los elementos necesarios para utilizar el sello en el material seleccionado."
           />
@@ -324,4 +326,8 @@ export default function InternationalStampUseCasePage({ params }: PageParams) {
       </div>
     </div>
   );
+}
+
+export default function InternationalStampUseCasePage(props: PageParams) {
+  return localizeTree(InternationalStampUseCasePageContent(props), props.params.market as MarketCode);
 }

@@ -2,6 +2,7 @@ import { getMarketConfig } from './config';
 import {
   internationalBaselinePublicArs,
   internationalBaselineTransferArs,
+  isTransferBaselineArs,
 } from './internationalBaseline';
 import { formatMarketMoney, roundToIncrement } from './money';
 import type { MarketCode, MarketPricingConfig } from './types';
@@ -24,6 +25,13 @@ export function convertTransferArsToMarketPrice(
 export function convertPublicArsToMarketPrice(publicArs: number, market: MarketCode): number {
   if (!Number.isFinite(publicArs) || publicArs <= 0) return 0;
   if (market === 'ar') return Math.round(publicArs);
+
+  // Los "desde" del catálogo (ej. 76.000) son precios de transferencia AR. Afuera no hay
+  // descuento por transferencia: se muestran con el mismo recargo que cobra el generador,
+  // para que el "desde" coincida con el sello más chico que se puede comprar.
+  if (isTransferBaselineArs(publicArs)) {
+    return convertTransferArsToMarketPrice(publicArs, market);
+  }
 
   const pricing = getMarketConfig(market).pricing;
   const base = internationalBaselinePublicArs(publicArs);

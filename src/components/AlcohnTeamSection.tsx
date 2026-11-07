@@ -1,5 +1,7 @@
 import MobileCarousel from '@/components/MobileCarousel';
 import { teamMembers } from '@/data/aboutAlcohn';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 function memberInitials(name: string, role: string) {
   const source = name.trim() || role;
@@ -53,7 +55,7 @@ function TeamMemberCard({ member }: { member: (typeof teamMembers)[number] }) {
   );
 }
 
-export default function AlcohnTeamSection() {
+function AlcohnTeamSectionContent() {
   return (
     <section className="mb-20" aria-labelledby="equipo-alcohn-heading">
       <div className="technical-sheet">
@@ -96,4 +98,8 @@ export default function AlcohnTeamSection() {
       </div>
     </section>
   );
+}
+
+export default function AlcohnTeamSection({ market = 'ar' }: { market?: MarketCode }) {
+  return localizeTree(AlcohnTeamSectionContent(), market);
 }

@@ -10,6 +10,8 @@ import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { MARKETS } from '@/lib/markets/config';
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 const META_PE_PENDING_PREFIX = 'alcohn_meta_pe_pending_';
 const META_PE_FIRED_PREFIX = 'alcohn_meta_pe_purchase_';
@@ -204,10 +206,15 @@ function InternationalCheckoutSuccessContent() {
   );
 }
 
-export default function InternationalCheckoutSuccessPage() {
+function InternationalCheckoutSuccessPageContent() {
   return (
     <Suspense fallback={<div className="min-h-screen py-16" />}>
       <InternationalCheckoutSuccessContent />
     </Suspense>
   );
+}
+
+export default function InternationalCheckoutSuccessPage() {
+  const { market } = useMarket();
+  return localizeTree(InternationalCheckoutSuccessPageContent(), market);
 }

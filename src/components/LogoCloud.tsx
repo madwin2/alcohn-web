@@ -6,6 +6,7 @@ import { brands } from '@/data/brands';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ActionButton from './ActionButton';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface LogoCloudProps {
   compact?: boolean;
@@ -26,7 +27,7 @@ const longestTrustWord = trustWords.reduce(
   trustWords[0]
 );
 
-export default function LogoCloud({ compact = false }: LogoCloudProps) {
+function LogoCloudContent({ compact = false }: LogoCloudProps) {
   const { market } = useMarket();
   const [wordIndex, setWordIndex] = useState(0);
   const [visibleLetters, setVisibleLetters] = useState(trustWords[0].length);
@@ -196,4 +197,9 @@ export default function LogoCloud({ compact = false }: LogoCloudProps) {
       </div>
     </section>
   );
+}
+
+export default function LogoCloud(props: LogoCloudProps) {
+  const { market } = useMarket();
+  return localizeTree(LogoCloudContent(props), market);
 }

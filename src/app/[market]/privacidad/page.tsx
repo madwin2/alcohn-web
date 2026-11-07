@@ -5,6 +5,8 @@ import { getInternationalPrivacySections } from '@/lib/markets/legal';
 import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import { createPageMetadata } from '@/lib/seo';
+import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type PageParams = {
   params: { market: string };
@@ -25,7 +27,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalPrivacidadPage({ params }: PageParams) {
+function InternationalPrivacidadPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market);
   const country = getMarketConfig(market).countryName;
 
@@ -37,4 +39,8 @@ export default function InternationalPrivacidadPage({ params }: PageParams) {
       sections={getInternationalPrivacySections(market)}
     />
   );
+}
+
+export default function InternationalPrivacidadPage(props: PageParams) {
+  return localizeTree(InternationalPrivacidadPageContent(props), props.params.market as MarketCode);
 }

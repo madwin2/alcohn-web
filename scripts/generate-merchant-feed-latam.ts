@@ -5,10 +5,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { precioTransferencia } from '../src/lib/abecedarioConfigurator';
-import { getAccessoryBySlug, getAccessoryTransferPrice } from '../src/data/accessories';
+import { getAccessoryBySlug, getAccessoryLinkPrice } from '../src/data/accessories';
 import { products } from '../src/data/products';
-import { stampUseCases } from '../src/data/stampUseCases';
+import { getStampPriceFrom, stampUseCases } from '../src/data/stampUseCases';
 import {
   isAccessoryAvailableInMarket,
   isProductSlugAvailableInMarket,
@@ -16,9 +15,9 @@ import {
 } from '../src/lib/markets/catalog';
 import { INTERNATIONAL_MARKETS, getMarketConfig } from '../src/lib/markets/config';
 import { marketPath } from '../src/lib/markets/paths';
-import { convertTransferArsToMarketPrice } from '../src/lib/markets/pricing';
+import { marketProductDescription } from '../src/lib/markets/seo';
+import { convertPublicArsToMarketPrice } from '../src/lib/markets/pricing';
 import type { InternationalMarketCode } from '../src/lib/markets/types';
-import { CUSTOM_STAMP_PRICE_FROM_ARS } from '../src/lib/pricing';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -26,15 +25,14 @@ const SITE_URL = 'https://www.alcohnsellos.com';
 const BRAND = 'Alcohn';
 const GOOGLE_CATEGORY = 'Herramientas y ferretería > Herramientas > Sellos y punzones';
 
-const CUSTOM_TRANSFER_ARS = precioTransferencia(CUSTOM_STAMP_PRICE_FROM_ARS);
-
 type FeedRow = {
   id: string;
   title: string;
   description: string;
   link: string;
   image: string;
-  transferArs: number;
+  /** Precio ARS que recibe la página (PriceFrom / JSON-LD); se convierte igual que en la web. */
+  pageArs: number;
 };
 
 const HEADERS = [
@@ -77,21 +75,24 @@ function buildInternationalRows(): FeedRow[] {
       description: useCase.seoDescription ?? useCase.description,
       link: `/sellos/${useCase.slug}`,
       image: useCase.heroImage,
-      transferArs: CUSTOM_TRANSFER_ARS,
+      pageArs: getStampPriceFrom(useCase.buyMaterial),
     });
   }
 
+  // Los sellos personalizados ya están cubiertos por /sellos/para-*; /{market}/productos/{slug}
+  // no existe. Solo se publican los abecedarios, que tienen página propia.
   for (const product of products) {
     if (!isProductSlugAvailableInMarket(product.slug, 'cl')) continue;
+    if (product.category !== 'abecedario') continue;
     const publicPrice =
       typeof product.price === 'number' ? product.price : product.price.desde;
     rows.push({
       id: `prod-${product.slug}`,
       title: product.seoTitle,
       description: product.seoDescription,
-      link: product.category === 'abecedario' ? '/abecedarios' : `/productos/${product.slug}`,
+      link: '/abecedarios',
       image: product.images.default,
-      transferArs: precioTransferencia(publicPrice),
+      pageArs: publicPrice,
     });
   }
 
@@ -103,7 +104,7 @@ function buildInternationalRows(): FeedRow[] {
       description: mango.seoDescription ?? mango.description,
       link: '/accesorios/mango-de-golpe',
       image: mango.image,
-      transferArs: getAccessoryTransferPrice(mango),
+      pageArs: mango.variants?.[0]?.linkPrice ?? getAccessoryLinkPrice(mango),
     });
   }
 
@@ -112,11 +113,12 @@ function buildInternationalRows(): FeedRow[] {
 
 function rowToLine(row: FeedRow, market: InternationalMarketCode) {
   const config = getMarketConfig(market);
-  const localPrice = convertTransferArsToMarketPrice(row.transferArs, market);
+  // Misma conversión que PriceFrom y el JSON-LD de la página de destino.
+  const localPrice = convertPublicArsToMarketPrice(row.pageArs, market);
   const cells = [
     `${market}-${row.id}`,
-    row.title.slice(0, 150),
-    row.description.slice(0, 5000),
+    row.title.replace(/Alcohn Argentina/g, 'Alcohn').slice(0, 150),
+    marketProductDescription(row.description, market).slice(0, 5000),
     absoluteUrl(marketPath(market, row.link)),
     absoluteUrl(row.image),
     'in_stock',

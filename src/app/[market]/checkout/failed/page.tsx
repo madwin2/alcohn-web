@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 function InternationalCheckoutFailedContent() {
   const searchParams = useSearchParams();
@@ -50,10 +52,15 @@ function InternationalCheckoutFailedContent() {
   );
 }
 
-export default function InternationalCheckoutFailedPage() {
+function InternationalCheckoutFailedPageContent() {
   return (
     <Suspense fallback={<div className="min-h-screen py-16" />}>
       <InternationalCheckoutFailedContent />
     </Suspense>
   );
+}
+
+export default function InternationalCheckoutFailedPage() {
+  const { market } = useMarket();
+  return localizeTree(InternationalCheckoutFailedPageContent(), market);
 }

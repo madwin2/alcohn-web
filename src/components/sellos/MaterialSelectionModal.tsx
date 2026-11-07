@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import StampMaterialGrid from '@/components/sellos/StampMaterialGrid';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface MaterialSelectionModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function MaterialSelectionModal({ open, onClose }: MaterialSelectionModalProps) {
+function MaterialSelectionModalContent({ open, onClose }: MaterialSelectionModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,4 +76,9 @@ export default function MaterialSelectionModal({ open, onClose }: MaterialSelect
       </div>
     </div>
   );
+}
+
+export default function MaterialSelectionModal(props: MaterialSelectionModalProps) {
+  const { market } = useMarket();
+  return localizeTree(MaterialSelectionModalContent(props), market);
 }

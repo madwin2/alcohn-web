@@ -4,6 +4,8 @@ import {
   fitProportionalStampSize,
   isValidStampSizeMm,
 } from '@/lib/cotizador/stampSizeLimits';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 export type CustomSizeMm = { width: number; height: number };
 
@@ -21,7 +23,7 @@ type WizardCustomSizeFieldsProps = {
   className?: string;
 };
 
-export default function WizardCustomSizeFields({
+function WizardCustomSizeFieldsContent({
   customSize,
   aspectRatio,
   onPatch,
@@ -166,4 +168,9 @@ export default function WizardCustomSizeFields({
         )}
     </div>
   );
+}
+
+export default function WizardCustomSizeFields(props: WizardCustomSizeFieldsProps) {
+  const { market } = useMarket();
+  return localizeTree(WizardCustomSizeFieldsContent(props), market);
 }

@@ -44,6 +44,11 @@ const LINK_BASELINE_ARS: Record<number, number> = Object.fromEntries(
   ])
 );
 
+/** Indica si el monto es un precio de transferencia AR vigente de la tabla de sellos. */
+export function isTransferBaselineArs(ars: number): boolean {
+  return Math.round(ars) in TRANSFER_BASELINE_ARS;
+}
+
 /** Precio de transferencia ARS a usar como base de conversión internacional. */
 export function internationalBaselineTransferArs(transferArs: number): number {
   return TRANSFER_BASELINE_ARS[Math.round(transferArs)] ?? transferArs;

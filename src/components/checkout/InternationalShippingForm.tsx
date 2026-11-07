@@ -8,6 +8,8 @@ import {
   type InternationalShippingFormData,
   validateInternationalShippingForm,
 } from '@/lib/shipping/international';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface InternationalShippingFormProps {
   market: InternationalMarketCode;
@@ -16,7 +18,7 @@ interface InternationalShippingFormProps {
   submitError?: string | null;
 }
 
-export default function InternationalShippingForm({
+function InternationalShippingFormContent({
   market,
   onSubmit,
   submitting = false,
@@ -230,4 +232,9 @@ export default function InternationalShippingForm({
       </button>
     </form>
   );
+}
+
+export default function InternationalShippingForm(props: InternationalShippingFormProps) {
+  const { market } = useMarket();
+  return localizeTree(InternationalShippingFormContent(props), market);
 }

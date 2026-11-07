@@ -17,6 +17,8 @@ import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { getAbecedarioMinPrice } from '@/lib/pricing';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 type PageParams = {
   params: { market: string };
@@ -37,7 +39,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalAbecedariosPage({ params }: PageParams) {
+function InternationalAbecedariosPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   const country = getMarketConfig(market).countryName;
   const priceFrom = getAbecedarioMinPrice();
@@ -122,7 +124,7 @@ export default function InternationalAbecedariosPage({ params }: PageParams) {
         <AbecedarioConfigurator />
 
         <div className="mb-10 md:mb-20">
-          <PurchaseInclusions variant="abecedario" title="Qué incluye tu compra" />
+          <PurchaseInclusions variant="abecedario" title="Qué incluye tu compra" market={market} />
         </div>
 
         <SalesCtaBand
@@ -137,4 +139,8 @@ export default function InternationalAbecedariosPage({ params }: PageParams) {
       </div>
     </div>
   );
+}
+
+export default function InternationalAbecedariosPage(props: PageParams) {
+  return localizeTree(InternationalAbecedariosPageContent(props), props.params.market as MarketCode);
 }

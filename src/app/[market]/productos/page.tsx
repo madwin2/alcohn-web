@@ -20,6 +20,8 @@ import {
 } from '@/lib/pricing';
 import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 import { getAccessoryBySlug, getAccessoryLinkPrice } from '@/data/accessories';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 const PRODUCTOS_TITLE = 'Sellos de bronce personalizados | Cuero, madera y packaging | Alcohn';
 const PRODUCTOS_DESCRIPTION =
@@ -40,7 +42,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalProductosPage({ params }: PageParams) {
+function InternationalProductosPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   const country = getMarketConfig(market).countryName;
   const customStampMinPrice = getCustomStampMinPrice();
@@ -210,4 +212,8 @@ export default function InternationalProductosPage({ params }: PageParams) {
       </div>
     </div>
   );
+}
+
+export default function InternationalProductosPage(props: PageParams) {
+  return localizeTree(InternationalProductosPageContent(props), props.params.market as MarketCode);
 }

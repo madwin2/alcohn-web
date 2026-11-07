@@ -1,11 +1,13 @@
 'use client';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface MaterialStepProps {
   selected: string | null;
   onSelect: (material: 'cuero' | 'madera' | 'alimentos' | 'otro') => void;
 }
 
-export default function MaterialStep({ selected, onSelect }: MaterialStepProps) {
+function MaterialStepContent({ selected, onSelect }: MaterialStepProps) {
   const materials = [
     { id: 'cuero' as const, label: 'Cuero', icon: '👜' },
     { id: 'madera' as const, label: 'Madera', icon: '🪵' },
@@ -36,9 +38,7 @@ export default function MaterialStep({ selected, onSelect }: MaterialStepProps) 
   );
 }
 
-
-
-
-
-
-
+export default function MaterialStep(props: MaterialStepProps) {
+  const { market } = useMarket();
+  return localizeTree(MaterialStepContent(props), market);
+}

@@ -5,6 +5,7 @@ import MobileCarousel from '@/components/MobileCarousel';
 import { marketBreadcrumbJsonLd, marketBuyCta } from '@/lib/markets/infoPages';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 const setupSteps = [
   ['01', 'Prepará el material', 'Superficie limpia, plana y con retazo de prueba disponible.'],
@@ -47,7 +48,7 @@ type ComoUsarSellosPageContentProps = {
   market: MarketCode;
 };
 
-export default function ComoUsarSellosPageContent({ market }: ComoUsarSellosPageContentProps) {
+function ComoUsarSellosPageContentInner({ market }: ComoUsarSellosPageContentProps) {
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
     { name: 'Cómo usar los sellos', path: '/como-usar-sellos' },
@@ -202,4 +203,8 @@ export default function ComoUsarSellosPageContent({ market }: ComoUsarSellosPage
       </div>
     </div>
   );
+}
+
+export default function ComoUsarSellosPageContent(props: ComoUsarSellosPageContentProps) {
+  return localizeTree(ComoUsarSellosPageContentInner(props), props.market);
 }

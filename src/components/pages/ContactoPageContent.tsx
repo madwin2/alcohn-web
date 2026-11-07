@@ -11,12 +11,13 @@ import {
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
 import { SITE_CONTACT } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type ContactoPageContentProps = {
   market: MarketCode;
 };
 
-export default function ContactoPageContent({ market }: ContactoPageContentProps) {
+function ContactoPageContentInner({ market }: ContactoPageContentProps) {
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
     { name: 'Contacto', path: '/contacto' },
@@ -163,4 +164,8 @@ export default function ContactoPageContent({ market }: ContactoPageContentProps
       </div>
     </div>
   );
+}
+
+export default function ContactoPageContent(props: ContactoPageContentProps) {
+  return localizeTree(ContactoPageContentInner(props), props.market);
 }

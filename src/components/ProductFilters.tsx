@@ -1,6 +1,8 @@
 'use client';
 
 import { MaterialType, ProductCategory } from '@/data/products';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ProductFiltersProps {
   selectedMaterial: MaterialType | 'todos';
@@ -11,7 +13,7 @@ interface ProductFiltersProps {
   onSortChange: (sort: 'destacados' | 'menor-precio' | 'mayor-precio') => void;
 }
 
-export default function ProductFilters({
+function ProductFiltersContent({
   selectedMaterial,
   selectedCategory,
   selectedSort,
@@ -85,4 +87,9 @@ export default function ProductFilters({
       </div>
     </div>
   );
+}
+
+export default function ProductFilters(props: ProductFiltersProps) {
+  const { market } = useMarket();
+  return localizeTree(ProductFiltersContent(props), market);
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ContactStepProps {
   nombre: string;
@@ -15,7 +16,7 @@ interface ContactStepProps {
   processingMessage?: string;
 }
 
-export default function ContactStep({
+function ContactStepContent({
   nombre: initialNombre,
   whatsapp: initialWhatsapp,
   email: initialEmail,
@@ -230,4 +231,9 @@ export default function ContactStep({
       </form>
     </div>
   );
+}
+
+export default function ContactStep(props: ContactStepProps) {
+  const { market } = useMarket();
+  return localizeTree(ContactStepContent(props), market);
 }

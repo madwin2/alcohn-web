@@ -1,7 +1,7 @@
 import PageIntro from '@/components/PageIntro';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import Timeline from '@/components/Timeline';
-import { processSteps } from '@/data/process';
+import { getProcessSteps } from '@/data/process';
 import { getMarketConfig } from '@/lib/markets/config';
 import {
   marketBreadcrumbJsonLd,
@@ -10,6 +10,7 @@ import {
 } from '@/lib/markets/infoPages';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 function getFacts(market: MarketCode) {
   const country = getMarketConfig(market).countryName;
@@ -41,7 +42,7 @@ type ProcesoPageContentProps = {
   market: MarketCode;
 };
 
-export default function ProcesoPageContent({ market }: ProcesoPageContentProps) {
+function ProcesoPageContentInner({ market }: ProcesoPageContentProps) {
   const breadcrumbJsonLd = marketBreadcrumbJsonLd(market, [
     { name: 'Inicio', path: '/' },
     { name: 'Cómo funciona', path: '/proceso' },
@@ -68,7 +69,7 @@ export default function ProcesoPageContent({ market }: ProcesoPageContentProps) 
         />
 
         <section className="mb-20">
-          <Timeline steps={processSteps} />
+          <Timeline steps={getProcessSteps(market)} />
         </section>
 
         <section className="mb-20">
@@ -108,4 +109,8 @@ export default function ProcesoPageContent({ market }: ProcesoPageContentProps) 
       </div>
     </div>
   );
+}
+
+export default function ProcesoPageContent(props: ProcesoPageContentProps) {
+  return localizeTree(ProcesoPageContentInner(props), props.market);
 }

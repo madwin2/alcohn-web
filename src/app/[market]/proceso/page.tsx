@@ -4,6 +4,8 @@ import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 const TITLE = 'Cómo comprar tu sello de bronce | Proceso en 72hs | Alcohn';
 const DESCRIPTION =
@@ -22,7 +24,11 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalProcesoPage({ params }: PageParams) {
+function InternationalProcesoPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   return <ProcesoPageContent market={market} />;
+}
+
+export default function InternationalProcesoPage(props: PageParams) {
+  return localizeTree(InternationalProcesoPageContent(props), props.params.market as MarketCode);
 }

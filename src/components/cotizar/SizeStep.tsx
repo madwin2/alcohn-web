@@ -1,6 +1,8 @@
 'use client';
 
 import { SizeOption } from '@/types';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface SizeStepProps {
   sizes: SizeOption[];
@@ -8,7 +10,7 @@ interface SizeStepProps {
   onSelect: (size: string) => void;
 }
 
-export default function SizeStep({ sizes, selected, onSelect }: SizeStepProps) {
+function SizeStepContent({ sizes, selected, onSelect }: SizeStepProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold mb-4">3. Elegí una medida sugerida</h3>
@@ -37,9 +39,7 @@ export default function SizeStep({ sizes, selected, onSelect }: SizeStepProps) {
   );
 }
 
-
-
-
-
-
-
+export default function SizeStep(props: SizeStepProps) {
+  const { market } = useMarket();
+  return localizeTree(SizeStepContent(props), market);
+}

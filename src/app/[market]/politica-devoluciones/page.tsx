@@ -5,6 +5,8 @@ import { getInternationalReturnsPolicySections } from '@/lib/markets/legal';
 import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import { createPageMetadata } from '@/lib/seo';
+import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type PageParams = {
   params: { market: string };
@@ -24,7 +26,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalPoliticaDevolucionesPage({ params }: PageParams) {
+function InternationalPoliticaDevolucionesPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market);
   const country = getMarketConfig(market).countryName;
 
@@ -36,4 +38,8 @@ export default function InternationalPoliticaDevolucionesPage({ params }: PagePa
       sections={getInternationalReturnsPolicySections()}
     />
   );
+}
+
+export default function InternationalPoliticaDevolucionesPage(props: PageParams) {
+  return localizeTree(InternationalPoliticaDevolucionesPageContent(props), props.params.market as MarketCode);
 }

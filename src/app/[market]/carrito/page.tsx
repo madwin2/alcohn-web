@@ -8,8 +8,10 @@ import CartSummary from '@/components/cart/CartSummary';
 import ActionButton from '@/components/ActionButton';
 import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
-export default function InternationalCartPage() {
+function InternationalCartPageContent() {
   const params = useParams();
   const marketParam = typeof params.market === 'string' ? params.market : '';
   const market = (
@@ -111,4 +113,9 @@ export default function InternationalCartPage() {
       </div>
     </div>
   );
+}
+
+export default function InternationalCartPage() {
+  const { market } = useMarket();
+  return localizeTree(InternationalCartPageContent(), market);
 }

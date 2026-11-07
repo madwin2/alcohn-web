@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { FAQ } from '@/data/faq';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface FaqListProps {
   faqs: FAQ[];
 }
 
-export default function FaqList({ faqs }: FaqListProps) {
+function FaqListContent({ faqs }: FaqListProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggle = (index: number) => {
@@ -54,4 +56,9 @@ export default function FaqList({ faqs }: FaqListProps) {
       </div>
     </div>
   );
+}
+
+export default function FaqList(props: FaqListProps) {
+  const { market } = useMarket();
+  return localizeTree(FaqListContent(props), market);
 }

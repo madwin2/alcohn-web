@@ -1,6 +1,8 @@
 'use client';
 
 import type { AccessoryVariant } from '@/data/accessories';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface AccessoryVariantSelectorProps {
   label: string;
@@ -9,7 +11,7 @@ interface AccessoryVariantSelectorProps {
   onSelect: (variantId: string) => void;
 }
 
-export default function AccessoryVariantSelector({
+function AccessoryVariantSelectorContent({
   label,
   variants,
   selectedVariantId,
@@ -51,4 +53,9 @@ export default function AccessoryVariantSelector({
       </div>
     </div>
   );
+}
+
+export default function AccessoryVariantSelector(props: AccessoryVariantSelectorProps) {
+  const { market } = useMarket();
+  return localizeTree(AccessoryVariantSelectorContent(props), market);
 }

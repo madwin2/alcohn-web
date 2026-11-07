@@ -29,6 +29,7 @@ import { getMarketConfig } from '@/lib/markets/config';
 import { marketPath } from '@/lib/markets/paths';
 import { formatCatalogPriceFromLinkArs } from '@/lib/markets/pricing';
 import { generateLeatherTextMockup, sizeScaleFromMm } from '@/lib/textStampMockup';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 const abecedarioCompleto = abecedarios[0];
 const PERSONALIZADO_MIN_PRECIO = ABECEDARIO_PRECIOS_DESDE.numero;
@@ -178,7 +179,7 @@ function QtyStepper({ value, onChange, min, max, label }: QtyStepperProps) {
   );
 }
 
-export default function AbecedarioConfigurator() {
+function AbecedarioConfiguratorContent() {
   const router = useRouter();
   const { addItem } = useCart();
   const { market } = useMarket();
@@ -751,4 +752,9 @@ function PrecioYAcciones({
       )}
     </div>
   );
+}
+
+export default function AbecedarioConfigurator() {
+  const { market } = useMarket();
+  return localizeTree(AbecedarioConfiguratorContent(), market);
 }

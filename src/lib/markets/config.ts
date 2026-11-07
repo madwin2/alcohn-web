@@ -60,7 +60,7 @@ export const MARKETS: Record<MarketCode, MarketConfig> = {
   },
   pe: {
     code: 'pe',
-    countryName: 'Peru',
+    countryName: 'Perú',
     countryIso2: 'PE',
     locale: 'es-PE',
     hreflang: 'es-PE',
@@ -105,7 +105,7 @@ export const MARKETS: Record<MarketCode, MarketConfig> = {
   },
   mx: {
     code: 'mx',
-    countryName: 'Mexico',
+    countryName: 'México',
     countryIso2: 'MX',
     locale: 'es-MX',
     hreflang: 'es-MX',

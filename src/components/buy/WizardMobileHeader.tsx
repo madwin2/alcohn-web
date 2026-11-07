@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 const MOBILE_STEP_TITLES: Record<string, string> = {
   material: 'Diseñá tu sello',
@@ -18,7 +20,7 @@ type WizardMobileHeaderProps = {
   onBack?: () => void;
 };
 
-export default function WizardMobileHeader({
+function WizardMobileHeaderContent({
   steps,
   currentStep,
   onBack,
@@ -76,4 +78,9 @@ export default function WizardMobileHeader({
       </div>
     </header>
   );
+}
+
+export default function WizardMobileHeader(props: WizardMobileHeaderProps) {
+  const { market } = useMarket();
+  return localizeTree(WizardMobileHeaderContent(props), market);
 }

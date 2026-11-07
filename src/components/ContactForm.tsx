@@ -5,8 +5,9 @@ import { config } from '@/lib/config';
 import { trackEvent } from '@/lib/analytics/client';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
-export default function ContactForm() {
+function ContactFormContent() {
   const { market } = useMarket();
   const [formData, setFormData] = useState({
     nombre: '',
@@ -136,4 +137,9 @@ export default function ContactForm() {
       )}
     </form>
   );
+}
+
+export default function ContactForm() {
+  const { market } = useMarket();
+  return localizeTree(ContactFormContent(), market);
 }

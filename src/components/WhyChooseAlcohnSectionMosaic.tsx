@@ -8,6 +8,8 @@ import WhyChooseIntro from '@/components/WhyChooseIntro';
 import type { WhyChooseReason } from '@/data/aboutAlcohn';
 import { whyChooseReasons } from '@/data/aboutAlcohn';
 import { bindScrollReveal, prefersReducedMotion, revealEase } from '@/lib/motion';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -63,7 +65,7 @@ function MosaicCard({
   );
 }
 
-export default function WhyChooseAlcohnSectionMosaic({
+function WhyChooseAlcohnSectionMosaicContent({
   embedded = false,
   playImmediately = false,
   compareMode = false,
@@ -129,4 +131,11 @@ export default function WhyChooseAlcohnSectionMosaic({
       </div>
     </section>
   );
+}
+
+export default function WhyChooseAlcohnSectionMosaic(
+  props: Parameters<typeof WhyChooseAlcohnSectionMosaicContent>[0]
+) {
+  const { market } = useMarket();
+  return localizeTree(WhyChooseAlcohnSectionMosaicContent(props), market);
 }

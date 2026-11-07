@@ -5,6 +5,8 @@ import WhyChooseIntro from '@/components/WhyChooseIntro';
 import WhyChooseAlcohnSection from '@/components/WhyChooseAlcohnSection';
 import WhyChooseAlcohnSectionMosaic from '@/components/WhyChooseAlcohnSectionMosaic';
 import WhyChooseAlcohnSectionPanels from '@/components/WhyChooseAlcohnSectionPanels';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type LayoutVariant = 'dossier' | 'mosaic' | 'panels';
 
@@ -26,7 +28,7 @@ const variants: { id: LayoutVariant; label: string; description: string }[] = [
   },
 ];
 
-export default function WhyChooseAlcohnCompare() {
+function WhyChooseAlcohnCompareContent() {
   const groupId = useId();
   const [variant, setVariant] = useState<LayoutVariant>('dossier');
 
@@ -92,4 +94,9 @@ export default function WhyChooseAlcohnCompare() {
       </div>
     </section>
   );
+}
+
+export default function WhyChooseAlcohnCompare() {
+  const { market } = useMarket();
+  return localizeTree(WhyChooseAlcohnCompareContent(), market);
 }

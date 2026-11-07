@@ -10,8 +10,9 @@ import {
   STAMP_MM_MAX_LONG,
   STAMP_MM_MIN_LONG,
 } from '@/lib/cotizador/stampSizeLimits';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
-export default function CustomSizeInput() {
+function CustomSizeInputContent() {
   const router = useRouter();
   const { market } = useMarket();
   const [width, setWidth] = useState('');
@@ -139,4 +140,9 @@ export default function CustomSizeInput() {
       </button>
     </div>
   );
+}
+
+export default function CustomSizeInput() {
+  const { market } = useMarket();
+  return localizeTree(CustomSizeInputContent(), market);
 }

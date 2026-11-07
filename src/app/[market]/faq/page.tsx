@@ -4,6 +4,8 @@ import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import { createPageMetadata } from '@/lib/seo';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 const TITLE = 'Preguntas frecuentes sobre sellos de bronce personalizados | Alcohn';
 const DESCRIPTION =
@@ -22,7 +24,11 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalFaqPage({ params }: PageParams) {
+function InternationalFaqPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market) as InternationalMarketCode;
   return <FaqPageContent market={market} />;
+}
+
+export default function InternationalFaqPage(props: PageParams) {
+  return localizeTree(InternationalFaqPageContent(props), props.params.market as MarketCode);
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { Children, useEffect, useMemo, useRef, useState, type MutableRefObject, type Ref } from 'react';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface MobileCarouselProps {
   children: React.ReactNode;
@@ -25,7 +27,7 @@ function mergeRefs<T>(...refs: Array<Ref<T> | undefined>) {
   };
 }
 
-export default function MobileCarousel({
+function MobileCarouselContent({
   children,
   rowClassName = '',
   className = '',
@@ -133,4 +135,9 @@ export default function MobileCarousel({
       )}
     </div>
   );
+}
+
+export default function MobileCarousel(props: MobileCarouselProps) {
+  const { market } = useMarket();
+  return localizeTree(MobileCarouselContent(props), market);
 }

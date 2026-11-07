@@ -1,3 +1,5 @@
+import type { MarketCode } from '@/lib/markets/types';
+
 export interface ProcessStep {
   step: number;
   title: string;
@@ -41,3 +43,27 @@ export const processSteps: ProcessStep[] = [
       'Te llega listo para usar en el material que quieras. Después de la compra tenés a nuestro equipo para asesorarte y ayudarte cuando lo necesites.',
   },
 ];
+
+/**
+ * Pasos para mercados internacionales: el pago es online con tarjeta en moneda local
+ * (sin transferencia ni BBVA) y el envío es DHL puerta a puerta.
+ */
+export function getProcessSteps(market: MarketCode): ProcessStep[] {
+  if (market === 'ar') return processSteps;
+  return processSteps.map((step) => {
+    if (step.step === 3) {
+      return {
+        ...step,
+        description:
+          'El sistema te muestra las medidas posibles para tu sello. Eliges la que quieres y pagas online en moneda local, con tarjeta de crédito o débito, a través de nuestro procesador de pagos internacional.',
+      };
+    }
+    if (step.step === 5) {
+      return {
+        ...step,
+        description: 'Por DHL, puerta a puerta y con seguimiento internacional.',
+      };
+    }
+    return step;
+  });
+}

@@ -5,6 +5,8 @@ import { getInternationalTermsSections } from '@/lib/markets/legal';
 import { requireInternationalMarket } from '@/lib/markets/params';
 import { marketSeoDescription, marketSeoTitle } from '@/lib/markets/seo';
 import { createPageMetadata } from '@/lib/seo';
+import type { MarketCode } from '@/lib/markets/types';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type PageParams = {
   params: { market: string };
@@ -24,7 +26,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   });
 }
 
-export default function InternationalTerminosPage({ params }: PageParams) {
+function InternationalTerminosPageContent({ params }: PageParams) {
   const market = requireInternationalMarket(params.market);
   const country = getMarketConfig(market).countryName;
 
@@ -36,4 +38,8 @@ export default function InternationalTerminosPage({ params }: PageParams) {
       sections={getInternationalTermsSections(country)}
     />
   );
+}
+
+export default function InternationalTerminosPage(props: PageParams) {
+  return localizeTree(InternationalTerminosPageContent(props), props.params.market as MarketCode);
 }

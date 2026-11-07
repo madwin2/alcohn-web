@@ -7,6 +7,7 @@ import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface ProductCardProps {
   product: Product;
@@ -22,7 +23,7 @@ function generateProductCode(product: Product, index: number): string {
   return `${prefix}-${categoryCode}-${number}`;
 }
 
-export default function ProductCard({ product, materialFilter = 'todos', index = 0 }: ProductCardProps) {
+function ProductCardContent({ product, materialFilter = 'todos', index = 0 }: ProductCardProps) {
   const { market } = useMarket();
 
   const getImageSrc = () => {
@@ -129,4 +130,9 @@ export default function ProductCard({ product, materialFilter = 'todos', index =
       </div>
     </article>
   );
+}
+
+export default function ProductCard(props: ProductCardProps) {
+  const { market } = useMarket();
+  return localizeTree(ProductCardContent(props), market);
 }

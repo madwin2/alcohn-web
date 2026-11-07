@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BuyWizard from '@/components/BuyWizard';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 import {
   getWizardOptionBySlug,
   type WizardMaterial,
@@ -22,7 +24,7 @@ function getWizardMaterial(value: string | null): WizardMaterial | undefined {
     : undefined;
 }
 
-function BuyPageContent() {
+function BuyPageContentView() {
   const searchParams = useSearchParams();
   const productSlug = searchParams.get('product');
   const usoSlug = searchParams.get('uso');
@@ -54,6 +56,11 @@ function BuyPageContent() {
       </div>
     </div>
   );
+}
+
+function BuyPageContent() {
+  const { market } = useMarket();
+  return localizeTree(BuyPageContentView(), market);
 }
 
 export default function BuyPageContentWithSuspense() {

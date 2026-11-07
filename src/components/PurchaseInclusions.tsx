@@ -6,6 +6,8 @@ import PurchaseInclusionsKitExplorer, {
   type PurchaseInclusionsVideoPanel,
 } from '@/components/PurchaseInclusionsKitExplorer';
 import MobileCarousel from '@/components/MobileCarousel';
+import { localizeTree } from '@/lib/markets/localizeTree';
+import type { MarketCode } from '@/lib/markets/types';
 
 type InclusionVariant = 'personalizado' | 'estandar' | 'abecedario';
 
@@ -179,7 +181,7 @@ function normalizeItems(variant: InclusionVariant, items?: string[]): InclusionI
   });
 }
 
-export default function PurchaseInclusions({
+function PurchaseInclusionsContent({
   variant = 'personalizado',
   items,
   inclusionItems,
@@ -367,4 +369,11 @@ export default function PurchaseInclusions({
       </div>
     </section>
   );
+}
+
+export default function PurchaseInclusions({
+  market = 'ar',
+  ...props
+}: PurchaseInclusionsProps & { market?: MarketCode }) {
+  return localizeTree(PurchaseInclusionsContent(props), market);
 }

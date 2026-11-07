@@ -12,6 +12,7 @@ import { formatMarketMoney } from '@/lib/markets/money';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode } from '@/lib/markets/types';
 import type { InternationalShippingFormData } from '@/lib/shipping/international';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 interface PricingResponse {
   market: string;
@@ -22,7 +23,7 @@ interface PricingResponse {
   lineItems: Array<{ id: string; title: string; price: number; qty: number }>;
 }
 
-export default function InternationalCheckoutPage() {
+function InternationalCheckoutPageContent() {
   const { market, config } = useMarket();
   const { items, isHydrated } = useCart();
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
@@ -222,4 +223,9 @@ export default function InternationalCheckoutPage() {
       </div>
     </div>
   );
+}
+
+export default function InternationalCheckoutPage() {
+  const { market } = useMarket();
+  return localizeTree(InternationalCheckoutPageContent(), market);
 }

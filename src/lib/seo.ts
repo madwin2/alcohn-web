@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { MarketCode } from '@/lib/markets/types';
 import { getMarketConfig } from '@/lib/markets/config';
 import { alternateLanguages, marketAbsoluteUrl } from '@/lib/markets/seo';
+import { hasInternationalEquivalent } from '@/lib/markets/catalog';
 import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 
 export const SITE_URL = 'https://www.alcohnsellos.com';
@@ -34,6 +35,8 @@ export function createPageMetadata({
   market,
 }: PageMetadataOptions): Metadata {
   const canonicalPath = market ? marketAbsoluteUrl(market, path) : path;
+  // Las páginas AR con versión internacional también declaran hreflang (ida y vuelta).
+  const withAlternates = Boolean(market) || hasInternationalEquivalent(path);
   const ogImages =
     image === DEFAULT_OG_IMAGE
       ? [
@@ -52,7 +55,7 @@ export function createPageMetadata({
     ...(robots ? { robots } : {}),
     alternates: {
       canonical: canonicalPath,
-      ...(market ? { languages: alternateLanguages(path) } : {}),
+      ...(withAlternates ? { languages: alternateLanguages(path) } : {}),
     },
     openGraph: {
       type: 'website',

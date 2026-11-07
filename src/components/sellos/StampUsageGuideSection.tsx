@@ -3,12 +3,14 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import type { StampUsageGuide, StampUsageMethod } from '@/data/stampUsageGuides';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 type StampUsageGuideSectionProps = {
   guide: StampUsageGuide;
 };
 
-export default function StampUsageGuideSection({ guide }: StampUsageGuideSectionProps) {
+function StampUsageGuideSectionContent({ guide }: StampUsageGuideSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const method = guide.methods[activeIndex];
   const showTabs = guide.methods.length > 1;
@@ -136,4 +138,9 @@ function UsageIllustrationFrame({
       </div>
     </div>
   );
+}
+
+export default function StampUsageGuideSection(props: StampUsageGuideSectionProps) {
+  const { market } = useMarket();
+  return localizeTree(StampUsageGuideSectionContent(props), market);
 }

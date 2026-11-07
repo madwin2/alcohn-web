@@ -6,6 +6,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import MobileCarousel from '@/components/MobileCarousel';
 import { prefersReducedMotion, revealEase } from '@/lib/motion';
+import { useMarket } from '@/contexts/MarketContext';
+import { localizeTree } from '@/lib/markets/localizeTree';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -189,7 +191,7 @@ function ValueCard({
   );
 }
 
-export default function AlcohnValuesSection() {
+function AlcohnValuesSectionContent() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -303,4 +305,9 @@ export default function AlcohnValuesSection() {
       </div>
     </section>
   );
+}
+
+export default function AlcohnValuesSection() {
+  const { market } = useMarket();
+  return localizeTree(AlcohnValuesSectionContent(), market);
 }
