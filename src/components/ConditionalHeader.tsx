@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { stripMarketFromPathname } from '@/lib/markets/paths';
 import Header from './Header';
+import PromoBar from './PromoBar';
 
 /**
  * En /buy mobile el wizard trae su propio header (como el mock Claude).
@@ -16,10 +17,16 @@ export default function ConditionalHeader() {
   if (isBuy) {
     return (
       <div className="hidden md:block">
+        <PromoBar />
         <Header />
       </div>
     );
   }
 
-  return <Header />;
+  return (
+    <>
+      <PromoBar />
+      <Header />
+    </>
+  );
 }

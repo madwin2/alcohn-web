@@ -359,6 +359,7 @@ export default function CheckoutPage() {
         price: item.price,
         qty: item.qty,
       })),
+      email: formData.email.trim() || undefined,
     });
   };
 
@@ -514,7 +515,7 @@ export default function CheckoutPage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
               <ActionButton href={marketBuyPath(market)} variant="primary" className="w-full sm:w-auto px-6">
-                Subir logo y ver precio
+                Subir logo y ver mi sello
               </ActionButton>
               <ActionButton href={marketCatalogPath(market)} variant="secondary" className="w-full sm:w-auto px-6">
                 Comprar estándar

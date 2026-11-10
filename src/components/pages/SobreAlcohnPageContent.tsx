@@ -75,7 +75,7 @@ function SobreAlcohnPageContentInner({ market }: SobreAlcohnPageContentProps) {
           <SalesCtaBand
             title="La mejor forma de conocer Alcohn es probar tu marca en el flujo"
             copy="Subí tu logo, elegí uso y dejá que la web te muestre el camino hacia muestra, precio y pago."
-            primaryLabel="Subir logo y ver precio"
+            primaryLabel="Subir logo y ver mi sello"
             primaryHref={marketBuyPath(market)}
             secondaryLabel="Ver proceso"
             secondaryHref={marketPath(market, '/proceso')}

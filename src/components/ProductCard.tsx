@@ -8,6 +8,7 @@ import ProductCode from './ProductCode';
 import SpecChips from './SpecChips';
 import ActionButton from './ActionButton';
 import { localizeTree } from '@/lib/markets/localizeTree';
+import InstallmentsNote from '@/components/InstallmentsNote';
 
 interface ProductCardProps {
   product: Product;
@@ -105,6 +106,11 @@ function ProductCardContent({ product, materialFilter = 'todos', index = 0 }: Pr
               <span className="craft-label mr-2">Desde</span>
               {priceDisplay}
             </p>
+            <InstallmentsNote
+              amount={typeof product.price === 'number' ? product.price : product.price.desde}
+              kind={product.category === 'abecedario' ? 'link' : 'transfer'}
+              className="mt-1"
+            />
           </div>
 
           {/* CTAs - Botones industriales */}

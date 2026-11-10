@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
+import GoogleCustomerReviewsOptIn from '@/components/GoogleCustomerReviewsOptIn';
 import { trackMetaCustomEvent } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
@@ -36,6 +37,7 @@ function TransferenciaConfirmacionContent() {
 
   return (
     <div className="min-h-screen bg-white py-16">
+      <GoogleCustomerReviewsOptIn orderId={ordenId} deliveryCountry="AR" />
       <div className="container mx-auto max-w-2xl px-4 py-16 text-center md:px-8">
         <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
           <svg

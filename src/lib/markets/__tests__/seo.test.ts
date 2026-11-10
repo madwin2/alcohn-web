@@ -60,4 +60,9 @@ describe('market seo', () => {
     );
     expect(marketSeoDescription('Envío a todo Argentina.', 'ar')).toBe('Envío a todo Argentina.');
   });
+  it('afuera dice "Fabricado en 72 hs" en vez de "Listo" (después se suma el envío DHL)', () => {
+    expect(marketSeoDescription('Mirá tu sello antes de pagar. Listo en 72 hs hábiles.', 'co')).toBe(
+      'Mira tu sello antes de pagar. Fabricado en 72 hs hábiles. Envío internacional DHL a Colombia.'
+    );
+  });
 });

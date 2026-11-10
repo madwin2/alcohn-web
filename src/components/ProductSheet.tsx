@@ -151,7 +151,7 @@ function ProductSheetContent({ product }: ProductSheetProps) {
               variant="primary"
               className="flex-1"
             >
-              Subir logo y ver precio
+              Subir logo y ver mi sello
             </ActionButton>
             <ActionButton
               href={marketPath(market, '/proceso')}

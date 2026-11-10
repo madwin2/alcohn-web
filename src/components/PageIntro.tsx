@@ -22,6 +22,8 @@ interface PageIntroProps {
   /** Mobile: título + texto + CTA en un solo bloque compacto (sin columna derecha separada). */
   compactMobile?: boolean;
   priceFrom?: number;
+  /** Línea destacada bajo el título (visible también en mobile). */
+  tagline?: string;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export default function PageIntro({
   titleOnlyOnMobile = false,
   compactMobile = false,
   priceFrom,
+  tagline,
   className = '',
 }: PageIntroProps) {
   const hideMobileExtras = titleOnlyOnMobile || hideHighlightsOnMobile;
@@ -74,6 +77,11 @@ export default function PageIntro({
           >
             {title}
           </h1>
+          {tagline && (
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--alcohn-bronze)] md:mt-4 md:text-sm">
+              {tagline}
+            </p>
+          )}
 
           {compactMobile && (
             <div className="mt-2.5 space-y-2.5 border-t border-[var(--alcohn-line)] pt-2.5 md:hidden">

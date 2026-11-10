@@ -47,17 +47,19 @@ export function getInternationalReturnsPolicySections(): LegalSection[] {
       ],
     },
     {
-      title: 'Defectos o errores de Alcohn',
+      title: 'Garantía Alcohn de por vida',
       paragraphs: [
-        'Si el producto llega dañado o hay un error atribuible a Alcohn, revisaremos el caso con fotos, número de pedido y constancia de DHL.',
-        'Si corresponde, ofrecemos reparación, reemplazo o devolución del importe abonado según la situación.',
+        'Todos nuestros sellos tienen garantía de por vida: si tu sello tiene un problema, lo rehacemos y te lo enviamos por DHL sin costo.',
+        'Problemas del sello (fabricación, grabado, falla del material o medida distinta a la aprobada): lo rehacemos y lo enviamos sin costo, sin límite de tiempo.',
+        'Golpes, caídas o mal uso: lo rehacemos igual; solo pagas el envío.',
+        'Cambios de diseño (por ejemplo, si te rechazaron el registro de la marca o hubo un error en un texto o número): escríbenos. Evaluamos cada caso para ayudarte a resolverlo.',
+        'Para usar la garantía, escríbenos con fotos del sello y tu número de pedido.',
       ],
     },
     {
-      title: 'Plazos',
+      title: 'Envíos dañados',
       paragraphs: [
-        'Contáctanos dentro de los 10 días corridos desde la recepción del paquete para reportar defectos de fabricación.',
-        'Para envíos dañados, escríbenos dentro de las 72 horas de recibido con evidencia del embalaje.',
+        'Si el paquete llega dañado, escríbenos dentro de las 72 horas de recibido con fotos del embalaje y la constancia de DHL.',
       ],
     },
   ];

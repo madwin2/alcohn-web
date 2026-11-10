@@ -34,6 +34,8 @@ function mentionsDhlTo(text: string, country: string): boolean {
  */
 export function stripArgentinaShipping(text: string): string {
   return text
+    // Afuera el envío DHL se suma después de fabricar: "listo" se entendería como entrega.
+    .replace(/Listo en 72 hs hábiles/g, 'Fabricado en 72 hs hábiles')
     .replace(/,\s*env[ií]o (?:a todo (?:Argentina|el pa[ií]s)|nacional)(?=[.,])/gi, '')
     .replace(/\s*Env[ií]o (?:a todo (?:Argentina|el pa[ií]s)|nacional)\.\s*/gi, ' ')
     .replace(/\s{2,}/g, ' ')

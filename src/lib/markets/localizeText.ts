@@ -120,6 +120,10 @@ const VOSEO_TO_TU: Record<string, string> = {
   vendés: 'vendes',
   // Imperativo con pronombre
   agregalo: 'agrégalo',
+  cuidalo: 'cuídalo',
+  lavalo: 'lávalo',
+  mantenelo: 'mantenlo',
+  secalo: 'sécalo',
   apoyalo: 'apóyalo',
   armalo: 'ármalo',
   calentalo: 'caliéntalo',

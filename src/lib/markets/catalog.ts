@@ -23,8 +23,12 @@ export function isAccessoryAvailableInMarket(slug: string, market: MarketCode): 
   return INTERNATIONAL_ACCESSORY_SLUGS.has(slug);
 }
 
+/** Usos que solo aplican en Argentina (ej. RENAPA es un registro argentino). */
+const ARGENTINA_ONLY_USE_CASES = new Set(['para-colmenas']);
+
 export function isStampUseCaseAvailableInMarket(slug: string, market: MarketCode): boolean {
   if (market === 'ar') return true;
+  if (ARGENTINA_ONLY_USE_CASES.has(slug)) return false;
   return slug.startsWith('para-');
 }
 

@@ -50,7 +50,7 @@ export default function InternationalBuySteps({ market }: { market: Internationa
 
             <div className="mt-6 flex flex-col gap-2 sm:flex-row md:mt-8 md:gap-3">
               <ActionButton href={marketBuyPath(market)} variant="primary">
-                Subir logo y ver precio
+                Subir logo y ver mi sello
               </ActionButton>
               <ActionButton href={marketPath(market, '/politica-envios')} variant="ghost">
                 Ver política de envíos

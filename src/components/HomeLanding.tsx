@@ -114,7 +114,9 @@ function HomeLandingContent({ market }: HomeLandingProps) {
   const finalCta = getHomeFinalCta(market);
 
   const oficioMaterialBlocks = stampUseCases
-    .filter((useCase) => isStampUseCaseAvailableInMarket(useCase.slug, market))
+    .filter(
+      (useCase) => useCase.listed !== false && isStampUseCaseAvailableInMarket(useCase.slug, market)
+    )
     .map((useCase) => ({
       oficio: useCase.oficio,
       material: useCase.material,

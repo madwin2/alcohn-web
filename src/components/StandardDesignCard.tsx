@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { COLLECTION_LABELS, StandardDesign } from '@/lib/catalog';
+import InstallmentsNote from '@/components/InstallmentsNote';
 
 interface StandardDesignCardProps {
   design: StandardDesign;
@@ -64,6 +65,7 @@ export default function StandardDesignCard({ design }: StandardDesignCardProps) 
               <span className="craft-label mr-2">Desde</span>
               {priceDisplay}
             </p>
+            <InstallmentsNote amount={design.startingPrice} className="mt-1" />
             <p className="mt-2 text-xs text-neutral-500">
               Incluye sello en bronce, medida elegida y guía de uso.
             </p>

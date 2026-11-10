@@ -4,7 +4,7 @@ import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 export const metadata: Metadata = createPageMetadata({
   title: 'Sellos estándar de bronce | Comprá online con envío | Alcohn',
   description:
-    'Diseños estándar de bronce listos para personalizar. Elegí motivo, medida, agregá al carrito y comprá online con envío nacional.',
+    'Diseños estándar de bronce listos para personalizar. Elegí motivo y medida, comprá online y recibilo listo en 72 hs hábiles con envío nacional.',
   path: '/sellos/estandar',
 });
 

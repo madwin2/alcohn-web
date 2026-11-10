@@ -22,7 +22,7 @@ function ContactoPageContentInner({ market }: ContactoPageContentProps) {
     { name: 'Inicio', path: '/' },
     { name: 'Contacto', path: '/contacto' },
   ]);
-  const buyCta = marketBuyCta(market, 'Subir logo y ver precio');
+  const buyCta = marketBuyCta(market, 'Subir logo y ver mi sello');
   const secondaryCatalogCta = marketStandardSecondaryCta(market);
 
   return (
@@ -65,7 +65,7 @@ function ContactoPageContentInner({ market }: ContactoPageContentProps) {
                 </p>
                 <div className="flex flex-col gap-3">
                   <ActionButton href={marketBuyPath(market)} variant="primary">
-                    Subir logo y ver precio
+                    Subir logo y ver mi sello
                   </ActionButton>
                   <ActionButton href={secondaryCatalogCta.href} variant="secondary">
                     {secondaryCatalogCta.label}

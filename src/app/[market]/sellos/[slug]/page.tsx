@@ -33,6 +33,14 @@ import {
 import { INTERNATIONAL_MARKETS } from '@/lib/markets/config';
 import { localizeTree } from '@/lib/markets/localizeTree';
 import type { MarketCode } from '@/lib/markets/types';
+import { getStampDepthSpec } from '@/data/stampDepth';
+import GuaranteeNote from '@/components/GuaranteeNote';
+import {
+  localUseCaseHeading,
+  localUseCaseProductName,
+  localUseCaseSeoDescription,
+  localUseCaseSeoTitle,
+} from '@/lib/markets/localTerms';
 
 type PageParams = {
   params: { market: string; slug: string };
@@ -58,10 +66,10 @@ export function generateMetadata({ params }: PageParams): Metadata {
   }
 
   const canonical = `/sellos/${useCase.slug}`;
-  const description = useCase.seoDescription ?? useCase.description;
+  const description = localUseCaseSeoDescription(useCase, market);
 
   return createPageMetadata({
-    title: marketSeoTitle(useCase.seoTitle, market),
+    title: marketSeoTitle(localUseCaseSeoTitle(useCase, market), market),
     description: marketSeoDescription(description, market),
     path: canonical,
     image: useCase.heroImage,
@@ -79,11 +87,15 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
 
   const canonical = `/sellos/${useCase.slug}`;
   const priceFrom = getStampPriceFrom(useCase.buyMaterial);
+  const depthSpec = getStampDepthSpec(useCase.slug);
   const productCarouselImages = getProductCarouselImages(useCase);
-  const usageGuide = getStampUsageGuideBySlug(useCase.slug);
+  const usageGuide = getStampUsageGuideBySlug(useCase.usageGuideSlug ?? useCase.slug);
   const relatedUseCases = stampUseCases
     .filter(
-      (item) => item.slug !== useCase.slug && isStampUseCaseAvailableInMarket(item.slug, market)
+      (item) =>
+        item.listed !== false &&
+        item.slug !== useCase.slug &&
+        isStampUseCaseAvailableInMarket(item.slug, market)
     )
     .slice(0, 3);
   const productosHref = marketPath(market, '/productos');
@@ -91,8 +103,8 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
   const contactHref = '/contacto';
 
   const productJsonLd = buildProductJsonLd({
-    name: `Sello de bronce para ${useCase.material}`,
-    description: marketProductDescription(useCase.seoDescription ?? useCase.description, market),
+    name: localUseCaseProductName(useCase, market),
+    description: marketProductDescription(localUseCaseSeoDescription(useCase, market), market),
     path: canonical,
     image: useCase.heroImage,
     category: 'Sellos de bronce personalizados',
@@ -129,7 +141,7 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <StampUseCasePageIntro
           label={useCase.searchIntent}
-          title={useCase.title}
+          title={localUseCaseHeading(useCase, market)}
           description={useCase.description}
           mobileDescription={useCase.intro}
           primaryCta={{
@@ -137,6 +149,7 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
             href: buyHref,
           }}
           priceFrom={priceFrom}
+          tagline="Fabricado en 72 hs hábiles · Mirá tu sello antes de pagar"
           highlights={[
             `Uso principal: ${useCase.material}`,
             'Envío internacional DHL',
@@ -178,6 +191,23 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
               </p>
 
               <PriceFrom amount={priceFrom} className="mt-4 md:mt-5" size="sm" />
+
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--alcohn-line)] pt-4 sm:gap-6 md:mt-5 md:pt-5">
+                <div>
+                  <p className="craft-label mb-1.5">Material</p>
+                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                    Bronce CNC de alta precisión.
+                  </p>
+                </div>
+                <div>
+                  <p className="craft-label mb-1.5">Profundidad</p>
+                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                    {depthSpec.summary}.
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs leading-snug text-neutral-600">{depthSpec.detail}</p>
+              <GuaranteeNote className="mt-3" />
 
               <div className="mt-5 flex flex-col gap-3 border-t border-[var(--alcohn-line)] pt-4 sm:flex-row md:mt-auto md:border-0 md:pt-6">
                 <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">

@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketPath } from '@/lib/markets/paths';
 import { localizeTree } from '@/lib/markets/localizeTree';
+import InstallmentsNote from '@/components/InstallmentsNote';
 
 interface AccessoryCardProps {
   accessory: Accessory;
@@ -60,6 +61,7 @@ function AccessoryCardContent({ accessory }: AccessoryCardProps) {
             <span className="craft-label mr-2">Desde</span>${getAccessoryTransferPrice(accessory).toLocaleString('es-AR')}
             <span className="ml-1 text-xs text-neutral-500">c/ transferencia</span>
           </p>
+          <InstallmentsNote amount={getAccessoryTransferPrice(accessory)} className="mt-1" />
         </div>
         {added ? (
           <div className="space-y-3">

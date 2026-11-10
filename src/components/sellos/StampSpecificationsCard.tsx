@@ -3,7 +3,7 @@ import ProductCompactCard from '@/components/sellos/ProductCompactCard';
 const STANDARD_STAMP_SPECS = [
   { label: 'Material', value: 'Bronce de alta calidad' },
   { label: 'Proceso', value: 'CNC alta precisión' },
-  { label: 'Profundidad', value: '3mm' },
+  { label: 'Profundidad', value: '1,7 mm + 3 mm desbaste' },
   { label: 'Uso', value: 'Cuero y madera' },
   { label: 'Tiempo', value: '72hs hábiles' },
 ] as const;

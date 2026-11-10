@@ -199,7 +199,7 @@ Lista de cambios que salen del análisis. **Todavía no se tocó la web**; queda
 | M11 | **Los feeds de Google Shopping de Chile, Perú, Colombia y México muestran precios más bajos que la web** | Google muestra S/159, $156.000 COP y $820 MXN; en la web el mismo sello cuesta S/183, $179.000 COP y $940 MXN (sin DHL). El feed convierte el precio viejo de $69.500 sin el 15% de recargo internacional. Google puede rechazar productos por precio distinto, y el cliente se encuentra con un precio más alto al entrar | `feeds/google-merchant-products-{cl,pe,co,mx}.tsv` |
 | M12 | **En Colombia, Google muestra la página argentina con "US$ 76.000"** | En google.com.co aparece la ficha de cuero de Argentina, con el precio en pesos argentinos marcado como dólares y el texto "Envío a todo Argentina". Un colombiano ve un sello de 76.000 dólares. Revisar hreflang/canonical para que Google muestre `/co/` en Colombia | Resultado orgánico de "sello de bronce para marcar cuero personalizado" en google.com.co |
 | M13 | **Chile: posicionar "cuño"** | En google.cl, "cuño de bronce personalizado" no muestra a Alcohn en la primera página. Todos los competidores chilenos usan "cuño" o "timbre", no "sello" | Las landings `/cl/` hablan de "sello" |
-| M14 | **Mostrar el precio final con DHL incluido desde el primer momento** en los mercados internacionales | En Chile, Perú y Colombia la competencia local cobra menos que el envío DHL solo. Si el cliente ve "desde S/183" y en el checkout aparece S/319, se va. Mejor mostrar el total y explicar qué incluye (fabricación en 72 hs + DHL puerta a puerta) | — |
+| M14 | **Mostrar el precio final con DHL incluido desde el primer momento** en los mercados internacionales | En Chile, Perú y Colombia la competencia local cobra menos que el envío DHL solo. Si el cliente ve "desde S/183" y en el checkout aparece S/319, se va. Mejor mostrar el total y explicar qué incluye (fabricación en 72 hs + DHL puerta a puerta) | — — **Postergado al final (07/11):** se evalúa bajar el envío 50% como promoción; requiere integrar con la pasarela de pago y la app. |
 | M15 | **España: decidir si entrar** | No es mercado activo (no existe `/es/`). Ver sección 9 | — |
 
 ### Avance etapa 1 (06/11/2026)
@@ -211,6 +211,115 @@ Lista de cambios que salen del análisis. **Todavía no se tocó la web**; queda
 - **"Desde" internacional igualado al generador** (decisión del 06/11): Colombia $179.000, Perú S/183, Chile $50.000, México $940 (sin DHL). Mismo valor en la página, el JSON-LD y los feeds.
 - **M17 resuelto en el código:** las páginas de otros países ya no dicen "Alcohn Argentina" ni prometen "envío a todo el país / Argentina / nacional" en título, descripción, JSON-LD ni feeds. Se eliminaron frases de DHL repetidas y se corrigieron "Peru" y "Mexico" sin tilde (también en el selector de país).
 - **M18 resuelto (junto con M17):** todas las páginas de Chile, Perú, Colombia y México se muestran en "tú" (conversor `src/lib/markets/localizeText.ts` + `localizeTree.ts`), incluidos generador, carrito y checkout. Argentina sigue en voseo. Además: pasos de compra con pago con tarjeta en moneda local y envío DHL, badge "Envío DHL a {país}" en el generador, y metadatos propios para carrito y checkout.
+
+### Avance etapa 2 (07/11/2026)
+
+- **M1 + M2 hechos (sin publicar):** barra superior en toda la web ("3 cuotas sin interés · 15% off por transferencia · Fabricación en 72 hs hábiles"; en otros países: "Envío DHL a {país} · Pago en {moneda}"). Debajo de cada precio "desde" (hero, fichas, listado, tarjetas de sellos estándar, accesorios y productos): "Precio por transferencia · o 3 cuotas sin interés de $29.133" (o "3 cuotas sin interés · 15% off por transferencia" cuando el precio publicado es el de tarjeta, como en abecedarios). Solo Argentina.
+
+- **M6 hecho sin cambiar títulos (sin publicar):** línea "Listo en 72 hs hábiles · Mirá tu sello antes de pagar" bajo el título de las 9 fichas (afuera: "Fabricado en 72 hs hábiles"); punto 02 "Mirá tu sello con tu logo antes de pagar"; botón "Subir logo y ver mi sello" en todo el sitio; descripciones para Google de las 9 fichas, productos y sellos estándar con vista previa + 72 hs; texto de la home con "mirá cómo queda tu sello antes de pagar"; barra superior "Sellos listos en 72 hs hábiles", oculto en abecedarios (10–14 días). Títulos sin tocar; revisar en 4–6 semanas contra la línea base.
+
+### Avance etapa 3 (07/11/2026, sin publicar)
+
+- **M7:** profundidad real en todas las fichas (AR y otros países) desde `src/data/stampDepth.ts`: estándar "grabado cónico de 1,7 mm + desbaste de 3 mm"; pan, hielo y fruta "grabado cónico de 3 mm + corte de contorno"; sello de 10 mm de espesor. Se corrigieron la ficha técnica de estándar y los datos de productos. Falta la tolerancia de medida (si la definen).
+- **M8:** sección "Uso y cuidado del sello" en Cómo usar sellos, 8 preguntas aprobadas, con datos estructurados FAQPage.
+- **M13:** Chile usa "cuño" en títulos, H1, descripciones y nombre de producto de las 9 fichas y en el título de productos ("Cuño de bronce para cuero y PU (sello personalizado) | Envío DHL a Chile | Alcohn"). Resto de países sin cambios.
+- **M3:** "Garantía de por vida: si tu sello tiene un problema, lo rehacemos y te lo enviamos sin costo" en la home y en las fichas, con link a la política. Política de devoluciones AR e internacional reescrita (de por vida; mal uso: se rehace y el cliente paga el envío; cambios de diseño: caso por caso). Igual afuera, con DHL.
+
+### Relevamiento etapa 4 (07/11/2026)
+
+- **M9 – Mercado Libre:** la publicación de Alcohn ("Sello Clise Personalizado De Bronce Para Marcar Cuero Madera", $93.624, 6 cuotas) tiene **+5 vendidos y ninguna opinión**, contra Axis con +100 vendidos y 5.0 a $59.900. Problemas: está en la categoría **Librería > Sellos de goma** (con atributos "Color de la tinta: Bronce" y "Cantidad de sellos de goma"); la entrega dice **"Llega entre el 19 y el 25/nov"** (12–18 días), lo que anula el diferencial de 72 hs; la descripción dice "profundidad de grabado: 3 mm" (el estándar es 1,7 mm); el título no menciona 72 hs.
+- **M5 – Reseñas:** el programa **Reseñas de Clientes en Google ya está firmado** en Merchant Center, pero la web **no tiene la integración** (encuesta de aceptación en la página de confirmación del pedido). Merchant Center avisa que hace más de 30 días que no se muestra. Sin esto no se juntan calificaciones de la tienda. Las estrellas por producto en Shopping requieren además GTIN o un feed de reseñas de producto.
+
+- **M5 hecho (sin publicar):** encuesta de Reseñas de Clientes en Google en las páginas de pedido confirmado (tarjeta cuando el pago queda confirmado, transferencia e internacional). Usa el email del pedido y una fecha estimada de entrega (10 días AR, 14 días afuera). Probado en local: Google carga su recuadro con el ID de Alcohn.
+- **M10 hecho (sin publicar):** fichas nuevas /sellos/para-chocolate (chocolate y alfajores = mismo sello que lacre; también en CL/PE/CO/MX, en Chile como "cuño") y /sellos/para-colmenas (RENAPA = sello de madera; solo Argentina). Compran con el uso equivalente (lacre / madera) para que el taller lo fabrique igual; no aparecen en la grilla de la home ni en el generador; están en el sitemap. Fotos sumadas: hamburguesa y empanadas (pan), hielo, fruta y botella con lacre. Pendiente: fotos propias de chocolate y colmenas (hoy usan fotos de lacre y madera con la aclaración "El mismo sello, aplicado en…").
+
+### M9 – Mercado Libre: cambios hechos (07/11/2026)
+
+- **Descripción corregida en las 2 publicaciones activas** (#2761678048 "Sello Clise Personalizado…" y #2765303986 "Cuño De Bronce Para Estampar A Presión"): profundidad real (1,7 mm cónico + 3 mm de desbaste; 3 mm con contorno en alimentos), "Lo fabricamos en 72 hs hábiles desde que aprobás la muestra" y la garantía de por vida. Verificado en la publicación pública.
+- **No se cambió el tiempo de disponibilidad (4 días):** ML lo cuenta en días corridos; 72 hs hábiles pueden ser 5 corridos con fin de semana. Bajarlo arriesga despachos tarde y castigo de reputación.
+- **Categoría:** no se puede cambiar. ML solo permite "volver a publicar", que borra la publicación con visitas y ventas. Opción: crear una publicación nueva en una categoría de sellos metálicos/herramientas y mantener esta.
+- **Título:** no se agregó "72 hs" (las reglas de títulos de ML no permiten info de envío/plazos).
+- **Precio:** sin cambios (decisión pendiente).
+- **Publicaciones inactivas (revisadas 08/11):**
+  - **#829288770 "Sello Clise De Bronce Para Madera Cuero Jabon": 19 ventas** (la que más vendió), categoría **Herramientas > Otros** (la correcta), $82.000 sin cuotas, envío "acuerdo con el comprador", sin garantía cargada. "Inactiva para revisar": se puede reactivar.
+  - #1462999803 "Sello Clise De Bronce Para Marcar Madera": 1 venta, Herramientas > Herramientas Manuales > Otros, $95.000, tiene un video (pausado), sin garantía ni tiempo de disponibilidad.
+  - #1967674534 "Sello Clise Personalizado De Bronce Para Marcar Cuero": finalizada por ML (solo "volver a publicar").
+  - Las preguntas viejas de esas publicaciones no aparecen (la bandeja muestra hasta 30 días). Pregunta pendiente actual: 1, en la publicación activa principal ("¿cómo hago para mandarte el diseño?", hace 24 días).
+
+### M9 – Costos reales de vender en Mercado Libre (08/11/2026)
+
+Publicación principal a $93.624 (tipo Premium, "cuota mejorada" 3 cuotas = el comprador ve 6):
+
+| Concepto | % | $ |
+|---|---:|---:|
+| Comisión por venta | 15 % | 14.044 |
+| Cuotas sin interés (cuota mejorada) | 8,5 % | 7.958 |
+| Envío gratis (50 % bonificado por reputación) | — | 8.290 |
+| **Recibís** | **≈ 68 %** | **63.332** |
+
+Opciones de cuotas disponibles (costo extra sobre el precio): 3 a 12 cuotas con interés bajo 5 % · 3 cuotas mismo precio 8,5 % (hoy) · 6 cuotas 12,9 % · 9 cuotas 17,3 % · 12 cuotas 20,8 %. No hay opción sin costo de financiación. El envío gratis es obligatorio por precio.
+
+Para recibir lo mismo que una venta web por transferencia ($76.000): precio ≈ $110.200 con la cuota mejorada (8,5 %) o ≈ $105.400 con "interés bajo" (5 %).
+
+### M9 – Avance publicaciones nuevas (08/11/2026)
+
+- Respondida la pregunta pendiente (Fernando, "cómo mando el diseño").
+- **Categoría:** ML obliga a "Arte, Librería y Mercería > … > Sellos de Goma" para cualquier título con "sello"; en Herramientas o Cocina avisa que anula la publicación. Garetto y Alcohn están ahí. No es un error de la publicación vieja.
+- **Medidas como variantes:** en esa categoría las variantes al crear son solo por color; la "variante personalizada" (medida) aparece en la edición y solo si la publicación no tiene ventas.
+- **Publicadas y reactivadas (08/11):**
+  | Publicación | Categoría | Precio | Recibís |
+  |---|---|---:|---:|
+  | #4176478588 Sello Para Pan De Hamburguesa … Con Logo (3x3) | Sellos de goma | $130.400 | ≈ $91.800 |
+  | #4176479340 Sello Para Pan De Hamburguesa … 5x5 Cm | Sellos de goma (ML sugirió cambio) | $221.300 | ≈ $156.000 |
+  | #2273351321 Sello Para Lacre Y Chocolate … 2,5 Cm (Medida: 25 mm) | Kits de Sellos para Lacres (la movió ML) | $110.200 | ≈ $77.500 |
+  | #2273375151 Sello Para Lacre Y Chocolate … 3x3 Cm | Sellos de goma | $130.400 | ≈ $91.200 |
+  | #2273376287 Sello Para Hielo Y Cocteleria … Con Logo (3x3) | Sellos de Cocina | $130.400 | ≈ $91.800 |
+  | #829288770 Sello Clise De Bronce Para Madera Cuero Jabon (4x4 / 5x3) — **reactivada** | Herramientas > Otros | $107.700, sin cuotas, envío a acordar | ≈ $92.100 |
+
+  Todas con descripción propia (profundidad real, 72 hs, garantía de por vida), 4 días de disponibilidad, garantía del vendedor 5 años. Las nuevas: 3 cuotas mejorada y envío gratis. Descripciones guardadas en `ml-descripciones/`.
+  Pendiente: #829288770 sigue sin Mercado Envíos (ML pide completar características principales y secundarias para habilitarlo); videos (ML los pide en todas); más medidas (hielo 5x5) y sellos estándar, abecedarios y accesorios.
+- **Sellos estándar publicados (09/11):** medida M, $130.400, Sellos de goma, 3 cuotas mejorada, envío gratis, stock 50, 3 fotos (render, foto vertical y marcado en cuero), descripción de `ml-descripciones/estandar.txt`, 4 días, garantía del vendedor 5 años.
+  | Publicación | Medida | Recibís |
+  |---|---|---:|
+  | #4176908356 Sello De Bronce Mate Para Marcar Cuero Y Madera 4x2,3 Cm | 40x23 mm | ≈ $91.200 |
+  | #2273594777 Sello Bronce Herradura Para Marcar Cuero Y Madera 4x3,5 Cm | 40x35 mm | ≈ $91.000 |
+  | #4176909108 Sello Bronce Cabeza De Caballo Para Cuero Y Madera 4x3,5 Cm | 40x35 mm | ≈ $88.900 (envío estimado más caro) |
+  | #2273595603 Sello De Bronce Caballo Para Marcar Cuero Y Madera 4x3 Cm | 40x30 mm | ≈ $91.000 |
+  | #2273596089 Sello De Bronce Carpincho Para Cuero Y Madera 2,8x2,4 Cm (chico, $110.200) | 28x24 mm | ≈ $75.500 |
+  | #4176910324 Sello De Bronce Sol De Mayo Para Cuero Y Madera 3x3 Cm (2 fotos) | 30x30 mm | ≈ $87.900 (envío estimado más caro) |
+  | #4176910574 Sello De Bronce Mapa Argentina Para Cuero Y Madera 5x2,3 Cm | 50x23 mm | ≈ $91.200 |
+  | #2273596981 Sello De Bronce Islas Malvinas Para Cuero Y Madera 3x3 Cm | 30x30 mm | ≈ $91.200 |
+  | #4176911268 Sello Bronce Bandera Argentina Cuero Y Madera 3,8x2,4 Cm | 38x24 mm | ≈ $92.500 |
+
+  No se publicaron Escudo Nacional ni escudos de clubes/AFA (riesgo de propiedad intelectual).
+- **Accesorios publicados (09/11):** 3 cuotas mejorada, envío gratis, stock 20, 4 días, garantía del vendedor 5 años, descripciones en `ml-descripciones/`.
+  | Publicación | Categoría | Precio | Recibís |
+  |---|---|---:|---:|
+  | #2273523317 Mango Metalico De Golpe Para Sellos De Bronce Marcar Cuero | Herramientas > Accesorios > Punzones | $44.300 | ≈ $25.000 |
+  | #2273523945 Base De Aluminio Para Remachadora Y Prensa Marcar Cuero | Herramientas > Accesorios > Puntas y Adaptadores > Otros | $62.700 | ≈ $41.000 |
+
+  La base no lleva "sello" en el título: en esa categoría ML avisa que la anula. Debajo de ~$62.000 ML quita la bonificación del 50% del envío (a $61.400 se recibía $32.100).
+- **Pendientes de decisión:**
+  - **Calentador eléctrico** (borrador "Marcador A Fuego Electrico Para Sellos De Bronce 200w", categoría Pirograbadores): ML pide organismo y número de certificado de seguridad eléctrica. Sin certificado no se debería declarar "No aplica".
+  - **Abecedarios:** producción 10–14 días hábiles (≈ 20 días corridos de disponibilidad en ML, que baja la exposición) y se eligen tipografía y tamaño. Falta definir qué juegos publicar y cómo tomar esos datos.
+
+  ML rechaza fotos de menos de ~1000 px: las fotos verticales de la web (589x611) se subieron ampliadas.
+- Plan acordado: precio igual a lo que se recibe en la web (3x1 ≈ $110.200, 3x3 ≈ $130.400, grande ≈ $158.600, XL ≈ $221.300), 3 cuotas mejorada, solo productos distintos (pan/hamburguesa, lacre/chocolate, hielo/coctelería, sellos estándar por diseño, abecedarios, accesorios), y reactivar #829288770.
+
+### Línea base SEO antes de M6 (Search Console, 05/08–04/11/2026)
+
+| Página | Clics | Impresiones | Posición |
+|---|---:|---:|---:|
+| / (home) | 280 | 1.848 | 4,4 |
+| /sellos/para-cuero | 50 | 2.712 | 9,2 |
+| /mx/sellos/para-pan | 45 | 2.342 | 8,4 |
+| /pe/sellos/para-pan | 39 | 673 | 5,7 |
+| /productos | 26 | 1.139 | 10,1 |
+| /sellos/para-pan | 20 | 813 | 9,0 |
+| /sellos/para-madera | 17 | 562 | 10,9 |
+| /co/sellos/para-cuero | 17 | 502 | 6,3 |
+
+Fichas /sellos/para-* en total: 340 clics, 13,8 mil impresiones, CTR 2,5 %, posición 8,3. Búsquedas principales: "sello para cuero", "sellos para cuero", "sellos para cuero personalizados", "sello para pan de hamburguesa", "sello para pan", "sellos de madera", "sello para madera". "Marroquinería" no aparece entre las búsquedas. Comparar en 4–6 semanas después de publicar M6.
 
 ---
 

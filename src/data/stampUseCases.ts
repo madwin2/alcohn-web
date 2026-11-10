@@ -34,6 +34,15 @@ export interface StampUseCase {
     question: string;
     answer: string;
   }>;
+  /**
+   * Landing de un uso que se fabrica igual que otro (ej. chocolate = lacre, colmenas = madera).
+   * El botón de compra lleva al generador con ese uso, así el taller lo fabrica como corresponde.
+   */
+  buyUsoSlug?: string;
+  /** Guía de uso a mostrar si no tiene una propia (ej. colmenas usa la de madera). */
+  usageGuideSlug?: string;
+  /** false: landing solo para búsquedas; no aparece en la grilla de materiales ni en el generador. */
+  listed?: boolean;
 }
 
 const STAMP_PRICE_FROM_ARS: Record<WizardMaterial, number> = {
@@ -57,7 +66,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos para Madera Personalizados',
     seoTitle: 'Sello de bronce para madera personalizado | Carpintería CNC | Alcohn',
     seoDescription:
-      'Sello de bronce CNC para tablas, cajas y muebles. Marcá madera con tu logo. Fabricación en Argentina, envío a todo el país.',
+      'Sello de bronce CNC para tablas, cajas y muebles. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marcá madera con tu logo. Fabricación en Argentina, envío a todo el país.',
     description:
       'Marcá tablas, cajas, muebles y piezas de carpintería con un sello de bronce personalizado.',
     intro:
@@ -110,7 +119,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para cuero y PU',
     seoTitle: 'Sello de bronce para cuero | Marroquinería profesional | Alcohn Argentina',
     seoDescription:
-      'Sello personalizado para cuero y PU. Marroquinería, billeteras y materas con marca CNC. Envío a todo Argentina.',
+      'Sello personalizado para cuero y PU. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marroquinería, billeteras y materas con marca CNC. Envío a todo Argentina.',
     description:
       'Convertí billeteras, carteras, vainas, materas y etiquetas de cuero en piezas con marca propia.',
     intro:
@@ -164,7 +173,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para cerámica',
     seoTitle: 'Sello de bronce para cerámica personalizado | Alcohn Argentina',
     seoDescription:
-      'Sellos CNC para cerámica en crudo, placas y piezas de autor. Marcá antes de la cocción con precisión.',
+      'Sellos CNC para cerámica en crudo, placas y piezas de autor. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marcá antes de la cocción con precisión.',
     description:
       'Marcá piezas de cerámica en crudo, placas, objetos decorativos y trabajos de autor con tu logo.',
     intro:
@@ -212,7 +221,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para jabón artesanal',
     seoTitle: 'Sello de bronce para jabón artesanal | Alcohn Argentina',
     seoDescription:
-      'Sello personalizado para jabones, velas y cosmética natural. Bronce CNC, ideal para ferias y regalos.',
+      'Sello personalizado para jabones, velas y cosmética natural. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Bronce CNC, ideal para ferias y regalos.',
     description:
       'Dale identidad a jabones artesanales, velas blandas y productos de cosmética natural con un sello personalizado.',
     intro:
@@ -251,7 +260,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos para cajas de cartón y packaging',
     seoTitle: 'Sello para cajas de cartón y packaging | Bronce CNC | Alcohn',
     seoDescription:
-      'Sello de bronce CNC para marcar cajas de cartón, etiquetas y bolsas de papel. Ideal para packaging artesanal y series cortas. Envío a todo Argentina.',
+      'Sello de bronce CNC para marcar cajas de cartón, etiquetas y bolsas de papel. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Ideal para packaging artesanal y series cortas. Envío a todo Argentina.',
     description:
       'Marcá cajas de cartón, etiquetas, bolsas, papel grueso y packaging artesanal con una identidad consistente.',
     intro:
@@ -312,7 +321,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para lacre',
     seoTitle: 'Sello de bronce para lacre personalizado | Alcohn Argentina',
     seoDescription:
-      'Sellos para lacre en invitaciones, sobres y packaging boutique. Bronce CNC, diseño elegante.',
+      'Sellos para lacre en invitaciones, sobres y packaging boutique. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Bronce CNC, diseño elegante.',
     description:
       'Creá cierres, invitaciones, packaging y detalles de marca con lacre personalizado.',
     intro:
@@ -334,6 +343,7 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/lacre/sello-lacre-cierre-02.webp', alt: 'Cierre de lacre marcado' },
       { src: '/images/lacre/sello-lacre-detalle-03.webp', alt: 'Detalle de marca en lacre' },
       { src: '/images/lacre/sello-lacre-trabajo-04.webp', alt: 'Trabajo real en lacre' },
+      { src: '/images/mail/g-cocteleria-botella.jpg', alt: 'Botella sellada con lacre y monograma' },
     ],
     proofPoints: ['Aporta ritual y terminación premium', 'Ideal para packaging boutique', 'Buena opción para ediciones especiales'],
     faqs: [
@@ -351,7 +361,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para hielo',
     seoTitle: 'Sello para hielo y coctelería | Bronce CNC | Alcohn',
     seoDescription:
-      'Sello de bronce para hielo en bares y eventos. Marcá cubos y roca con tu logo. Envío a todo el país.',
+      'Sello de bronce para hielo en bares y eventos. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marcá cubos y roca con tu logo. Envío a todo el país.',
     description:
       'Marcá hielos para bares, coctelería, eventos y experiencias gastronómicas con identidad propia.',
     intro:
@@ -370,6 +380,7 @@ export const stampUseCases: StampUseCase[] = [
     ],
     gallery: [
       { src: '/images/carousel/hielo.webp', alt: 'Sello aplicado sobre hielo' },
+      { src: '/images/mail/cocteleria-hielo.jpg', alt: 'Cubo de hielo marcado con sello de bronce' },
     ],
     proofPoints: ['Diferencia la experiencia de consumo', 'Muy visual para redes sociales', 'Útil para bares, eventos y marcas premium'],
     faqs: [
@@ -392,7 +403,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para pan y alimentos',
     seoTitle: 'Sello para pan y hamburguesa personalizado | Bronce CNC | Alcohn',
     seoDescription:
-      'Sello de bronce para pan, hamburguesas y gastronomía. Marcá masas con tu logo. Fabricación CNC, envío nacional.',
+      'Sello de bronce para pan, hamburguesas y gastronomía. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marcá masas con tu logo. Fabricación CNC, envío nacional.',
     description:
       'Marcá panes, tapas y productos gastronómicos para que tu marca aparezca en la experiencia de consumo.',
     intro:
@@ -414,6 +425,8 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/pan/sello-pan-hamburguesa-02.webp', alt: 'Pan marcado con sello' },
       { src: '/images/pan/sello-pan-hamburguesa-03.webp', alt: 'Detalle de marca en pan' },
       { src: '/images/pan/sello-pan-hamburguesa-04.webp', alt: 'Trabajo real en pan' },
+      { src: '/images/mail/g-alimentos-hamburguesa.jpg', alt: 'Pan de hamburguesa marcado con logo' },
+      { src: '/images/mail/g-alimentos-empanadas.jpg', alt: 'Empanadas marcadas a fuego con sello de bronce' },
     ],
     proofPoints: ['Mejora recuerdo de marca', 'Muy útil para hamburgueserías y eventos', 'Aporta diferenciación sin cambiar receta'],
     faqs: [
@@ -441,7 +454,7 @@ export const stampUseCases: StampUseCase[] = [
     title: 'Sellos de bronce para fruta y decoración de cocktails',
     seoTitle: 'Sello para fruta y decoración de cocktails | Bronce CNC | Alcohn',
     seoDescription:
-      'Sellos para fruta y cítricos en bares y eventos. Bronce CNC, marca visible en cada servicio.',
+      'Sellos para fruta y cítricos en bares y eventos. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Bronce CNC, marca visible en cada servicio.',
     description:
       'Marcá frutas, cítricos y decoraciones de cocktail para bares, eventos y experiencias de marca.',
     intro:
@@ -460,6 +473,7 @@ export const stampUseCases: StampUseCase[] = [
     ],
     gallery: [
       { src: '/images/carousel/fruta.webp', alt: 'Sello aplicado sobre fruta' },
+      { src: '/images/mail/g-cocteleria-fruta.jpg', alt: 'Fruta marcada con sello para coctelería' },
     ],
     proofPoints: ['Diseñado para experiencias visuales', 'Ayuda a generar contenido para redes', 'Ideal para bares, eventos y marcas de bebida'],
     faqs: [
@@ -470,6 +484,100 @@ export const stampUseCases: StampUseCase[] = [
       {
         question: '¿Puede ser el mismo sello que uso en hielo?',
         answer: 'Sí, muchas marcas usan el mismo sello para hielo y frutas si el tamaño del logo funciona en ambos soportes.',
+      },
+    ],
+  },
+  {
+    slug: 'para-chocolate',
+    oficio: 'Repostería',
+    material: 'Chocolate',
+    title: 'Sellos de bronce para chocolate y alfajores',
+    seoTitle: 'Sello para chocolate y alfajores personalizado | Alcohn Argentina',
+    seoDescription:
+      'Sello de bronce para marcar chocolates y alfajores con tu logo. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Es el mismo sello que fabricamos para lacre.',
+    description:
+      'Marcá chocolates, bombones, alfajores y tabletas con tu logo para que tu marca se reconozca en cada pieza.',
+    intro:
+      'En repostería la marca tiene que verse limpia y prolija: es lo primero que ve el cliente al abrir la caja.',
+    buyMaterial: 'otros',
+    buyUsoSlug: 'para-lacre',
+    listed: false,
+    heroImage: '/images/mail/bronce-sobre-negro.jpg',
+    heroAlt: 'Sello de bronce personalizado para chocolate y alfajores',
+    productImage: '/images/lacre/sello-lacre-detalle-03.webp',
+    productAlt: 'Sello de bronce para chocolate, el mismo que se usa para lacre',
+    searchIntent: 'Sello para chocolate y alfajores',
+    applications: ['Bombones', 'Tabletas', 'Alfajores', 'Cajas de regalo', 'Ediciones especiales'],
+    recommendedSizes: [
+      { label: 'Bombón', size: '20x20mm a 25x25mm', copy: 'Para piezas chicas o un detalle discreto.' },
+      { label: 'Alfajor', size: '30x30mm a 40x40mm', copy: 'La medida más elegida para que la marca se lea bien en la tapa.' },
+      { label: 'Tableta', size: '40x40mm o más', copy: 'Para tabletas o piezas grandes donde la marca es protagonista.' },
+    ],
+    gallery: [
+      { src: '/images/lacre/sello-lacre-detalle-03.webp', alt: 'Sello de bronce para chocolate y lacre', caption: 'El mismo sello, aplicado en lacre' },
+      { src: '/images/lacre/sello-lacre-aplicado-01.webp', alt: 'Marca aplicada con sello de bronce', caption: 'El mismo sello, aplicado en lacre' },
+      { src: '/images/mail/bronce-sobre-negro.jpg', alt: 'Sello de bronce mecanizado en CNC' },
+    ],
+    proofPoints: ['Es el mismo sello que el de lacre', 'Ideal para repostería y regalos empresariales', 'Marca prolija en cada pieza'],
+    faqs: [
+      {
+        question: '¿Es el mismo sello que el de lacre?',
+        answer: 'Sí. El sello para chocolate y alfajores es el mismo que fabricamos para lacre.',
+      },
+      {
+        question: '¿Qué medida conviene para alfajores?',
+        answer:
+          'Depende del tamaño del alfajor. La mayoría elige entre 30 y 40 mm para que la marca se lea bien en la tapa.',
+      },
+    ],
+  },
+  {
+    slug: 'para-colmenas',
+    oficio: 'Apicultura',
+    material: 'Colmenas',
+    title: 'Sellos de bronce para colmenas (RENAPA)',
+    seoTitle: 'Sello para colmenas RENAPA | Marcado apícola en bronce | Alcohn Argentina',
+    seoDescription:
+      'Sello de bronce para marcar colmenas con el diseño de RENAPA. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Es el mismo sello que fabricamos para madera.',
+    description:
+      'Marcá cajones y alzas de tus colmenas con el diseño que se usa para RENAPA, a fuego y con lectura clara.',
+    intro: 'Un sello de bronce para identificar tus colmenas en el campo, marca tras marca.',
+    buyMaterial: 'madera',
+    buyUsoSlug: 'para-madera',
+    usageGuideSlug: 'para-madera',
+    listed: false,
+    heroImage: '/images/madera/sello-madera-aplicado-01.webp',
+    heroAlt: 'Sello de bronce marcando madera, como se marcan las colmenas',
+    productImage: '/images/mail/madera-sello-redondo.jpg',
+    productAlt: 'Sello de bronce para marcar colmenas',
+    searchIntent: 'Sello para colmenas RENAPA',
+    applications: ['Cajones de colmena', 'Alzas', 'Tapas', 'Núcleos'],
+    recommendedSizes: [
+      {
+        label: 'Diseño RENAPA',
+        size: 'Según tu diseño',
+        copy: 'Te ayudamos a llevar el diseño de RENAPA a una medida que se lea bien en la madera.',
+      },
+    ],
+    gallery: [
+      { src: '/images/madera/sello-madera-aplicado-01.webp', alt: 'Sello de bronce aplicado en madera', caption: 'El mismo sello, aplicado en madera' },
+      { src: '/images/madera/sello-madera-detalle-03.webp', alt: 'Detalle de marca a fuego en madera', caption: 'El mismo sello, aplicado en madera' },
+      { src: '/images/mail/madera-sello-redondo.jpg', alt: 'Sello de bronce redondo para marcar a fuego' },
+    ],
+    proofPoints: ['Es el mismo sello que el de madera', 'Marca a fuego que se lee en el campo', 'Bronce que aguanta el uso diario'],
+    faqs: [
+      {
+        question: '¿Es el mismo sello que el de madera?',
+        answer: 'Sí. El sello para colmenas es el mismo que fabricamos para marcar madera a fuego.',
+      },
+      {
+        question: '¿Lo hacen con el diseño de RENAPA?',
+        answer:
+          'Sí, lo fabricamos con el diseño preestablecido que se usa para RENAPA. Subí tu diseño o escribinos y te ayudamos a armarlo.',
+      },
+      {
+        question: '¿Cómo se marca la colmena?',
+        answer: 'A fuego, igual que la madera: calentá el sello y apoyalo de 1 a 2 segundos sobre la superficie.',
       },
     ],
   },
@@ -488,6 +596,8 @@ const WIZARD_OPTION_SHORT_COPY: Record<WizardUsoSlug, string> = {
   'para-hielo': 'Hielo para bares y eventos.',
   'para-pan': 'Panes, tapas y masas.',
   'para-fruta': 'Frutas y decoración de cocktails.',
+  'para-chocolate': 'Chocolates y alfajores.',
+  'para-colmenas': 'Colmenas con diseño RENAPA.',
 };
 
 /** Opciones del paso «Qué querés marcar» (misma grilla que la home). */
@@ -500,7 +610,7 @@ export type WizardMaterialOption = {
   image: string;
 };
 
-export const wizardMaterialOptions: WizardMaterialOption[] = stampUseCases.map((useCase) => ({
+export const wizardMaterialOptions: WizardMaterialOption[] = listedStampUseCases().map((useCase) => ({
   slug: useCase.slug,
   oficio: useCase.oficio,
   materialLabel: useCase.material,
@@ -528,6 +638,11 @@ export function wizardStampProcess(
   return 'CNC';
 }
 
+/** Usos que aparecen en la grilla de materiales y en el generador. */
+export function listedStampUseCases(): StampUseCase[] {
+  return stampUseCases.filter((useCase) => useCase.listed !== false);
+}
+
 export function getStampUseCaseBySlug(slug: string) {
   return stampUseCases.find((useCase) => useCase.slug === slug);
 }
@@ -537,11 +652,11 @@ export function getWizardOptionBySlug(slug: string): WizardMaterialOption | unde
 }
 
 export function getStampUseCaseBuyHref(
-  useCase: Pick<StampUseCase, 'slug' | 'buyMaterial'>,
+  useCase: Pick<StampUseCase, 'slug' | 'buyMaterial' | 'buyUsoSlug'>,
   market: MarketCode = 'ar'
 ) {
   return marketBuyPath(
     market,
-    `mode=custom&material=${useCase.buyMaterial}&uso=${useCase.slug}`
+    `mode=custom&material=${useCase.buyMaterial}&uso=${useCase.buyUsoSlug ?? useCase.slug}`
   );
 }

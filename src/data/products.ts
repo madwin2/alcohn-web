@@ -52,7 +52,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '3mm',
+      profundidad: '1,7 mm + 3 mm desbaste',
       tiempoProduccion: '72hs hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Cuero genuino y sintético',
@@ -78,7 +78,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '2mm - 3mm',
+      profundidad: '1,7 mm + 3 mm desbaste',
       tiempoProduccion: '72hs hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Maderas duras y blandas',
@@ -104,7 +104,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '1.5mm - 2.5mm',
+      profundidad: '1,7 mm + 3 mm desbaste',
       tiempoProduccion: '72hs hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Cuero y madera',
@@ -130,7 +130,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce grado alimenticio',
       proceso: 'CNC alta precisión + pulido especial',
-      profundidad: '2mm - 3mm',
+      profundidad: '3 mm + contorno',
       tiempoProduccion: '8-12 días hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso', 'Certificado alimenticio'],
       uso: 'Alimentos (pan, queso, mantequilla, etc.)',
@@ -208,7 +208,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión',
-      profundidad: '1mm - 1.5mm',
+      profundidad: '1,7 mm + 3 mm desbaste',
       tiempoProduccion: '72hs hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Cerámica en crudo',
@@ -234,7 +234,7 @@ export const products: Product[] = [
     specs: {
       material: 'Bronce de alta calidad',
       proceso: 'CNC alta precisión + pulido espejo',
-      profundidad: '0.5mm - 1mm',
+      profundidad: '1,7 mm + 3 mm desbaste',
       tiempoProduccion: '72hs hábiles',
       incluye: ['Sello de bronce', 'Mango ergonómico', 'Adaptación para remachadora', 'Muestra digital', 'Revisión básica del logo', 'Guía rápida de uso'],
       uso: 'Lacre caliente',

@@ -9,6 +9,8 @@ import { formatMarketMoney } from '@/lib/markets/money';
 import { convertPublicArsToMarketPrice } from '@/lib/markets/pricing';
 import AutoImageCarousel from './AutoImageCarousel';
 import GoogleReviewsBadge from './GoogleReviewsBadge';
+import InstallmentsNote from './InstallmentsNote';
+import GuaranteeNote from './GuaranteeNote';
 import { prefersReducedMotion } from '@/lib/motion';
 
 gsap.registerPlugin(useGSAP);
@@ -104,13 +106,19 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
             <span className="hidden md:inline">{subtitle}</span>
           </p>
           {priceFrom != null && (
-            <p
+            <div
               data-hero-reveal
               className="mb-6 text-sm font-semibold uppercase tracking-wide text-white/90 md:mb-8 md:text-base"
             >
               Desde {formatMarketMoney(convertPublicArsToMarketPrice(priceFrom, market), market)} ·
               fabricación en 72hs hábiles
-            </p>
+              <InstallmentsNote
+                amount={priceFrom}
+                inverted
+                className="mt-1 font-normal normal-case tracking-normal"
+              />
+              <GuaranteeNote inverted className="mt-1 font-normal normal-case tracking-normal" />
+            </div>
           )}
           {primaryCta && (
             <div data-hero-reveal className="hero-cta-row flex flex-row flex-nowrap gap-2 sm:gap-3">

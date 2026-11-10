@@ -9,6 +9,8 @@ export type PurchaseSnapshot = {
   orderId: string;
   value: number;
   items: PurchaseSnapshotItem[];
+  /** Email del comprador, para la encuesta de Reseñas de Clientes en Google. */
+  email?: string;
 };
 
 const PURCHASE_SNAPSHOT_KEY = 'alcohn_purchase_snapshot';
@@ -19,6 +21,19 @@ export function savePurchaseSnapshot(snapshot: PurchaseSnapshot): void {
     sessionStorage.setItem(PURCHASE_SNAPSHOT_KEY, JSON.stringify(snapshot));
   } catch {
     // El tracking no debe romper el checkout.
+  }
+}
+
+/** Lee el snapshot sin borrarlo (lo usan componentes que no hacen el tracking de compra). */
+export function peekPurchaseSnapshot(orderId: string): PurchaseSnapshot | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(PURCHASE_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PurchaseSnapshot;
+    return parsed.orderId === orderId ? parsed : null;
+  } catch {
+    return null;
   }
 }
 

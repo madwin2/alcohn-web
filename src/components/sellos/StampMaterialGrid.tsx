@@ -17,8 +17,8 @@ interface StampMaterialGridProps {
 
 function StampMaterialGridContent({ className = '', onLinkClick }: StampMaterialGridProps) {
   const { market } = useMarket();
-  const useCases = stampUseCases.filter((useCase) =>
-    isStampUseCaseAvailableInMarket(useCase.slug, market)
+  const useCases = stampUseCases.filter(
+    (useCase) => useCase.listed !== false && isStampUseCaseAvailableInMarket(useCase.slug, market)
   );
 
   return (

@@ -63,7 +63,7 @@ export default function SellosEstandarPage() {
           <SalesCtaBand
             title="¿No encontraste el motivo justo?"
             copy="Si el sello necesita tu logo o una pieza propia, el flujo personalizado te lleva directo a muestra, medida y precio."
-            primaryLabel="Subir logo y ver precio"
+            primaryLabel="Subir logo y ver mi sello"
             primaryHref="/buy?mode=custom"
             secondaryLabel="Ver productos"
             secondaryHref="/productos"

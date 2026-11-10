@@ -25,6 +25,8 @@ import {
   createPageMetadata,
 } from '@/lib/seo';
 import { getStampPriceFrom } from '@/data/stampUseCases';
+import { getStampDepthSpec } from '@/data/stampDepth';
+import GuaranteeNote from '@/components/GuaranteeNote';
 
 type PageParams = {
   params: {
@@ -69,11 +71,12 @@ export default function SelloUseCasePage({ params }: PageParams) {
 
   const buyHref = getStampUseCaseBuyHref(useCase);
   const priceFrom = getStampPriceFrom(useCase.buyMaterial);
+  const depthSpec = getStampDepthSpec(useCase.slug);
   const canonical = `/sellos/${useCase.slug}`;
   const productCarouselImages = getProductCarouselImages(useCase);
-  const usageGuide = getStampUsageGuideBySlug(useCase.slug);
+  const usageGuide = getStampUsageGuideBySlug(useCase.usageGuideSlug ?? useCase.slug);
   const relatedUseCases = stampUseCases
-    .filter((item) => item.slug !== useCase.slug)
+    .filter((item) => item.listed !== false && item.slug !== useCase.slug)
     .slice(0, 3);
 
   const productJsonLd = buildProductJsonLd({
@@ -118,13 +121,14 @@ export default function SelloUseCasePage({ params }: PageParams) {
           description={useCase.description}
           mobileDescription={useCase.intro}
           primaryCta={{
-            label: 'Subir logo y ver precio',
+            label: 'Subir logo y ver mi sello',
             href: buyHref,
           }}
           priceFrom={priceFrom}
+          tagline="Listo en 72 hs hábiles · Mirá tu sello antes de pagar"
           highlights={[
             `Uso principal: ${useCase.material}`,
-            'Muestra, medida y precio antes de fabricar',
+            'Mirá tu sello con tu logo antes de pagar',
             'Mismo sello de bronce, contexto específico para tu oficio',
           ]}
         />
@@ -172,18 +176,22 @@ export default function SelloUseCasePage({ params }: PageParams) {
                 <div>
                   <p className="craft-label mb-1.5">Profundidad</p>
                   <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
-                    3&nbsp;mm desbaste, 1,7&nbsp;mm grabado.
+                    {depthSpec.summary}.
                   </p>
                 </div>
               </div>
+              <p className="mt-2 text-xs leading-snug text-neutral-600">{depthSpec.detail}</p>
+              <GuaranteeNote className="mt-3" />
 
               <div className="mt-5 flex flex-col gap-3 pt-4 border-t border-[var(--alcohn-line)] sm:flex-row md:mt-auto md:pt-6 md:border-0 sm:pt-8">
                 <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">
                   Diseñar para {useCase.material.toLowerCase()}
                 </ActionButton>
-                <ActionButton href="#guia-uso" variant="ghost" className="w-full sm:w-auto">
-                  Ver guía de uso
-                </ActionButton>
+                {usageGuide ? (
+                  <ActionButton href="#guia-uso" variant="ghost" className="w-full sm:w-auto">
+                    Ver guía de uso
+                  </ActionButton>
+                ) : null}
               </div>
             </div>
 
@@ -298,7 +306,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
         <SalesCtaBand
           title={`Diseñá tu sello para ${useCase.material.toLowerCase()} y avanzá con precio real`}
           copy="Subí tu logo, elegí cómo lo vas a usar, revisá la muestra y dejá el pedido listo para pagar online."
-          primaryLabel="Subir logo y ver precio"
+          primaryLabel="Subir logo y ver mi sello"
           primaryHref={buyHref}
           secondaryLabel="Ver todos los productos"
           secondaryHref="/productos"

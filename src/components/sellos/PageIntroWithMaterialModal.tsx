@@ -13,6 +13,7 @@ interface PageIntroWithMaterialModalProps {
   highlights?: string[];
   hideHighlightsOnMobile?: boolean;
   priceFrom?: number;
+  tagline?: string;
   className?: string;
   materialCtaLabel?: string;
 }

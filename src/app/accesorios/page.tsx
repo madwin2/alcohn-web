@@ -59,7 +59,7 @@ export default function AccesoriosPage() {
           <SalesCtaBand
             title="¿Necesitás un sello para usar con estos accesorios?"
             copy="Diseñá tu sello con logo o elegí un diseño estándar listo para comprar."
-            primaryLabel="Subir logo y ver precio"
+            primaryLabel="Subir logo y ver mi sello"
             primaryHref="/buy?mode=custom"
             secondaryLabel="Ver sellos estándar"
             secondaryHref="/sellos/estandar"

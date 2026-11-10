@@ -5,7 +5,7 @@ import { createPageMetadata, SITE_CONTACT } from '@/lib/seo';
 export const metadata: Metadata = createPageMetadata({
   title: 'Política de devoluciones y cambios | Alcohn',
   description:
-    'Condiciones de devolución, cambios y garantía para sellos de bronce personalizados y estándar fabricados por Alcohn en Argentina.',
+    'Garantía de por vida, devoluciones y cambios para sellos de bronce personalizados y estándar fabricados por Alcohn en Argentina.',
   path: '/politica-devoluciones',
 });
 
@@ -25,10 +25,13 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
     ],
   },
   {
-    title: 'Defectos y errores de Alcohn',
+    title: 'Garantía Alcohn de por vida',
     paragraphs: [
-      'Si el sello presenta un defecto de fabricación o no coincide con lo aprobado en el pedido (medida, diseño o material acordados), contactanos dentro de los 10 días corridos desde que recibís el producto.',
-      'Evaluaremos el caso con fotos o video del sello y del empaque. Si corresponde, ofrecemos reparación, reemplazo o devolución del importe abonado, según la situación.',
+      'Todos nuestros sellos tienen garantía de por vida: si tu sello tiene un problema, lo rehacemos y te lo enviamos sin costo.',
+      'Problemas del sello (fabricación, grabado, falla del material o medida distinta a la aprobada): lo rehacemos y lo enviamos sin costo, sin límite de tiempo.',
+      'Golpes, caídas o mal uso: lo rehacemos igual; solo pagás el envío.',
+      'Cambios de diseño (por ejemplo, si te rechazaron el registro de la marca o hubo un error en un texto o número): escribinos. Evaluamos cada caso para ayudarte a resolverlo.',
+      'Para usar la garantía, escribinos con fotos del sello y tu número de pedido.',
     ],
   },
   {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
+import GoogleCustomerReviewsOptIn from '@/components/GoogleCustomerReviewsOptIn';
 import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 
@@ -66,6 +67,7 @@ function OpenpaySuccessContent() {
 
   return (
     <div className="min-h-screen bg-white py-16">
+      {syncState === 'ok' && <GoogleCustomerReviewsOptIn orderId={ordenId} deliveryCountry="AR" />}
       <div className="container mx-auto px-4 md:px-8 max-w-2xl text-center py-16">
         <h1 className="text-3xl font-semibold text-neutral-900 mb-4 tracking-tight">
           {syncState === 'pending' ? 'Pago en proceso' : 'Pago recibido'}

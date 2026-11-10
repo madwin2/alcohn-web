@@ -2,6 +2,10 @@ import MaterialUsageSelector from '@/components/sellos/MaterialUsageSelector';
 import PageIntroWithMaterialModal from '@/components/sellos/PageIntroWithMaterialModal';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import MobileCarousel from '@/components/MobileCarousel';
+import FaqList from '@/components/FaqList';
+import { stampCareFaq } from '@/data/stampCareFaq';
+import { buildFaqJsonLd } from '@/lib/seo';
+import { localizeDeep } from '@/lib/markets/localizeText';
 import { marketBreadcrumbJsonLd, marketBuyCta } from '@/lib/markets/infoPages';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import type { MarketCode } from '@/lib/markets/types';
@@ -54,11 +58,18 @@ function ComoUsarSellosPageContentInner({ market }: ComoUsarSellosPageContentPro
     { name: 'Cómo usar los sellos', path: '/como-usar-sellos' },
   ]);
 
+  const careFaq = localizeDeep(stampCareFaq, market);
+  const careFaqJsonLd = buildFaqJsonLd(careFaq);
+
   return (
     <div className="atelier-page min-h-screen py-10 md:py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(careFaqJsonLd) }}
       />
       <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <PageIntroWithMaterialModal
@@ -191,10 +202,21 @@ function ComoUsarSellosPageContentInner({ market }: ComoUsarSellosPageContentPro
           </div>
         </section>
 
+        <section className="mb-14 md:mb-20" aria-labelledby="preguntas-uso-cuidado">
+          <p className="craft-label mb-4">Preguntas frecuentes</p>
+          <h2
+            id="preguntas-uso-cuidado"
+            className="mb-6 text-3xl font-semibold tracking-tight text-neutral-950 md:mb-8 md:text-4xl"
+          >
+            Uso y cuidado del sello
+          </h2>
+          <FaqList faqs={careFaq} />
+        </section>
+
         <SalesCtaBand
           title="Elegí el sello según el material que vas a marcar"
           copy="El diseñador online te pide el uso principal para orientar mejor medida, muestra y precio antes de fabricar."
-          primaryLabel="Subir logo y ver precio"
+          primaryLabel="Subir logo y ver mi sello"
           primaryHref={marketBuyPath(market)}
           secondaryLabel="Ver sellos personalizados"
           secondaryHref={marketPath(market, '/productos')}

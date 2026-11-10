@@ -134,6 +134,7 @@ function InternationalCheckoutPageContent() {
           price: li.price,
           qty: li.qty,
         })),
+        email: shippingForm.email?.trim() || undefined,
       });
 
       const paymentRes = await fetch('/api/checkout/international/payment', {

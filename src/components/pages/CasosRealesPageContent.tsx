@@ -46,7 +46,7 @@ function CasosRealesPageContentInner({ market }: CasosRealesPageContentProps) {
           title="Clientes que confiaron en Alcohn"
           description="La confianza no sale de promesas: sale de ver marcas aplicadas, materiales reales y clientes que ya usan Alcohn para profesionalizar sus productos."
           mobileDescription="Casos reales para ver resultado, escala y lectura antes de elegir tu sello."
-          primaryCta={marketBuyCta(market, 'Subir logo y ver precio')}
+          primaryCta={marketBuyCta(market, 'Subir logo y ver mi sello')}
           secondaryCta={secondaryCta}
         />
 
@@ -77,7 +77,7 @@ function CasosRealesPageContentInner({ market }: CasosRealesPageContentProps) {
           <SalesCtaBand
             title="Usá estos casos como referencia para tu sello"
             copy="Si ya tenés logo, el diseñador online te ayuda a llevarlo a una medida fabricable y a una muestra visual antes de pagar."
-            primaryLabel="Subir logo y ver precio"
+            primaryLabel="Subir logo y ver mi sello"
             primaryHref={marketBuyPath(market)}
             secondaryLabel="Ver cómo funciona"
             secondaryHref={marketPath(market, '/proceso')}

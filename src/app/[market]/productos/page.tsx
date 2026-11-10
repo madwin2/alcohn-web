@@ -22,6 +22,7 @@ import { buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/seo';
 import { getAccessoryBySlug, getAccessoryLinkPrice } from '@/data/accessories';
 import { localizeTree } from '@/lib/markets/localizeTree';
 import type { MarketCode } from '@/lib/markets/types';
+import { localProductsSeoTitle } from '@/lib/markets/localTerms';
 
 const PRODUCTOS_TITLE = 'Sellos de bronce personalizados | Cuero, madera y packaging | Alcohn';
 const PRODUCTOS_DESCRIPTION =
@@ -35,7 +36,7 @@ export function generateMetadata({ params }: PageParams): Metadata {
   const market = requireInternationalMarket(params.market);
 
   return createPageMetadata({
-    title: marketSeoTitle(PRODUCTOS_TITLE, market),
+    title: marketSeoTitle(localProductsSeoTitle(PRODUCTOS_TITLE, market), market),
     description: marketSeoDescription(PRODUCTOS_DESCRIPTION, market),
     path: '/productos',
     market,
@@ -50,8 +51,8 @@ function InternationalProductosPageContent({ params }: PageParams) {
   const mango = getAccessoryBySlug('mango-de-golpe');
   const mangoPrice = mango ? getAccessoryLinkPrice(mango) : 0;
 
-  const internationalUseCases = stampUseCases.filter((useCase) =>
-    isStampUseCaseAvailableInMarket(useCase.slug, market)
+  const internationalUseCases = stampUseCases.filter(
+    (useCase) => useCase.listed !== false && isStampUseCaseAvailableInMarket(useCase.slug, market)
   );
 
   const collectionPageJsonLd = {

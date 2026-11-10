@@ -20,7 +20,7 @@ import { absoluteUrl, buildBreadcrumbJsonLd, createPageMetadata } from '@/lib/se
 const PRODUCTOS_TITLE =
   'Sellos de bronce personalizados | Cuero, madera, pan y packaging | Alcohn';
 const PRODUCTOS_DESCRIPTION =
-  'Catálogo de sellos de bronce y abecedarios CNC. Cuero, madera, alimentos, cerámica y lacre. Comprá online o diseñá con tu logo.';
+  'Catálogo de sellos de bronce y abecedarios CNC. Cuero, madera, alimentos, cerámica y lacre. Mirá tu sello antes de pagar; sellos listos en 72 hs hábiles.';
 
 export const metadata: Metadata = createPageMetadata({
   title: PRODUCTOS_TITLE,
@@ -118,7 +118,7 @@ export default function ProductosPage() {
           description="Dos caminos de compra claros: subir tu logo para diseñar un sello a medida, o elegir un diseño estándar listo para personalizar. Todo orientado a ver medida, muestra, precio y pago sin depender de una conversación manual."
           mobileDescription="Dos caminos claros: subir tu logo para un sello a medida o comprar un diseño estándar listo para usar."
           primaryCta={{
-            label: 'Subir logo y ver precio',
+            label: 'Subir logo y ver mi sello',
             href: '/buy?mode=custom',
           }}
           secondaryCta={{
@@ -188,7 +188,7 @@ export default function ProductosPage() {
                 <p className="text-sm text-neutral-600 leading-relaxed max-w-2xl">
                   Conjunto de letras y números individuales de bronce para marcar textos personalizados, series, fechas o iniciales. Cada pieza funciona como una herramienta modular de taller.
                 </p>
-                <PriceFrom amount={abecedarioMinPrice} className="mt-4" size="sm" />
+                <PriceFrom amount={abecedarioMinPrice} kind="link" className="mt-4" size="sm" />
               </div>
 
               <div className="mt-auto pt-6 border-t border-[var(--alcohn-line)]">
@@ -273,7 +273,7 @@ export default function ProductosPage() {
         <SalesCtaBand
           title="Si tenés logo, el camino más rápido es el diseñador online"
           copy="La página guía el pedido, guarda los datos, genera una muestra cuando puede y deja el pedido listo para pagar o recuperar si algo falla."
-          primaryLabel="Subir logo y ver precio"
+          primaryLabel="Subir logo y ver mi sello"
           primaryHref="/buy?mode=custom"
           secondaryLabel="Ver cómo funciona"
           secondaryHref="/proceso"

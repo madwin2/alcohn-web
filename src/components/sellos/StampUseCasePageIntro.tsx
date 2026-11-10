@@ -10,6 +10,7 @@ interface StampUseCasePageIntroProps {
   primaryCta: { label: string; href: string };
   highlights: string[];
   priceFrom: number;
+  tagline?: string;
 }
 
 export default function StampUseCasePageIntro(props: StampUseCasePageIntroProps) {

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
+import GoogleCustomerReviewsOptIn from '@/components/GoogleCustomerReviewsOptIn';
+import { getMarketConfig } from '@/lib/markets/config';
 import { trackMetaPurchasePeru } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
 import { MARKETS } from '@/lib/markets/config';
@@ -167,6 +169,7 @@ function InternationalCheckoutSuccessContent() {
 
   return (
     <div className="atelier-page min-h-screen py-16">
+      <GoogleCustomerReviewsOptIn orderId={ordenId} deliveryCountry={getMarketConfig(market).countryIso2} />
       <div className="container mx-auto max-w-2xl px-4">
         <div className="technical-sheet p-8 text-center md:p-12">
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-950">Gracias por tu compra</h1>

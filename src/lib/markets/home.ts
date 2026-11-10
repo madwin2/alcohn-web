@@ -20,14 +20,14 @@ export function getHomeHeroTitle(market: MarketCode): string {
 
 export function getHomeHeroSubtitle(market: MarketCode): string {
   if (market === 'ar') {
-    return 'Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo, elegí cómo lo vas a usar y recibí muestra, medida y precio antes de fabricar.';
+    return 'Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo y mirá cómo queda tu sello antes de pagar, con medida y precio al instante.';
   }
   return getMarketLocalCopy(market).heroSubtitle;
 }
 
 export function getHomePrimaryCta(market: MarketCode) {
   return {
-    text: 'Subir logo y ver precio',
+    text: 'Subir logo y ver mi sello',
     mobileText: 'Subir logo',
     href: marketBuyPath(market),
   };
