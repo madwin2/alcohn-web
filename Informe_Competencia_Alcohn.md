@@ -299,9 +299,35 @@ Para recibir lo mismo que una venta web por transferencia ($76.000): precio ≈ 
   | #2273523945 Base De Aluminio Para Remachadora Y Prensa Marcar Cuero | Herramientas > Accesorios > Puntas y Adaptadores > Otros | $62.700 | ≈ $41.000 |
 
   La base no lleva "sello" en el título: en esa categoría ML avisa que la anula. Debajo de ~$62.000 ML quita la bonificación del 50% del envío (a $61.400 se recibía $32.100).
+- **Revisión 09/11 (pausas):** ML pausó Caballo, Hielo y Lacre 3x3 por "título/fotos no coinciden". Causa: fotos de portada que no muestran el sello (el dibujo del diseño en los estándar; solo el resultado marcado —naranjas, hielo, sobres— en los personalizados). Arreglo: se sacaron los dibujos de Caballo, Mate, Cabeza de caballo, Carpincho y Malvinas, y se puso `mail/sello-taller.jpg` (el sello de bronce) como portada en Hielo, Lacre 3x3, Lacre 2,5, Pan 3x3 y Pan 5x5. Regla: **la portada siempre tiene que mostrar el sello**.
+- **Abecedarios publicados (09/11):** Sellos de goma ("Incluye set de letras intercambiables: Sí"), 3 cuotas, envío gratis, stock 10, **14 días** de disponibilidad, precio para letras de 3 a 6 mm (de 7 a 10 mm se avisa recargo), cada uno incluye soporte de bronce, caja y mango.
+  | Publicación | Precio | Recibís | Web (transf.) |
+  |---|---:|---:|---:|
+  | #4180422364 Abecedario Completo Letras Y Numeros | $600.000 | ≈ $450.700 | $450.000 |
+  | #4180422850 Abecedario Letras Minusculas | $320.700 | ≈ $237.000 | $237.000 |
+  | #4180423510 Abecedario Letras Mayusculas | $320.700 | ≈ $236.700 | $237.000 |
+  | #2276360699 Abecedario Mayusculas Y Minusculas | $571.600 | ≈ $428.700 | $429.000 |
+  | #4180586604 Abecedario 2 Juegos Minusculas Y 1 Mayusculas | $822.600 | ≈ $620.500 | $621.000 |
+
+  La foto real del abecedario muestra mayúsculas: en las de minúsculas puede haber reclamo de ML; conviene sacar una foto del juego de minúsculas. El de $822.600 supera $716.840: ML avisa percepción de IVA del 7 % para monotributo.
+  Resultado: las tres volvieron a estar activas el mismo día.
+- **Soldador / calentador (09/11):** #2276362917 "Marcador A Fuego Electrico 200w Soldador Para Sellos Bronce", categoría Herramientas Eléctricas > Pirograbadores, $140.000 (≈ $75.700 netos), garantía del vendedor 1 año, 4 días. La información regulatoria (certificado de seguridad eléctrica) quedó en blanco: ML la recomienda pero no la exige. En esta categoría ML estima $32.090 de envío (medidas de paquete por defecto); a $110.200 se recibían $52.764. Revisar el costo real con el primer envío.
+- **Usos y medidas nuevos (09/11):** Sellos de goma, 3 cuotas, envío gratis, stock 50, 4 días, portada = foto del sello.
+  | Publicación | Precio | Recibís |
+  |---|---:|---:|
+  | #4180588942 Personalizado Con Tu Logo Cuero Madera 4x2 Cm (chico) | $110.200 | ≈ $75.700 |
+  | #4180428002 Personalizado Con Tu Logo Cuero Madera 7x4 Cm (grande) | $158.600 | ≈ $112.700 |
+  | #2276365011 Personalizado Con Tu Logo Cuero Madera 5x5 Cm (XL) | $221.300 | ≈ $160.700 |
+  | #2276365843 Personalizado Para Ceramica 2,5 Cm | $110.200 | ≈ $75.700 |
+  | #4180706032 Personalizado Para Jabon Artesanal 4x4 Cm | $130.400 | ≈ $91.500 |
+  | #4180706672 Para Cajas De Carton Y Packaging 4x4 Cm | $130.400 | ≈ $91.500 |
+  | #4180707252 Marcador Colmenas Renapa 5x3 Cm | $130.400 | ≈ $91.500 |
+
+  La medida 3x3 de cuero/madera ya está cubierta por #2761678048 (no se duplicó). Descripciones en `ml-descripciones/usos-extra.txt`.
+- **Precios corregidos por envío recalculado (09/11):** después de publicar, ML recalcula el envío con medidas reales. Base de remachadora $62.700 → $73.600 (neto $31.989 → $40.382); Herradura y Cabeza de caballo $130.400 → $136.700 (neto $86.666 → $91.486).
 - **Pendientes de decisión:**
-  - **Calentador eléctrico** (borrador "Marcador A Fuego Electrico Para Sellos De Bronce 200w", categoría Pirograbadores): ML pide organismo y número de certificado de seguridad eléctrica. Sin certificado no se debería declarar "No aplica".
-  - **Abecedarios:** producción 10–14 días hábiles (≈ 20 días corridos de disponibilidad en ML, que baja la exposición) y se eligen tipografía y tamaño. Falta definir qué juegos publicar y cómo tomar esos datos.
+  - ~~Publicaciones viejas por debajo de la web~~ **Resuelto 10/11:** #2761678048 (hasta 3x3) $93.624 → $130.400 (neto $63.332 → $91.466); #2765303986 (cuño a presión, "hasta 3x1 cm" = chico) $79.680 → $110.200 (neto $53.665 → $77.013).
+  - **#1462999803** (madera, inactiva por "preguntas sin responder", no hay preguntas pendientes) y **#1967674534** (finalizada por ML): conviene dejarlas así; están cubiertas por las nuevas.
 
   ML rechaza fotos de menos de ~1000 px: las fotos verticales de la web (589x611) se subieron ampliadas.
 - Plan acordado: precio igual a lo que se recibe en la web (3x1 ≈ $110.200, 3x3 ≈ $130.400, grande ≈ $158.600, XL ≈ $221.300), 3 cuotas mejorada, solo productos distintos (pan/hamburguesa, lacre/chocolate, hielo/coctelería, sellos estándar por diseño, abecedarios, accesorios), y reactivar #829288770.
