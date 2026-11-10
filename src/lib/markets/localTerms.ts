@@ -1,4 +1,4 @@
-import type { StampUseCase } from '@/data/stampUseCases';
+import { materialInSentence, type StampUseCase } from '@/data/stampUseCases';
 import type { MarketCode } from './types';
 
 /**
@@ -8,7 +8,7 @@ import type { MarketCode } from './types';
  */
 function materialLabel(material: string): string {
   // "Cuero y PU" -> "cuero y PU"; "Madera" -> "madera"
-  return material.charAt(0).toLowerCase() + material.slice(1);
+  return materialInSentence(material);
 }
 
 function usesCuno(market: MarketCode): boolean {

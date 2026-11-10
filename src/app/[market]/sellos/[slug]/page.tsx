@@ -11,10 +11,12 @@ import SalesCtaBand from '@/components/SalesCtaBand';
 import StampProductCarousel from '@/components/sellos/StampProductCarousel';
 import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
 import StampUsageGuideSection from '@/components/sellos/StampUsageGuideSection';
+import StickyMobileCta from '@/components/sellos/StickyMobileCta';
 import {
   getStampUseCaseBySlug,
   getStampPriceFrom,
   getStampUseCaseBuyHref,
+  materialInSentence,
   stampUseCases,
 } from '@/data/stampUseCases';
 import { getStampUsageGuideBySlug } from '@/data/stampUsageGuides';
@@ -183,7 +185,7 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
             <div className="technical-sheet flex h-full flex-col p-5 md:p-8">
               <p className="craft-label mb-3 md:mb-4">Producto base</p>
               <h2 className="text-lg font-semibold tracking-tight text-neutral-950 md:text-2xl">
-                Sello de bronce para {useCase.material.toLowerCase()}
+                Sello de bronce para {materialInSentence(useCase.material)}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-neutral-700 md:mt-3">
                 Fabricado en Argentina y enviado por DHL. Mismo sello de bronce CNC, contexto para{' '}
@@ -231,7 +233,7 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
 
           <section>
             <h2 className="mb-8 text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:mb-10 md:text-4xl">
-              Ejemplos en {useCase.material.toLowerCase()}
+              Ejemplos en {materialInSentence(useCase.material)}
             </h2>
 
             <div className="md:hidden">
@@ -342,9 +344,9 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
           ) : null}
         </div>
 
-        <div className="mt-20">
+        <div className="mt-20" data-sticky-cta-end>
           <SalesCtaBand
-            title={`Diseñá tu sello para ${useCase.material.toLowerCase()} con envío DHL`}
+            title={`Diseñá tu sello para ${materialInSentence(useCase.material)} con envío DHL`}
             copy="Subí tu logo, elegí medida, revisá la muestra y comprá en moneda local con envío DHL a tu país."
             primaryLabel="Diseñar mi sello"
             primaryHref={buyHref}
@@ -353,6 +355,12 @@ function InternationalStampUseCasePageContent({ params }: PageParams) {
             dark
           />
         </div>
+
+        <StickyMobileCta
+          href={buyHref}
+          label="Diseñar mi sello"
+          note="Mirá tu sello antes de pagar"
+        />
       </div>
     </div>
   );

@@ -69,6 +69,15 @@ import {
   isValidStampSizeMm,
 } from '@/lib/cotizador/stampSizeLimits';
 import { localizeTree } from '@/lib/markets/localizeTree';
+import WizardTextLogo, { type WizardTextLogoResult } from '@/components/buy/WizardTextLogo';
+import WizardAddonCard from '@/components/buy/WizardAddonCard';
+import { getTextLogoStyle } from '@/lib/textLogo';
+import {
+  buildWizardAddonCartLine,
+  getWizardAddonSuggestion,
+  resolveWizardAddon,
+} from '@/lib/wizardAddons';
+import { INSTALLMENTS_WITHOUT_INTEREST, installmentAmountArs } from '@/lib/installments';
 
 interface BuyWizardData {
   nombre?: string;
@@ -976,6 +985,13 @@ function BuyWizardContent({
   const [resumedFrom, setResumedFrom] = useState<'draft' | 'link' | null>(null);
   const [browserKind, setBrowserKind] = useState<BrowserKind>('desktop');
   const [showOtherUses, setShowOtherUses] = useState(false);
+  /** Estilo del logo de texto en uso ("No tengo logo"); null si el logo es un archivo subido. */
+  const [textLogoStyle, setTextLogoStyle] = useState<string | null>(null);
+  /** Complemento sugerido en el pago (solo AR): cuál se muestra y si está agregado. */
+  const [addonSlug, setAddonSlug] = useState<string | null>(null);
+  const [addonAdded, setAddonAdded] = useState(false);
+  const addonShownRef = useRef(false);
+  const textLogoRef = useRef<string | null>(null);
   const mainMaterialOptions = WIZARD_MAIN_USO_SLUGS.map((slug) =>
     wizardMaterialOptions.find((o) => o.slug === slug)
   ).filter((o): o is WizardMaterialOption => Boolean(o));
@@ -1654,7 +1670,11 @@ function BuyWizardContent({
     goToStepKey('logo');
   };
 
-  const handleLogoUploaded = useCallback(async (file: File, imageUrl: string) => {
+  const handleLogoUploaded = useCallback(async (
+    file: File,
+    imageUrl: string,
+    textLogo?: { styleId: string; lines: string[] }
+  ) => {
     const logoContentAspectRatio = await measureLogoContentAspectRatioFromDataUrl(imageUrl);
     let materialForMockup: WizardMaterial | undefined;
 
@@ -1694,12 +1714,36 @@ function BuyWizardContent({
       });
     }
 
+    // Logo de texto: queda anotado en la solicitud para que el vendedor lo sepa (merge en
+    // metadata_web). Si después sube un archivo, se desmarca.
+    const wasTextLogo = textLogoRef.current !== null;
+    textLogoRef.current = textLogo?.styleId ?? null;
+    setTextLogoStyle(textLogo?.styleId ?? null);
+    if (mid && (textLogo || wasTextLogo)) {
+      void patchMockupSolicitud(mid, {
+        metadata_web: textLogo
+          ? {
+              logo_texto: true,
+              logo_texto_tipografia: getTextLogoStyle(textLogo.styleId).label,
+              logo_texto_marca: textLogo.lines.join(' / '),
+            }
+          : { logo_texto: false },
+      }).catch((err) => console.error('[wizard] logo de texto', err));
+    }
+
     trackWizardDetail('logo_uploaded', {
       tipo: file.type || null,
       kb: Math.round(file.size / 1024),
+      ...(textLogo ? { fuente: 'texto' } : {}),
     });
     goToStepKey('contact');
   }, [goToStepKey, trackWizardDetail]);
+
+  /** "No tengo logo": el PNG armado con el nombre entra por el mismo camino que un archivo (sin recorte). */
+  const handleTextLogoConfirm = async ({ file, dataUrl, styleId, lines }: WizardTextLogoResult) => {
+    trackWizardDetail('logo_text_used', { estilo: styleId, lineas: lines.length });
+    await handleLogoUploaded(file, dataUrl, { styleId, lines });
+  };
 
   const runLogoProcessing = useCallback(async (file: File, imageUrl: string) => {
     const logoContentAspectRatio =
@@ -2027,6 +2071,62 @@ function BuyWizardContent({
     }
   };
 
+  /**
+   * Complemento sugerido en el pago (solo Argentina): uno solo, según el material
+   * (madera → calentador; cuero → mango de golpe o base para remachadora según la medida).
+   */
+  const selectedStampMm =
+    data.customSize && data.customSize.width > 0 && data.customSize.height > 0
+      ? data.customSize
+      : parseSizeMm(data.selectedSize ?? '');
+  const addonSuggestion = isInternationalMarket
+    ? null
+    : getWizardAddonSuggestion(data.material, selectedStampMm);
+  const shownAddonSlug = addonSuggestion
+    ? addonSlug && addonSlug === addonSuggestion.alternative
+      ? addonSlug
+      : addonSuggestion.primary
+    : null;
+  const wizardAddon = shownAddonSlug ? resolveWizardAddon(shownAddonSlug) : null;
+  const otherAddonSlug = addonSuggestion?.alternative
+    ? shownAddonSlug === addonSuggestion.primary
+      ? addonSuggestion.alternative
+      : addonSuggestion.primary
+    : null;
+  const alternativeAddon = otherAddonSlug ? resolveWizardAddon(otherAddonSlug) : null;
+  const addonInOrder = Boolean(wizardAddon && addonAdded);
+
+  // Si cambia el material o la medida y la sugerencia es otra, se arranca de cero.
+  useEffect(() => {
+    setAddonSlug(null);
+    setAddonAdded(false);
+  }, [addonSuggestion?.primary]);
+
+  useEffect(() => {
+    if (currentStepKey !== 'payment' || data.needsManualPreview || !wizardAddon) return;
+    if (addonShownRef.current) return;
+    addonShownRef.current = true;
+    trackWizardDetail('wizard_addon_shown', { accesorio: wizardAddon.accessory.slug });
+  }, [currentStepKey, data.needsManualPreview, wizardAddon, trackWizardDetail]);
+
+  const handleAddonToggle = () => {
+    if (!wizardAddon) return;
+    const next = !addonAdded;
+    setAddonAdded(next);
+    trackWizardDetail(next ? 'wizard_addon_added' : 'wizard_addon_removed', {
+      accesorio: wizardAddon.accessory.slug,
+    });
+  };
+
+  const handleAddonSwitch = () => {
+    if (!otherAddonSlug || !wizardAddon) return;
+    if (addonAdded) {
+      trackWizardDetail('wizard_addon_removed', { accesorio: wizardAddon.accessory.slug });
+    }
+    setAddonAdded(false);
+    setAddonSlug(otherAddonSlug);
+  };
+
   /** Lleva al checkout el sello configurado en el wizard. */
   const handleAddWizardToCheckout = (metodo: CheckoutMetodoPagoPrefill = 'Openpay') => {
     const price = isInternationalMarket
@@ -2071,9 +2171,15 @@ function BuyWizardContent({
     };
     syncMedidasToMockup();
     addItem(cartLine);
+    // Complemento agregado en el pago: misma línea que la ficha del accesorio.
+    const addonLine =
+      !isInternationalMarket && addonInOrder && wizardAddon
+        ? buildWizardAddonCartLine(wizardAddon, metodo)
+        : null;
+    if (addonLine) addItem(addonLine);
     const mid = mockupSolicitudIdRef.current;
     if (mid) {
-      void markCheckoutStarted(mid, [cartLine]);
+      void markCheckoutStarted(mid, addonLine ? [cartLine, addonLine] : [cartLine]);
     }
     clearWizardDraft();
     window.setTimeout(() => {
@@ -2082,8 +2188,8 @@ function BuyWizardContent({
   };
 
   /**
-   * "No tengo logo": por ahora lo atiende un vendedor por WhatsApp, que asesora y arma
-   * un diseño simple. Más adelante este botón se reemplaza por un generador de logos.
+   * "No tengo logo" por WhatsApp: un vendedor asesora y arma un diseño simple. Convive con
+   * el logo de texto dentro de la web (`WizardTextLogo`), para quien quiere algo más elaborado.
    */
   const noLogoWhatsappUrl = (() => {
     const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
@@ -2280,9 +2386,13 @@ function BuyWizardContent({
                 ¿Qué querés marcar?
               </h2>
               <p className="text-[13.5px] text-neutral-600 md:text-base">
-                <span className="md:hidden">Tocá una opción y seguimos. Podés cambiarla cuando quieras.</span>
+                {/* Qué viene después, sin precio: el valor se construye paso a paso. */}
+                <span className="md:hidden">
+                  Tocá una opción y mirá cómo queda tu sello con tu logo. Gratis y sin compromiso.
+                </span>
                 <span className="hidden md:inline">
-                  Elegí el uso principal. El sello igual sirve para varios materiales.
+                  Elegí el uso principal y mirá cómo queda tu sello con tu logo. Gratis y sin
+                  compromiso.
                 </span>
               </p>
             </div>
@@ -2493,6 +2603,14 @@ function BuyWizardContent({
                 </p>
               </div>
             )}
+            {/* Sin archivo: arma el logo con el nombre de la marca y sigue por el mismo camino. */}
+            {(!data.logoPreview || textLogoStyle) && (
+              <WizardTextLogo
+                disabled={isApplyingLogoCrop}
+                onOpen={() => trackWizardDetail('logo_text_open')}
+                onConfirm={handleTextLogoConfirm}
+              />
+            )}
             {!data.logoPreview && analysisError && (
               <p role="alert" className="text-[13px] text-red-700">
                 {analysisError}
@@ -2522,9 +2640,11 @@ function BuyWizardContent({
             )}
             {!data.logoPreview && (
               <div className="border-t border-[var(--alcohn-line)] pt-3 md:pt-4">
-                <p className="text-[13.5px] font-semibold text-neutral-900 md:text-sm">¿No tenés logo?</p>
+                <p className="text-[13.5px] font-semibold text-neutral-900 md:text-sm">
+                  ¿Preferís que te ayudemos con el diseño?
+                </p>
                 <p className="mt-0.5 text-[12.5px] leading-snug text-neutral-600 md:text-sm">
-                  Escribinos y te ayudamos a armar un diseño simple con tu nombre o tu marca.
+                  Escribinos y lo armamos juntos con tu nombre o tu marca.
                 </p>
                 <a
                   href={noLogoWhatsappUrl}
@@ -2803,6 +2923,16 @@ function BuyWizardContent({
                             selectTierOption(option);
                           }}
                         />
+                        {tierOptions.some(
+                          (o) => o.recommended && !data.customSize && o.size === data.selectedSize
+                        ) && (
+                          <p className="-mt-1 text-[12px] leading-snug text-neutral-600">
+                            <span className="font-semibold text-[var(--alcohn-bronze-dark)]">
+                              ✓ Recomendada:
+                            </span>{' '}
+                            medida ajustada a las proporciones de tu diseño.
+                          </p>
+                        )}
                         <WizardSizeCompareScale
                           options={tierOptions}
                           selectedSize={data.selectedSize}
@@ -2882,7 +3012,7 @@ function BuyWizardContent({
                         >
                           {option.recommended && (
                             <span className="absolute top-3 right-3 rounded bg-primary px-2 py-1 text-xs font-medium text-white">
-                              Recomendado
+                              Recomendada
                             </span>
                           )}
                           <div className="mb-1 font-medium text-gray-900">
@@ -2898,8 +3028,8 @@ function BuyWizardContent({
                             {!isInternationalMarket && (
                               <>
                                 <div className="text-xs text-gray-600">
-                                  3 cuotas sin interés:{' '}
-                                  {formatMarketMoney(Math.round(localPrice / 3), market)}
+                                  o {INSTALLMENTS_WITHOUT_INTEREST} cuotas sin interés de{' '}
+                                  {formatMarketMoney(installmentAmountArs(option.price, 'link'), market)}
                                 </div>
                                 <div className="text-xs font-medium text-green-600">
                                   Transferencia (15% off): {formatMarketMoney(transfer, market)}
@@ -2968,8 +3098,8 @@ function BuyWizardContent({
                       {!isInternationalMarket && (
                         <>
                           <p className="text-xs text-gray-600">
-                            3 cuotas sin interés:{' '}
-                            {formatMarketMoney(Math.round(data.selectedPrice / 3), market)}
+                            o {INSTALLMENTS_WITHOUT_INTEREST} cuotas sin interés de{' '}
+                            {formatMarketMoney(installmentAmountArs(data.selectedPrice, 'link'), market)}
                           </p>
                           <p className="text-xs text-green-600 font-medium">
                             Transferencia (15% off):{' '}
@@ -3002,7 +3132,9 @@ function BuyWizardContent({
               data.selectedTransferPrice ?? 0,
               market
             );
-            const localCuota = localPrice > 0 ? Math.round(localPrice / 3) : 0;
+            // Precio con tarjeta (selectedPrice) / 3, igual que el checkout.
+            const localCuota =
+              localPrice > 0 ? installmentAmountArs(data.selectedPrice ?? 0, 'link') : 0;
             const showSummary = Boolean(sizeLabel && localPrice > 0);
 
             return (
@@ -3023,11 +3155,12 @@ function BuyWizardContent({
                     ) : (
                       <>
                         <div className="flex items-baseline justify-between gap-2 py-0.5 text-[13.5px]">
-                          <span className="text-neutral-600">3 cuotas sin interés</span>
+                          <span className="text-neutral-600">Precio con tarjeta</span>
                           <span className="text-right font-semibold tabular-nums text-neutral-950">
                             {formatMarketMoney(localPrice, market)}
-                            <small className="mt-0.5 block text-[11px] font-medium text-neutral-500">
-                              3 × {formatMarketMoney(localCuota, market)}
+                            <small className="mt-0.5 block text-[11px] font-medium text-neutral-600">
+                              o {INSTALLMENTS_WITHOUT_INTEREST} cuotas sin interés de{' '}
+                              {formatMarketMoney(localCuota, market)}
                             </small>
                           </span>
                         </div>
@@ -3342,8 +3475,10 @@ function BuyWizardContent({
         {currentStepKey === 'payment' && !data.needsManualPreview && (() => {
           const transferPrice = data.selectedTransferPrice ?? 0;
           const cardPrice = data.selectedPrice || 0;
-          const cardTotal = cardPrice + shippingCost;
-          const transferTotal = transferPrice + shippingCost;
+          const addonCard = addonInOrder && wizardAddon ? wizardAddon.linkPrice : 0;
+          const addonTransfer = addonInOrder && wizardAddon ? wizardAddon.transferPrice : 0;
+          const cardTotal = cardPrice + shippingCost + addonCard;
+          const transferTotal = transferPrice + shippingCost + addonTransfer;
           const cuotaPrice = Math.round(cardTotal / 3);
           const materialDisplay = wizardUsoDisplayLabel(data);
           const clientLogo = data.logoOptimized || data.logoPreview;
@@ -3473,6 +3608,12 @@ function BuyWizardContent({
                       <span>${shippingCost.toLocaleString('es-AR')}</span>
                     </div>
                   )}
+                  {addonInOrder && wizardAddon && (
+                    <div className="flex justify-between gap-3 text-xs text-neutral-600">
+                      <span>{wizardAddon.accessory.title}</span>
+                      <span>${wizardAddon.linkPrice.toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-semibold text-neutral-950">
                     <span>Total tarjeta</span>
                     <span>${cardTotal.toLocaleString('es-AR')}</span>
@@ -3525,6 +3666,15 @@ function BuyWizardContent({
                         )}
                       </dd>
                     </div>
+                    {addonInOrder && wizardAddon && (
+                      <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
+                        <dt className="text-neutral-500">Complemento</dt>
+                        <dd className="font-medium text-neutral-950">
+                          {wizardAddon.accessory.title} · $
+                          {wizardAddon.linkPrice.toLocaleString('es-AR')}
+                        </dd>
+                      </div>
+                    )}
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
                       <dt className="font-semibold text-neutral-950">Total</dt>
                       <dd className="text-xl font-bold text-neutral-950">
@@ -3540,6 +3690,21 @@ function BuyWizardContent({
                   logoUrl={clientLogo}
                 />
               </div>
+
+              {/* Complemento según el uso: antes de los métodos, así los totales ya lo incluyen. */}
+              {wizardAddon && (
+                <WizardAddonCard
+                  addon={wizardAddon}
+                  added={addonAdded}
+                  onToggle={handleAddonToggle}
+                  paymentMethod={paymentMethod}
+                  alternative={
+                    alternativeAddon
+                      ? { addon: alternativeAddon, onSwitch: handleAddonSwitch }
+                      : null
+                  }
+                />
+              )}
 
               {/* Payment Methods */}
               {!paymentMethod ? (

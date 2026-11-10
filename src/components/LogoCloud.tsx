@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { brands } from '@/data/brands';
+import { testimonials } from '@/data/testimonials';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketBuyPath, marketPath } from '@/lib/markets/paths';
 import ActionButton from './ActionButton';
@@ -21,6 +22,9 @@ const trustWords = [
 ];
 
 const mobileBrands = brands.slice(0, 12);
+
+/** Reseña real de Google (marroquinería), en vez de una cita sin respaldo. */
+const featuredReview = testimonials.find((item) => item.name === 'Andrea Leone');
 
 const longestTrustWord = trustWords.reduce(
   (longest, word) => (word.length > longest.length ? word : longest),
@@ -150,14 +154,16 @@ function LogoCloudContent({ compact = false }: LogoCloudProps) {
               />
             </div>
             <div className="flex flex-col justify-between p-6 md:p-10 lg:p-12">
-              <div className="flex flex-col items-center text-center md:hidden">
-                <blockquote className="max-w-md text-[1.35rem] font-semibold italic leading-snug tracking-tight text-neutral-950">
-                  &ldquo;El sello quedó nítido desde el primer uso. Mis clientes reconocen la marca al toque la pieza.&rdquo;
-                </blockquote>
-                <p className="mt-4 text-sm text-neutral-600">
-                  Lucía M. — Marroquinería artesanal, Córdoba
-                </p>
-              </div>
+              {featuredReview ? (
+                <figure className="flex flex-col items-center text-center md:hidden">
+                  <blockquote className="max-w-md text-[1.35rem] font-semibold italic leading-snug tracking-tight text-neutral-950">
+                    &ldquo;{featuredReview.quote}&rdquo;
+                  </blockquote>
+                  <figcaption className="mt-4 text-sm text-neutral-600">
+                    {featuredReview.name} — Reseña de Google
+                  </figcaption>
+                </figure>
+              ) : null}
 
               <div className="hidden md:flex md:h-full md:w-full md:flex-col md:justify-between">
                 <div>

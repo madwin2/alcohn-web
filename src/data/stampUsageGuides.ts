@@ -44,7 +44,7 @@ export const stampUsageGuides: StampUsageGuide[] = [
         intro:
           'Método muy práctico y extendido para sellos pequeños, de 3 cm o menos. Terminación precisa en bajorrelieve.',
         bullets: [
-          'Humecé el cuero previamente para que copie mejor la forma.',
+          'Humedecé el cuero previamente para que copie mejor la forma.',
           'Aplicación con martillado sobre mango metálico.',
         ],
         image: `${USO_RAPIDO}/cuero golpeRecurso 3.png`,

@@ -632,6 +632,16 @@ main,
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
   }
 
+  /* Barra fija de CTA en las fichas (StickyMobileCta): no se muestra con el aviso de cookies
+     abierto, y mientras está visible el botón flotante de WhatsApp sube por encima. */
+  html[data-cookie-banner='open'] .sticky-cta-bar {
+    display: none;
+  }
+
+  html[data-sticky-cta='visible']:not([data-cookie-banner='open']) .whatsapp-float {
+    bottom: calc(var(--sticky-cta-height, 5.25rem) + 0.75rem);
+  }
+
   .text-5xl {
     font-size: 2.2rem;
     line-height: 1.06;

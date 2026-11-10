@@ -21,11 +21,13 @@ function parseStatValue(value: string): { prefix: string; numeric: number; suffi
   };
 }
 
+/** Mismo formato que el valor de `trustStats` (sin separador de miles), así no salta al terminar. */
 function formatCounterValue(prefix: string, amount: number, suffix: string) {
-  const rounded = Math.round(amount);
-  const body = rounded >= 1000 ? rounded.toLocaleString('es-AR') : String(rounded);
-  return `${prefix}${body}${suffix}`;
+  return `${prefix}${Math.round(amount)}${suffix}`;
 }
+
+/** El conteo arranca cerca del valor real: nunca se ve un "+0" ni un "0hs". */
+const COUNTER_START_RATIO = 0.8;
 
 function TrustStatsStripContent() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -45,19 +47,13 @@ function TrustStatsStripContent() {
       gsap.set(items, { y: 18, opacity: 0 });
       gsap.set(labels, { opacity: 0 });
 
-      stats.forEach((stat, index) => {
-        const parsed = parseStatValue(stat.value);
-        if (!parsed) return;
-        const valueEl = section.querySelector<HTMLElement>(`[data-trust-value="${index}"]`);
-        if (valueEl) valueEl.textContent = formatCounterValue(parsed.prefix, 0, parsed.suffix);
-      });
-
       const timeline = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top 88%',
           end: 'bottom 12%',
-          toggleActions: 'play reverse play reverse',
+          // Una sola vez: al volver a subir no se rebobina (antes los contadores quedaban en 0).
+          once: true,
         },
       });
 
@@ -84,7 +80,8 @@ function TrustStatsStripContent() {
         const valueEl = section.querySelector<HTMLElement>(`[data-trust-value="${index}"]`);
         if (!valueEl) return;
 
-        const counter = { amount: 0 };
+        // El HTML ya trae el valor final; el conteo corto solo corre mientras la cifra aparece.
+        const counter = { amount: Math.round(parsed.numeric * COUNTER_START_RATIO) };
         timeline.to(
           counter,
           {
@@ -93,6 +90,9 @@ function TrustStatsStripContent() {
             ease: 'power2.out',
             onUpdate: () => {
               valueEl.textContent = formatCounterValue(parsed.prefix, counter.amount, parsed.suffix);
+            },
+            onComplete: () => {
+              valueEl.textContent = stat.value;
             },
           },
           0.14 + index * 0.07

@@ -18,6 +18,7 @@ export default function StampUseCasePageIntro(props: StampUseCasePageIntroProps)
     <PageIntroWithMaterialModal
       {...props}
       hideHighlightsOnMobile
+      showGoogleReviews
       materialCtaLabel="Ver todos los materiales"
     />
   );

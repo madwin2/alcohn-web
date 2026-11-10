@@ -100,7 +100,7 @@ export function WizardSizePickerRow({
           >
             {option.recommended && (
               <span className="absolute -top-2 left-1/2 z-[1] -translate-x-1/2 whitespace-nowrap bg-[var(--alcohn-bronze)] px-1.5 py-px font-mono text-[8px] font-semibold uppercase tracking-wide text-white">
-                Recomendado
+                Recomendada
               </span>
             )}
             <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-500">

@@ -1,5 +1,6 @@
 import ActionButton from './ActionButton';
 import PriceFrom from './PriceFrom';
+import GoogleReviewsBadge from './GoogleReviewsBadge';
 
 interface Cta {
   label: string;
@@ -24,6 +25,8 @@ interface PageIntroProps {
   priceFrom?: number;
   /** Línea destacada bajo el título (visible también en mobile). */
   tagline?: string;
+  /** Calificación real de Google debajo de los botones (columna derecha). */
+  showGoogleReviews?: boolean;
   className?: string;
 }
 
@@ -40,6 +43,7 @@ export default function PageIntro({
   compactMobile = false,
   priceFrom,
   tagline,
+  showGoogleReviews = false,
   className = '',
 }: PageIntroProps) {
   const hideMobileExtras = titleOnlyOnMobile || hideHighlightsOnMobile;
@@ -135,24 +139,30 @@ export default function PageIntro({
             <PriceFrom amount={priceFrom} className="pt-1 border-t border-[var(--alcohn-line)]" />
           )}
 
-          {(primaryCta || secondaryCta) && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              {primaryCta && (
-                <ActionButton href={primaryCta.href} variant={primaryCta.variant || 'primary'} className="w-full sm:w-auto">
-                  {primaryCta.label}
-                </ActionButton>
+          {(primaryCta || secondaryCta || showGoogleReviews) && (
+            <div className="flex flex-col gap-2">
+              {(primaryCta || secondaryCta) && (
+                // data-hero-cta: lo usa la barra fija de mobile para saber cuándo salió de pantalla.
+                <div data-hero-cta className="flex flex-col sm:flex-row gap-3">
+                  {primaryCta && (
+                    <ActionButton href={primaryCta.href} variant={primaryCta.variant || 'primary'} className="w-full sm:w-auto">
+                      {primaryCta.label}
+                    </ActionButton>
+                  )}
+                  {secondaryCta && (
+                    <ActionButton
+                      href={secondaryCta.href}
+                      onClick={secondaryCta.onClick}
+                      gtmEvent={secondaryCta.gtmEvent}
+                      variant={secondaryCta.variant || 'secondary'}
+                      className="w-full sm:w-auto"
+                    >
+                      {secondaryCta.label}
+                    </ActionButton>
+                  )}
+                </div>
               )}
-              {secondaryCta && (
-                <ActionButton
-                  href={secondaryCta.href}
-                  onClick={secondaryCta.onClick}
-                  gtmEvent={secondaryCta.gtmEvent}
-                  variant={secondaryCta.variant || 'secondary'}
-                  className="w-full sm:w-auto"
-                >
-                  {secondaryCta.label}
-                </ActionButton>
-              )}
+              {showGoogleReviews && <GoogleReviewsBadge className="self-center sm:self-start" />}
             </div>
           )}
         </div>

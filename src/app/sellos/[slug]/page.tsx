@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import ActionButton from '@/components/ActionButton';
 import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
 import StampUsageGuideSection from '@/components/sellos/StampUsageGuideSection';
+import StickyMobileCta from '@/components/sellos/StickyMobileCta';
 import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
@@ -14,6 +15,7 @@ import MobileOverlayCarousel from '@/components/MobileOverlayCarousel';
 import {
   getStampUseCaseBuyHref,
   getStampUseCaseBySlug,
+  materialInSentence,
   stampUseCases,
 } from '@/data/stampUseCases';
 import { getStampUsageGuideBySlug } from '@/data/stampUsageGuides';
@@ -157,7 +159,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
             <div className="technical-sheet flex h-full flex-col p-5 md:p-8">
               <p className="craft-label mb-3 md:mb-4">Producto base</p>
               <h2 className="text-lg font-semibold tracking-tight text-neutral-950 md:text-2xl">
-                Sello de bronce para {useCase.material.toLowerCase()}
+                Sello de bronce para {materialInSentence(useCase.material)}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-neutral-700 md:mt-3">
                 El mismo sello sirve en todos los materiales. Acá ves ejemplos y medidas pensadas para{' '}
@@ -185,7 +187,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
 
               <div className="mt-5 flex flex-col gap-3 pt-4 border-t border-[var(--alcohn-line)] sm:flex-row md:mt-auto md:pt-6 md:border-0 sm:pt-8">
                 <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">
-                  Diseñar para {useCase.material.toLowerCase()}
+                  Diseñar para {materialInSentence(useCase.material)}
                 </ActionButton>
                 {usageGuide ? (
                   <ActionButton href="#guia-uso" variant="ghost" className="w-full sm:w-auto">
@@ -207,7 +209,7 @@ export default function SelloUseCasePage({ params }: PageParams) {
 
           <section>
             <h2 className="mb-8 text-3xl font-semibold leading-tight tracking-tight text-neutral-950 md:mb-10 md:text-4xl">
-              Ejemplos en {useCase.material.toLowerCase()}
+              Ejemplos en {materialInSentence(useCase.material)}
             </h2>
 
             <div className="md:hidden">
@@ -302,9 +304,9 @@ export default function SelloUseCasePage({ params }: PageParams) {
           </section>
         </div>
 
-        <div className="mt-20">
+        <div className="mt-20" data-sticky-cta-end>
         <SalesCtaBand
-          title={`Diseñá tu sello para ${useCase.material.toLowerCase()} y avanzá con precio real`}
+          title={`Diseñá tu sello para ${materialInSentence(useCase.material)} y avanzá con precio real`}
           copy="Subí tu logo, elegí cómo lo vas a usar, revisá la muestra y dejá el pedido listo para pagar online."
           primaryLabel="Subir logo y ver mi sello"
           primaryHref={buyHref}
@@ -313,6 +315,12 @@ export default function SelloUseCasePage({ params }: PageParams) {
           dark
         />
         </div>
+
+        <StickyMobileCta
+          href={buyHref}
+          label="Subir logo y ver mi sello"
+          note="Mirá tu sello antes de pagar"
+        />
       </div>
     </div>
   );

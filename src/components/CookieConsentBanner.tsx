@@ -16,6 +16,16 @@ function CookieConsentBannerContent() {
     setVisible(!consent);
   }, []);
 
+  // Mientras el aviso está abierto, la barra fija de CTA de las fichas no se muestra.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (visible) root.dataset.cookieBanner = 'open';
+    else delete root.dataset.cookieBanner;
+    return () => {
+      delete root.dataset.cookieBanner;
+    };
+  }, [visible]);
+
   const handleChoice = async (accepted: boolean) => {
     setConsentState({
       analytics: accepted,

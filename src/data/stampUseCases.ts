@@ -54,6 +54,14 @@ const STAMP_PRICE_FROM_ARS: Record<WizardMaterial, number> = {
   otros: 76000,
 };
 
+/**
+ * Material para usar dentro de una frase ("Sello de bronce para cuero y PU"): solo baja la
+ * inicial, así las siglas (PU) quedan en mayúscula.
+ */
+export function materialInSentence(material: string): string {
+  return material.charAt(0).toLowerCase() + material.slice(1);
+}
+
 export function getStampPriceFrom(material: WizardMaterial): number {
   return STAMP_PRICE_FROM_ARS[material];
 }
@@ -63,14 +71,14 @@ export const stampUseCases: StampUseCase[] = [
     slug: 'para-madera',
     oficio: 'Carpintería',
     material: 'Madera',
-    title: 'Sellos para Madera Personalizados',
+    title: 'Sellos para madera personalizados',
     seoTitle: 'Sello de bronce para madera personalizado | Carpintería CNC | Alcohn',
     seoDescription:
       'Sello de bronce CNC para tablas, cajas y muebles. Mirá tu sello antes de pagar. Listo en 72 hs hábiles. Marcá madera con tu logo. Fabricación en Argentina, envío a todo el país.',
     description:
       'Marcá tablas, cajas, muebles y piezas de carpintería con un sello de bronce personalizado.',
     intro:
-      'Un gran aporte de valor para tus trabajos. Aumenta la percepcion de tu marca. Recomendamos diseños limpios y claros, para que la marca se vea y se lea bien.',
+      'Un gran aporte de valor para tus trabajos: aumenta la percepción de tu marca. Recomendamos diseños limpios y claros, para que la marca se vea y se lea bien.',
     buyMaterial: 'madera',
     heroImage: '/images/carousel/madera.webp',
     heroAlt: 'Marca Alcohn aplicada sobre madera',
@@ -89,12 +97,12 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/madera/sello-madera-detalle-03.webp', alt: 'Detalle de sello en madera' },
       { src: '/images/madera/sello-madera-trabajo-04.webp', alt: 'Trabajo real sobre madera' },
     ],
-    proofPoints: ['Marca repetible en series chicas', 'Marca a fuego invorrable', 'Ayuda a vender piezas como producto de marca'],
+    proofPoints: ['Marca repetible en series chicas', 'Marca a fuego imborrable', 'Ayuda a vender piezas como producto de marca'],
     faqs: [
       {
         question: '¿Sirve para maderas duras?',
         answer:
-          'Sí, funciona. Solo precisa más tiempo de calentado (10-15 minutos aprox). Lo ideal es que el diseño sea sencillo y tenga buen grosor de los trazos.',
+          'Sí, funciona. Solo precisa más tiempo de calentado (entre 10 y 15 minutos, aprox.). Lo ideal es un diseño sencillo, con trazos de buen grosor.',
       },
       {
         question: '¿Viene eléctrico?',
@@ -103,12 +111,12 @@ export const stampUseCases: StampUseCase[] = [
       },
       {
         question: '¿Cómo se coloca el sello en la hornalla?',
-        answer: 'El sello debe estar apoyado encima de la llama, a fuego medio/alto.',
+        answer: 'El sello va apoyado sobre la llama, a fuego medio o alto.',
       },
       {
         question: '¿Funciona en melamina?',
         answer:
-          'En melamina no funciona, porque la aplicación con calor derrite la capa externa de la superficie.',
+          'En melamina no funciona, porque el calor derrite la capa externa de la superficie.',
       },
     ],
   },
@@ -123,7 +131,7 @@ export const stampUseCases: StampUseCase[] = [
     description:
       'Convertí billeteras, carteras, vainas, materas y etiquetas de cuero en piezas con marca propia.',
     intro:
-      'En cuero la marca tiene que sentirse precisa, limpia y proporcional. El cuero permite gran variedad de medidas, y detalles. Por lo que el diseño y la medida es muy variado.',
+      'En cuero la marca tiene que sentirse precisa, limpia y proporcional. El cuero admite una gran variedad de medidas y detalles, así que el diseño y la medida pueden variar mucho.',
     buyMaterial: 'cuero',
     heroImage: '/images/carousel/cuero.webp',
     heroAlt: 'Marca Alcohn aplicada sobre cuero',
@@ -142,12 +150,12 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/cuero/sello-cuero-detalle-03.webp', alt: 'Detalle de marca en cuero' },
       { src: '/images/cuero/sello-cuero-trabajo-04.webp', alt: 'Trabajo real sobre cuero' },
     ],
-    proofPoints: ['Ideal para emprendedores de marroquinería', 'Funciona en cuero natural y PU.', 'Aporta percepción premium sin cambiar el producto'],
+    proofPoints: ['Ideal para emprendedores de marroquinería', 'Funciona en cuero natural y PU', 'Aporta percepción premium sin cambiar el producto'],
     faqs: [
       {
         question: '¿Sirve para todo tipo de cuero?',
         answer:
-          'Sí. Sirve para vaqueta, gamuzado, curtido al cromo/vegetal, etc. Solo no recomendamos marcar cueros con texturas muy complejas, como los que simulan piel de cocodrilo.',
+          'Sí: vaqueta, gamuzado, curtido al cromo o vegetal, etc. Solo no recomendamos marcar cueros con texturas muy complejas, como los que simulan piel de cocodrilo.',
       },
       {
         question: '¿Puedo marcar productos ya armados?',
@@ -157,12 +165,12 @@ export const stampUseCases: StampUseCase[] = [
       {
         question: '¿El uso para cuero y PU es el mismo?',
         answer:
-          'No es el mismo, son procesos distintos porque cada material reacciona distinto a la presión y al calor. En este link podés acceder a información más detallada.',
+          'No. Son procesos distintos, porque cada material reacciona de forma diferente a la presión y al calor.',
       },
       {
         question: '¿Qué medida suele pedirse para billeteras y cinturones?',
         answer:
-          'Algo pequeño, de 2 o 3 cm, es lo más común para este tipo de productos. Los diseños suelen ser sencillos, con dibujos simples o iniciales.',
+          'Lo más común es un sello chico, de 2 o 3 cm, con un diseño sencillo: un dibujo simple o iniciales.',
       },
     ],
   },
@@ -210,7 +218,7 @@ export const stampUseCases: StampUseCase[] = [
       {
         question: '¿Qué tipo de superficies puedo marcar?',
         answer:
-          'Son preferibles las superficies planas, ya que las zonas curvas se vuelven complejas de marcar, aun en sellos pequeños.',
+          'Conviene marcar superficies planas: las zonas curvas son difíciles de marcar, aun con sellos pequeños.',
       },
     ],
   },
@@ -244,12 +252,12 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/jabon/sello-jabon-detalle-03.webp', alt: 'Detalle de marca en jabón' },
       { src: '/images/jabon/sello-jabon-trabajo-04.webp', alt: 'Trabajo real en jabón artesanal' },
     ],
-    proofPoints: ['Aumenta percepción de producto terminado', 'Ideal para ferias y packs de regalo', 'Ayuda a diferenciar piezas similares'],
+    proofPoints: ['Aumenta la percepción de producto terminado', 'Ideal para ferias y packs de regalo', 'Ayuda a diferenciar piezas similares'],
     faqs: [
       {
         question: '¿Qué diseños son convenientes?',
         answer:
-          'Convienen los trazos finos para una mejor penetración en el jabón. Y un diseño sencillo permite mejor definición.',
+          'Convienen los trazos finos, que penetran mejor en el jabón, y un diseño sencillo, que logra mejor definición.',
       },
     ],
   },
@@ -291,11 +299,11 @@ export const stampUseCases: StampUseCase[] = [
       {
         question: '¿Puedo marcarlo a presión?',
         answer:
-          'Solo si es un cartón forrado con papel de encuadernación. De no ser el caso, tenés la opción de marcar en caliente.',
+          'Solo si el cartón está forrado con papel de encuadernación. Si no, podés marcarlo en caliente.',
       },
       {
         question: '¿Qué tipo de papel es conveniente marcar?',
-        answer: 'Lo ideal es un papel grueso, de 300g o más.',
+        answer: 'Lo ideal es un papel grueso, de 300 g o más.',
       },
       {
         question: '¿Necesito alguna máquina en especial?',
@@ -305,12 +313,12 @@ export const stampUseCases: StampUseCase[] = [
       {
         question: '¿Puedo marcar en sobrerrelieve?',
         answer:
-          'Sí, es posible. Se precisan dos matrices, una de las cuales va por debajo del papel y otra por encima.',
+          'Sí. Se necesitan dos matrices: una va debajo del papel y la otra, encima.',
       },
       {
-        question: '¿Puedo marcar papel kraft/madera?',
+        question: '¿Puedo marcar papel kraft o papel madera?',
         answer:
-          'Nuestros sellos funcionan perfecto para papel kraft. El marcado, en este caso, es con calor.',
+          'Sí, nuestros sellos funcionan perfecto en papel kraft. En este caso, el marcado es con calor.',
       },
     ],
   },
@@ -365,7 +373,7 @@ export const stampUseCases: StampUseCase[] = [
     description:
       'Marcá hielos para bares, coctelería, eventos y experiencias gastronómicas con identidad propia.',
     intro:
-      'En hielo el impacto es visual e inmediato. La marca tiene que leerse rápido y funcionar como detalle de experiencia, por lo que recomendamos medidas medianas o grandes, y diseños simples y claros.',
+      'En hielo el impacto es visual e inmediato. La marca tiene que leerse rápido y funcionar como detalle de experiencia, por lo que recomendamos medidas medianas o grandes y diseños simples y claros.',
     buyMaterial: 'alimentos',
     heroImage: '/images/carousel/hielo.webp',
     heroAlt: 'Marca aplicada sobre hielo',
@@ -428,12 +436,12 @@ export const stampUseCases: StampUseCase[] = [
       { src: '/images/mail/g-alimentos-hamburguesa.jpg', alt: 'Pan de hamburguesa marcado con logo' },
       { src: '/images/mail/g-alimentos-empanadas.jpg', alt: 'Empanadas marcadas a fuego con sello de bronce' },
     ],
-    proofPoints: ['Mejora recuerdo de marca', 'Muy útil para hamburgueserías y eventos', 'Aporta diferenciación sin cambiar receta'],
+    proofPoints: ['Mejora el recuerdo de marca', 'Muy útil para hamburgueserías y eventos', 'Aporta diferenciación sin cambiar receta'],
     faqs: [
       {
         question: '¿Se puede hacer un logo complejo para panes?',
         answer:
-          'Recomendamos diseños bien sencillos, por ejemplo un logo solo o el nombre de la marca. Cuanto más simple es el diseño, mejor va a marcarse.',
+          'Recomendamos diseños bien sencillos, por ejemplo, solo el logo o el nombre de la marca. Cuanto más simple es el diseño, mejor va a marcarse.',
       },
       {
         question: '¿Qué medida se recomienda para empanadas o pizzas?',
@@ -479,7 +487,7 @@ export const stampUseCases: StampUseCase[] = [
     faqs: [
       {
         question: '¿Qué frutas funcionan mejor?',
-        answer: 'Suelen funcionar mejor superficies firmes y relativamente planas, como cítricos o frutas cortadas con buena estructura.',
+        answer: 'Funcionan mejor las superficies firmes y relativamente planas, como los cítricos o las frutas cortadas con buena estructura.',
       },
       {
         question: '¿Puede ser el mismo sello que uso en hielo?',

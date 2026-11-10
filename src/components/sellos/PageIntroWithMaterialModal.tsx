@@ -14,6 +14,7 @@ interface PageIntroWithMaterialModalProps {
   hideHighlightsOnMobile?: boolean;
   priceFrom?: number;
   tagline?: string;
+  showGoogleReviews?: boolean;
   className?: string;
   materialCtaLabel?: string;
 }
