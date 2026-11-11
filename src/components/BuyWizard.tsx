@@ -79,6 +79,7 @@ import {
   resolveWizardAddon,
 } from '@/lib/wizardAddons';
 import { INSTALLMENTS_WITHOUT_INTEREST, installmentAmountArs } from '@/lib/installments';
+import { MOCKUP_SCENES, resolveSceneId } from '@/lib/mockupScenes/scenes';
 
 interface BuyWizardData {
   nombre?: string;
@@ -132,16 +133,26 @@ interface BuyWizardData {
 
 const DEFAULT_MOCKUP_SIZE = '40x40mm';
 
-/** Solo cuero y madera tienen generador de muestra; el resto usa textura de referencia. */
-function resolveMockupGeneration(material: WizardMaterial): {
+/**
+ * Qué muestra se genera:
+ * - Cuero y madera: textura + efecto (como siempre).
+ * - Hielo, pan, piel de cítrico y cerámica: escena fotográfica propia (`mockupScenes`).
+ * - El resto (jabón, lacre, packaging…): textura de referencia de cuero o madera.
+ */
+function resolveMockupGeneration(
+  material: WizardMaterial,
+  usoSlug?: string,
+): {
   mockupMaterial: 'cuero' | 'madera';
   usesFallback: boolean;
+  sceneId: string | null;
 } {
-  if (material === 'madera') return { mockupMaterial: 'madera', usesFallback: false };
-  if (material === 'cuero') return { mockupMaterial: 'cuero', usesFallback: false };
+  const sceneId = resolveSceneId(usoSlug) ?? resolveSceneId(material);
+  if (material === 'madera') return { mockupMaterial: 'madera', usesFallback: false, sceneId: null };
+  if (material === 'cuero') return { mockupMaterial: 'cuero', usesFallback: false, sceneId: null };
   const mockupMaterial =
     material === 'ceramica' || material === 'otros' ? 'madera' : 'cuero';
-  return { mockupMaterial, usesFallback: true };
+  return { mockupMaterial, usesFallback: !sceneId, sceneId };
 }
 
 type WizardMaterial = NonNullable<BuyWizardData['material']>;
@@ -175,14 +186,13 @@ const MAX_CART_DATA_URL_LENGTH = 180_000;
 /** Miniatura del carrito: prioriza thumbnail/mockup; solo cae a textura base si no hay preview usable. */
 function wizardCartImageUrl(d: BuyWizardData): string {
   const u = d.thumbnailUrl || d.mockupUrl || '';
-  if (!u) {
-    if (d.material === 'madera') return '/mockup-textures/madera.jpg';
-    return '/mockup-textures/cuero.jpg';
-  }
-
   // Aceptamos data URLs chicas (thumbnail) para mostrar la muestra real sin inflar demasiado localStorage.
-  if (!u.startsWith('data:') || u.length <= MAX_CART_DATA_URL_LENGTH) return u;
+  if (u && (!u.startsWith('data:') || u.length <= MAX_CART_DATA_URL_LENGTH)) return u;
 
+  // Sin muestra usable: foto del material (escena propia para hielo, pan, fruta y cerámica).
+  const sceneId = resolveSceneId(d.usoSlug) ?? resolveSceneId(d.material);
+  const scene = sceneId ? MOCKUP_SCENES[sceneId] : null;
+  if (scene) return `/mockup-scenes/${scene.file}`;
   if (d.material === 'madera') return '/mockup-textures/madera.jpg';
   return '/mockup-textures/cuero.jpg';
 }
@@ -1484,7 +1494,10 @@ function BuyWizardContent({
       data.logoAnalysis
     ) {
       const generateMockup = async () => {
-        const { mockupMaterial, usesFallback } = resolveMockupGeneration(data.material!);
+        const { mockupMaterial, usesFallback, sceneId } = resolveMockupGeneration(
+          data.material!,
+          data.usoSlug,
+        );
         setData((prevData) => ({
           ...prevData,
           isGeneratingMockup: true,
@@ -1513,7 +1526,11 @@ function BuyWizardContent({
           const requestBody: Record<string, unknown> = {
             logo: logoToUse,
             size: sizeStr,
-            material: mockupMaterial,
+            // Con escena propia se manda el material real y el uso; si no, la textura de referencia.
+            material: sceneId ? data.material : mockupMaterial,
+            uso: data.usoSlug ?? null,
+            // Sin medida elegida, la escena usa la medida recomendada para ese objeto.
+            sizeIsReference: !data.selectedSize && !customSizeObj,
           };
           
           // Agregar aspect ratio si está disponible
