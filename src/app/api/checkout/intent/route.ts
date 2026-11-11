@@ -32,6 +32,7 @@ import { getCotizadorCatalog } from '@/lib/cotizador';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
 import { resolveShippingCostServer, saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
 import { qualifiesForFreeShipping } from '@/lib/shipping/freeShipping';
+import { readGaIdsFromRequest } from '@/lib/analytics/gaCookies';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 
 export const runtime = 'nodejs';
@@ -262,6 +263,8 @@ export async function POST(req: Request) {
     envio_metodo: envioMetodoRaw || undefined,
     ...(envioGratis ? { envio_gratis: true, envio_gratis_motivo: '3+ sellos' } : {}),
     ...(items.some((i) => i.logoStatus === 'pendiente') ? { logo_pendiente: true } : {}),
+    // Para que Alcohn AI mande el purchase a GA4 con el visitante y la sesión reales.
+    ...readGaIdsFromRequest(req),
   };
 
   const estadoPagoWeb = estadoPagoForMetodo(metodoPago);
