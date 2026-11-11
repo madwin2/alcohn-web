@@ -69,44 +69,17 @@ function bindBidirectional(
   cleanups.push(() => triggers.forEach((trigger) => trigger.kill()));
 }
 
-export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
-  if (prefersReducedMotion()) {
-    return () => {};
-  }
-
-  const cleanups: Array<() => void> = [];
-
+function bindDesktopReveals(scopeRoot: HTMLElement, cleanups: Array<() => void>) {
   const desktopPanels = gsap.utils
     .toArray<HTMLElement>('[data-scroll-panel]', scopeRoot)
     .filter(isScrollTriggerTarget);
-  const mobilePanels = gsap.utils
-    .toArray<HTMLElement>('[data-scroll-panel-mobile]', scopeRoot)
-    .filter(isScrollTriggerTarget);
-
-  const panelMedia = gsap.matchMedia();
-  panelMedia.add('(min-width: 768px)', () => {
-    if (mobilePanels.length) {
-      gsap.set(mobilePanels, { opacity: 1, y: 0, scale: 1, clearProps: 'opacity,transform,filter' });
-    }
-    if (!desktopPanels.length) return;
+  if (desktopPanels.length) {
     gsap.set(desktopPanels, panelFrom);
     bindBidirectional(desktopPanels, { ...panelTo }, { ...panelHide }, panelZone, cleanups, {
       interval: 0.12,
       batchMax: 1,
     });
-  });
-  panelMedia.add('(max-width: 767px)', () => {
-    if (desktopPanels.length) {
-      gsap.set(desktopPanels, { opacity: 1, y: 0, scale: 1, clearProps: 'opacity,transform,filter' });
-    }
-    if (!mobilePanels.length) return;
-    gsap.set(mobilePanels, panelFrom);
-    bindBidirectional(mobilePanels, { ...panelTo }, { ...panelHide }, panelZone, cleanups, {
-      interval: 0.12,
-      batchMax: 1,
-    });
-  });
-  cleanups.push(() => panelMedia.revert());
+  }
 
   const intros = gsap.utils
     .toArray<HTMLElement>('[data-scroll-intro]', scopeRoot)
@@ -129,8 +102,6 @@ export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
     );
   }
 
-  bindTitleKeywordHighlights(scopeRoot, cleanups);
-
   const finalCta = scopeRoot.querySelector('[data-final-cta]');
   if (finalCta) {
     gsap.set(finalCta, revealFrom);
@@ -145,6 +116,37 @@ export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
     });
     cleanups.push(() => ctaTrigger.kill());
   }
+}
+
+export function initHomeScrollReveals(scopeRoot: HTMLElement): () => void {
+  if (prefersReducedMotion()) {
+    return () => {};
+  }
+
+  const cleanups: Array<() => void> = [];
+
+  /*
+   * En celular no se anima nada al hacer scroll: el contenido arranca visible.
+   * Antes los bloques empezaban con opacidad 0 y, si el disparador no llegaba a activarse
+   * (por ejemplo, la sección quedaba justo en el borde de la pantalla), se veía un hueco en
+   * blanco enorme debajo del hero. Además al volver a subir se ocultaban otra vez.
+   */
+  const media = gsap.matchMedia();
+  media.add('(min-width: 768px)', () => {
+    const local: Array<() => void> = [];
+    bindDesktopReveals(scopeRoot, local);
+    return () => local.forEach((cleanup) => cleanup());
+  });
+  media.add('(max-width: 767px)', () => {
+    const all = gsap.utils.toArray<HTMLElement>(
+      '[data-scroll-panel], [data-scroll-panel-mobile], [data-scroll-intro], [data-scroll-card], [data-final-cta]',
+      scopeRoot
+    );
+    if (all.length) gsap.set(all, { clearProps: 'opacity,transform,filter' });
+  });
+  cleanups.push(() => media.revert());
+
+  bindTitleKeywordHighlights(scopeRoot, cleanups);
 
   return () => {
     cleanups.forEach((cleanup) => cleanup());

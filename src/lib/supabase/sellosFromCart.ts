@@ -3,6 +3,7 @@
  * solo cuando el pago está confirmado).
  */
 
+import { resolveCartLineCategory } from '@/lib/stampSizeCategories';
 import type { CartItem } from '@/lib/cart';
 import {
   getAccessoryBySlug,
@@ -179,16 +180,25 @@ export function buildSellosInsertsFromCart(
     const isPersonalized = isPersonalizedCartLine(item) && !isAccessory;
 
     // Accesorios no tienen medida de sello; no inventar dims desde "Único".
-    const dims = isAccessory
-      ? { largo_real: null, ancho_real: null }
-      : parseVariantSizeToCm(item.variantSize);
+    const category = isAccessory ? undefined : resolveCartLineCategory(item);
+    // Compra por tamaño: la medida exacta la define Alcohn con el logo.
+    const dims =
+      isAccessory || category
+        ? { largo_real: null, ancho_real: null }
+        : parseVariantSizeToCm(item.variantSize);
+    const logoPendiente = isPersonalized && item.logoStatus === 'pendiente';
 
     const lineTotal = item.price * Math.max(1, item.qty);
     const diseno = accessory?.title ?? item.title;
 
     const noteParts = isAccessory
       ? [accessory?.title ?? item.title, item.variantSize !== 'Único' ? item.variantSize : null]
-      : [item.material, item.variantSize, item.process];
+      : [
+          item.material,
+          item.variantSize,
+          item.process,
+          logoPendiente ? 'Logo pendiente: lo manda por WhatsApp' : null,
+        ];
 
     return {
       orden_id: ordenId,
@@ -202,7 +212,7 @@ export function buildSellosInsertsFromCart(
       largo_real: dims.largo_real,
       ancho_real: dims.ancho_real,
       mockup_solicitud_id: isPersonalized
-        ? options?.mockup_solicitud_id ?? null
+        ? item.mockupSolicitudId ?? options?.mockup_solicitud_id ?? null
         : null,
       item_config: {
         origen: 'web',
@@ -213,6 +223,9 @@ export function buildSellosInsertsFromCart(
         material_web: item.material,
         process: item.process,
         variant_size: item.variantSize,
+        ...(category ? { size_category: category.key, grupo_precio: category.grupo } : {}),
+        ...(item.usoSlug ? { uso_slug: item.usoSlug } : {}),
+        ...(isPersonalized && item.logoStatus ? { logo_status: item.logoStatus } : {}),
         qty: item.qty,
         unit_price: item.price,
         line_total: lineTotal,

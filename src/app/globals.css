@@ -590,21 +590,11 @@ main,
 }
 
 /* El hero ([data-hero-reveal]) no se oculta: con 4G flojo se veía solo la foto hasta hidratar. */
-@media (prefers-reduced-motion: no-preference) {
-  [data-scroll-intro],
-  [data-scroll-card] {
-    opacity: 0;
-  }
-}
-
+/* Solo en desktop: en celular el contenido de la home arranca visible (sin animación de scroll). */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  [data-scroll-panel] {
-    opacity: 0;
-  }
-}
-
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  [data-scroll-panel-mobile] {
+  [data-home-scroll] [data-scroll-intro],
+  [data-home-scroll] [data-scroll-card],
+  [data-home-scroll] [data-scroll-panel] {
     opacity: 0;
   }
 }

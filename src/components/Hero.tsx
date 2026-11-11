@@ -17,6 +17,8 @@ gsap.registerPlugin(useGSAP);
 
 interface HeroProps {
   title: string;
+  /** Título corto solo para celular (el largo ocupaba media pantalla). */
+  mobileTitle?: string;
   subtitle: string;
   priceFrom?: number;
   primaryCta?: {
@@ -29,9 +31,22 @@ interface HeroProps {
     mobileText?: string;
     href: string;
   };
+  /** Celular: un botón principal y un link chico, en lugar de dos botones del mismo peso. */
+  mobileCta?: {
+    primary: { text: string; href: string };
+    secondary?: { text: string; href: string };
+  };
 }
 
-export default function Hero({ title, subtitle, priceFrom, primaryCta, secondaryCta }: HeroProps) {
+export default function Hero({
+  title,
+  mobileTitle,
+  subtitle,
+  priceFrom,
+  primaryCta,
+  secondaryCta,
+  mobileCta,
+}: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const { market } = useMarket();
 
@@ -66,7 +81,7 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
   return (
     <section
       ref={sectionRef}
-      className="min-h-[78svh] md:min-h-[calc(100svh-4.5rem)] md:h-[calc(100vh-7rem)] py-8 md:py-0 flex items-center justify-center relative text-white overflow-hidden"
+      className="min-h-[70svh] md:min-h-[calc(100svh-4.5rem)] md:h-[calc(100vh-7rem)] py-8 md:py-0 flex items-center justify-center relative text-white overflow-hidden"
       data-snap-section
     >
       <div className="absolute inset-0 z-0">
@@ -96,7 +111,14 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
             data-hero-reveal
             className="font-abacaxi text-[1.95rem] sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-4 md:mb-8 leading-[1.06] md:leading-[1.08] text-white tracking-tight drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)]"
           >
-            {title}
+            {mobileTitle ? (
+              <>
+                <span className="md:hidden">{mobileTitle}</span>
+                <span className="hidden md:inline">{title}</span>
+              </>
+            ) : (
+              title
+            )}
           </h1>
           <p
             data-hero-reveal
@@ -108,20 +130,46 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
           {priceFrom != null && (
             <div
               data-hero-reveal
-              className="mb-6 text-sm font-semibold uppercase tracking-wide text-white/90 md:mb-8 md:text-base"
+              className="mb-6 text-[13px] font-semibold uppercase tracking-wide text-white/90 md:mb-8 md:text-base"
             >
               Desde {formatMarketMoney(convertPublicArsToMarketPrice(priceFrom, market), market)} ·
-              fabricación en 72hs hábiles
-              <InstallmentsNote
-                amount={priceFrom}
-                inverted
-                className="mt-1 font-normal normal-case tracking-normal"
-              />
-              <GuaranteeNote inverted className="mt-1 font-normal normal-case tracking-normal" />
+              <span className="md:hidden"> listo en 72 hs</span>
+              <span className="hidden md:inline"> fabricación en 72hs hábiles</span>
+              {/* Cuotas y garantía: en celular ya están en la barra superior y en cada ficha. */}
+              <div className="hidden md:block">
+                <InstallmentsNote
+                  amount={priceFrom}
+                  inverted
+                  className="mt-1 font-normal normal-case tracking-normal"
+                />
+                <GuaranteeNote inverted className="mt-1 font-normal normal-case tracking-normal" />
+              </div>
+            </div>
+          )}
+          {mobileCta && (
+            <div data-hero-reveal className="flex flex-col items-start gap-3 md:hidden">
+              <ActionButton
+                href={mobileCta.primary.href}
+                variant="secondary"
+                className="hero-cta hero-cta--solid w-full border-white bg-white text-neutral-900"
+              >
+                {mobileCta.primary.text}
+              </ActionButton>
+              {mobileCta.secondary && (
+                <a
+                  href={mobileCta.secondary.href}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 text-[14px] font-semibold text-white underline decoration-[var(--alcohn-bronze)] underline-offset-4"
+                >
+                  {mobileCta.secondary.text} →
+                </a>
+              )}
             </div>
           )}
           {primaryCta && (
-            <div data-hero-reveal className="hero-cta-row flex flex-row flex-nowrap gap-2 sm:gap-3">
+            <div
+              data-hero-reveal
+              className={`hero-cta-row flex flex-row flex-nowrap gap-2 sm:gap-3 ${mobileCta ? 'max-md:hidden' : ''}`}
+            >
               <ActionButton
                 href={primaryCta.href}
                 variant="secondary"
@@ -142,7 +190,7 @@ export default function Hero({ title, subtitle, priceFrom, primaryCta, secondary
               )}
             </div>
           )}
-          <div data-hero-reveal className="mt-4 md:mt-6">
+          <div data-hero-reveal className="mt-2 md:mt-6">
             <GoogleReviewsBadge tone="dark" />
           </div>
         </div>

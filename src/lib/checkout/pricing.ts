@@ -6,6 +6,8 @@ import {
 } from '@/data/accessories';
 import { cotizarAbecedarioDesdeVariante } from '@/lib/abecedarioConfigurator';
 import { cotizarRectangular, type CotizadorCatalog } from '@/lib/cotizador';
+import { cotizarGrupo } from '@/lib/cotizador/quote';
+import { resolveCartLineCategory } from '@/lib/stampSizeCategories';
 import { getMarketConfig } from '@/lib/markets/config';
 import { convertTransferArsToMarketPrice } from '@/lib/markets/pricing';
 import type { MarketCode } from '@/lib/markets/types';
@@ -59,6 +61,15 @@ function resolveLinePrices(
   }
 
   if (!catalog) return null;
+
+  // Compra por tamaño desde la ficha: precio del grupo (la medida exacta se define con el logo).
+  const category = resolveCartLineCategory(item);
+  if (category) {
+    const precio = cotizarGrupo(catalog, category.grupo);
+    if (!precio) return null;
+    return { link: precio.link, transfer: precio.transferencia };
+  }
+
   const dims = parseVariantSizeToCm(item.variantSize);
   if (dims.ancho_real == null || dims.largo_real == null) return null;
   const quote = cotizarRectangular(catalog, dims.ancho_real, dims.largo_real);

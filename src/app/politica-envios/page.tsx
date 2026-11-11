@@ -36,7 +36,8 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
   {
     title: 'Costos de envío',
     paragraphs: [
-      'El costo de envío se calcula y muestra en el checkout antes de pagar, según el método elegido (retiro, sucursal o domicilio).',
+      'Envío gratis a sucursal o a domicilio en pedidos de 3 sellos o más (se cuentan sellos personalizados, estándar y abecedarios; los accesorios no suman). El descuento se aplica solo en el checkout.',
+      'En el resto de los pedidos, el costo de envío se calcula y muestra en el checkout antes de pagar, según el método elegido (retiro, sucursal o domicilio).',
       'Los valores pueden actualizarse; el importe definitivo es el que ves al confirmar tu pedido en alcohnsellos.com.',
       'Si preferís otra empresa de transporte, contactanos antes de comprar para cotizar un envío alternativo.',
     ],
@@ -57,7 +58,7 @@ const sections: Array<{ title: string; paragraphs: string[] }> = [
   {
     title: 'Actualizaciones',
     paragraphs: [
-      'Podemos actualizar esta política. La versión vigente es la publicada en esta URL. Última actualización: junio de 2026.',
+      'Podemos actualizar esta política. La versión vigente es la publicada en esta URL. Última actualización: noviembre de 2026.',
     ],
   },
 ];

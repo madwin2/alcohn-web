@@ -40,7 +40,8 @@ export default function HomeScrollShell({ children }: HomeScrollShellProps) {
     <div
       ref={rootRef}
       data-home-scroll
-      className="w-full max-w-full"
+      // En celular es flex-col para reordenar secciones con `max-md:order-*` (ver HomeLanding).
+      className="flex w-full max-w-full flex-col md:block"
     >
       {children}
     </div>

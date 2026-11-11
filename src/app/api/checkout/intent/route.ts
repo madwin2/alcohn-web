@@ -31,6 +31,7 @@ import { computeCheckoutPricing } from '@/lib/checkout/pricing';
 import { getCotizadorCatalog } from '@/lib/cotizador';
 import type { EstadoPagoWeb, MetodoPago } from '@/lib/supabase/types';
 import { resolveShippingCostServer, saveShippingForOrder } from '@/lib/shipping/saveShippingServer';
+import { qualifiesForFreeShipping } from '@/lib/shipping/freeShipping';
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 
 export const runtime = 'nodejs';
@@ -244,9 +245,12 @@ export async function POST(req: Request) {
     typeof body.envio_metodo === 'string' ? body.envio_metodo.trim() : '';
   const envioMetodoCobro =
     parseEnvioMetodo(envioMetodoRaw) ?? parseEnvioMetodo(body.envio?.metodo);
-  const envioCosto = envioMetodoCobro
-    ? await resolveShippingCostServer(supabase, envioMetodoCobro)
-    : 0;
+  // Envío gratis desde 3 sellos en el mismo pedido (se cuenta con el carrito ya re-cotizado).
+  const envioGratis = qualifiesForFreeShipping(items, 'ar');
+  const envioCosto =
+    envioMetodoCobro && !envioGratis
+      ? await resolveShippingCostServer(supabase, envioMetodoCobro)
+      : 0;
 
   const notasWeb: Record<string, unknown> = {
     provincia: typeof body.provincia === 'string' ? body.provincia.trim() : '',
@@ -256,6 +260,8 @@ export async function POST(req: Request) {
     items_count: items.reduce((n, i) => n + i.qty, 0),
     envio_costo: envioCosto,
     envio_metodo: envioMetodoRaw || undefined,
+    ...(envioGratis ? { envio_gratis: true, envio_gratis_motivo: '3+ sellos' } : {}),
+    ...(items.some((i) => i.logoStatus === 'pendiente') ? { logo_pendiente: true } : {}),
   };
 
   const estadoPagoWeb = estadoPagoForMetodo(metodoPago);
@@ -291,7 +297,15 @@ export async function POST(req: Request) {
 
   const ordenId = (orden as { id: string }).id;
 
-  if (mockupId) {
+  // Cada sello puede traer su propia muestra/logo (varios sellos en un pedido).
+  const mockupIds = Array.from(
+    new Set(
+      [mockupId, ...items.map((i) => i.mockupSolicitudId ?? null)].filter(
+        (id): id is string => typeof id === 'string' && isUuid(id)
+      )
+    )
+  );
+  if (mockupIds.length > 0) {
     const now = new Date().toISOString();
     await supabase
       .from('mockup_solicitudes')
@@ -302,7 +316,7 @@ export async function POST(req: Request) {
         checkout_iniciado_at: now,
         carrito_json: items,
       } as never)
-      .eq('id', mockupId);
+      .in('id', mockupIds);
   }
 
   const envioBlock = body.envio;

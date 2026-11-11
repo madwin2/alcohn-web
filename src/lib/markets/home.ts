@@ -18,6 +18,11 @@ export function getHomeHeroTitle(market: MarketCode): string {
   return getMarketLocalCopy(market).heroTitle;
 }
 
+/** Título corto para celular: el largo ocupaba media pantalla. */
+export function getHomeHeroMobileTitle(_market: MarketCode): string {
+  return 'Tu marca, en bronce.';
+}
+
 export function getHomeHeroSubtitle(market: MarketCode): string {
   if (market === 'ar') {
     return 'Sellos de bronce personalizados para marcar cuero, madera, alimentos y packaging. Subí tu logo y mirá cómo queda tu sello antes de pagar, con medida y precio al instante.';

@@ -51,6 +51,14 @@ export default function CartItemRow({ item, showImage = true }: CartItemRowProps
             {item.variantSize}
           </span>
         </div>
+        {item.logoStatus === 'pendiente' && (
+          <p className="mb-2 text-[12px] leading-snug text-amber-800">
+            Logo pendiente: después de comprar nos lo mandás por WhatsApp.
+          </p>
+        )}
+        {item.logoStatus === 'subido' && (
+          <p className="mb-2 text-[12px] leading-snug text-emerald-700">✓ Logo recibido</p>
+        )}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -2,11 +2,9 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ActionButton from '@/components/ActionButton';
 import StampUseCasePageIntro from '@/components/sellos/StampUseCasePageIntro';
 import StampUsageGuideSection from '@/components/sellos/StampUsageGuideSection';
 import StickyMobileCta from '@/components/sellos/StickyMobileCta';
-import PriceFrom from '@/components/PriceFrom';
 import PurchaseInclusions from '@/components/PurchaseInclusions';
 import SalesCtaBand from '@/components/SalesCtaBand';
 import StampProductCarousel from '@/components/sellos/StampProductCarousel';
@@ -28,7 +26,7 @@ import {
 } from '@/lib/seo';
 import { getStampPriceFrom } from '@/data/stampUseCases';
 import { getStampDepthSpec } from '@/data/stampDepth';
-import GuaranteeNote from '@/components/GuaranteeNote';
+import ProductBuyBox from '@/components/sellos/ProductBuyBox';
 
 type PageParams = {
   params: {
@@ -123,14 +121,14 @@ export default function SelloUseCasePage({ params }: PageParams) {
           description={useCase.description}
           mobileDescription={useCase.intro}
           primaryCta={{
-            label: 'Subir logo y ver mi sello',
-            href: buyHref,
+            label: 'Elegí tu tamaño y comprá',
+            href: '#comprar',
           }}
           priceFrom={priceFrom}
-          tagline="Listo en 72 hs hábiles · Mirá tu sello antes de pagar"
+          tagline="Listo en 72 hs hábiles · Envío gratis desde 3 sellos"
           highlights={[
             `Uso principal: ${useCase.material}`,
-            'Mirá tu sello con tu logo antes de pagar',
+            'Comprá directo y mandá el logo después, o mirá tu sello antes de pagar',
             'Mismo sello de bronce, contexto específico para tu oficio',
           ]}
         />
@@ -155,46 +153,55 @@ export default function SelloUseCasePage({ params }: PageParams) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          {/* En celular la compra va antes que la foto grande: es lo primero que se busca. */}
+          <div className="order-first grid grid-cols-1 gap-4 lg:order-none">
             <div className="technical-sheet flex h-full flex-col p-5 md:p-8">
               <p className="craft-label mb-3 md:mb-4">Producto base</p>
               <h2 className="text-lg font-semibold tracking-tight text-neutral-950 md:text-2xl">
                 Sello de bronce para {materialInSentence(useCase.material)}
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-700 md:mt-3">
-                El mismo sello sirve en todos los materiales. Acá ves ejemplos y medidas pensadas para{' '}
-                {useCase.oficio.toLowerCase()}.
+              <p className="mt-1.5 mb-4 text-sm leading-relaxed text-neutral-700 md:mt-2 md:mb-5">
+                Elegí el tamaño y comprá. Si no tenés el logo a mano, lo mandás por WhatsApp después.
               </p>
 
-              <PriceFrom amount={priceFrom} className="mt-4 md:mt-5" size="sm" />
-
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--alcohn-line)] pt-4 sm:gap-6 md:mt-5 md:pt-5">
-                <div>
-                  <p className="craft-label mb-1.5">Material</p>
-                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
-                    Bronce CNC de alta precisión.
-                  </p>
-                </div>
-                <div>
-                  <p className="craft-label mb-1.5">Profundidad</p>
-                  <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
-                    {depthSpec.summary}.
-                  </p>
-                </div>
-              </div>
-              <p className="mt-2 text-xs leading-snug text-neutral-600">{depthSpec.detail}</p>
-              <GuaranteeNote className="mt-3" />
-
-              <div className="mt-5 flex flex-col gap-3 pt-4 border-t border-[var(--alcohn-line)] sm:flex-row md:mt-auto md:pt-6 md:border-0 sm:pt-8">
-                <ActionButton href={buyHref} variant="primary" className="w-full sm:w-auto">
-                  Diseñar para {materialInSentence(useCase.material)}
-                </ActionButton>
-                {usageGuide ? (
-                  <ActionButton href="#guia-uso" variant="ghost" className="w-full sm:w-auto">
-                    Ver guía de uso
-                  </ActionButton>
-                ) : null}
-              </div>
+              <ProductBuyBox
+                usoSlug={useCase.slug}
+                buyMaterial={useCase.buyMaterial}
+                materialLabel={materialInSentence(useCase.material)}
+                image={useCase.heroImage}
+                designHref={buyHref}
+                specs={
+                  <>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-6">
+                      <div>
+                        <p className="craft-label mb-1.5">Material</p>
+                        <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                          Bronce CNC de alta precisión.
+                        </p>
+                      </div>
+                      <div>
+                        <p className="craft-label mb-1.5">Profundidad</p>
+                        <p className="text-[13px] leading-snug text-neutral-800 md:text-sm">
+                          {depthSpec.summary}.
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs leading-snug text-neutral-600">{depthSpec.detail}</p>
+                    <p className="mt-2 text-xs leading-snug text-neutral-600">
+                      El mismo sello sirve en todos los materiales.
+                      {usageGuide ? (
+                        <>
+                          {' '}
+                          <a href="#guia-uso" className="underline">
+                            Ver guía de uso
+                          </a>
+                          .
+                        </>
+                      ) : null}
+                    </p>
+                  </>
+                }
+              />
             </div>
 
             <StampProductCarousel images={productCarouselImages} />
@@ -306,20 +313,21 @@ export default function SelloUseCasePage({ params }: PageParams) {
 
         <div className="mt-20" data-sticky-cta-end>
         <SalesCtaBand
-          title={`Diseñá tu sello para ${materialInSentence(useCase.material)} y avanzá con precio real`}
-          copy="Subí tu logo, elegí cómo lo vas a usar, revisá la muestra y dejá el pedido listo para pagar online."
-          primaryLabel="Subir logo y ver mi sello"
-          primaryHref={buyHref}
-          secondaryLabel="Ver todos los productos"
-          secondaryHref="/productos"
+          title={`Tu sello para ${materialInSentence(useCase.material)}, listo en 72 hs`}
+          copy="Elegí el tamaño y comprá en un minuto. El logo lo subís ahora o nos lo mandás por WhatsApp después."
+          primaryLabel="Elegí tu tamaño"
+          primaryHref="#comprar"
+          secondaryLabel="Ver cómo queda mi logo"
+          secondaryHref={buyHref}
           dark
         />
         </div>
 
         <StickyMobileCta
-          href={buyHref}
-          label="Subir logo y ver mi sello"
-          note="Mirá tu sello antes de pagar"
+          href="#comprar"
+          label="Comprar · elegí tu tamaño"
+          note={`Desde $${priceFrom.toLocaleString('es-AR')} · envío gratis desde 3 sellos`}
+          hideWhileVisible="#comprar"
         />
       </div>
     </div>

@@ -110,6 +110,14 @@ function precioGrupo(
   };
 }
 
+/** Precio de un grupo (chicos / medianos / grandes / xl): compra por tamaño desde la ficha. */
+export function cotizarGrupo(
+  catalog: CotizadorCatalog,
+  grupo: GrupoCodigo
+): { transferencia: number; link: number } | null {
+  return precioGrupo(catalog, grupo);
+}
+
 function buildResult(
   ancho: number,
   largo: number,

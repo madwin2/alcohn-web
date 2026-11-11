@@ -8,6 +8,7 @@ import { pushGtmEvent } from '@/lib/analytics/gtm';
 import GoogleCustomerReviewsOptIn from '@/components/GoogleCustomerReviewsOptIn';
 import { trackMetaPurchase } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
+import PendingLogoWhatsapp from '@/components/checkout/PendingLogoWhatsapp';
 
 function OpenpaySuccessContent() {
   const searchParams = useSearchParams();
@@ -90,6 +91,7 @@ function OpenpaySuccessContent() {
             sistema. Escribinos por WhatsApp con tu nombre y el monto.
           </p>
         )}
+        {syncState !== 'error' && <PendingLogoWhatsapp orderId={ordenId} />}
         <Link
           href="/"
           className="inline-block border border-neutral-900 bg-neutral-900 text-white px-6 py-3 text-sm font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors"

@@ -19,6 +19,7 @@ import { displayWizardProductPrice } from '@/lib/markets/pricing';
 import { saveCheckoutPrefill, type CheckoutMetodoPagoPrefill } from '@/lib/checkoutPrefill';
 import { fetchShippingCost } from '@/lib/shipping/client';
 import { saveCheckoutShipping } from '@/lib/shipping/storage';
+import { FREE_SHIPPING_MIN_STAMPS, countStampUnits } from '@/lib/shipping/freeShipping';
 import type { ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS } from '@/lib/shipping/types';
 import { trackMetaInitiateCheckout } from '@/lib/analytics/metaPixel';
@@ -940,7 +941,7 @@ function BuyWizardContent({
   const pathname = usePathname();
   const { market } = useMarket();
   const isInternationalMarket = market !== 'ar';
-  const { addItem, clearCart } = useCart();
+  const { addItem, clearCart, items: cartItems } = useCart();
   const [step, setStep] = useState(0); // Paso 0 = material
   /** Mobile paso medida: tarjetas estándar vs formulario personalizado */
   const [mobileSizeMode, setMobileSizeMode] = useState<'standard' | 'custom'>('standard');
@@ -950,6 +951,10 @@ function BuyWizardContent({
   const [manualPreviewRequested, setManualPreviewRequested] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | null>(null);
+  /** Unidades del mismo sello (mismo logo y medida). */
+  const [wizardQty, setWizardQty] = useState(1);
+  /** Aviso "Sello agregado: subí el logo del próximo" después de "Agregar otro sello". */
+  const [anotherStampAdded, setAnotherStampAdded] = useState<string | null>(null);
   const [checkoutNavigateBusy, setCheckoutNavigateBusy] = useState(false);
   const wizardPaymentTrackedRef = useRef(false);
   const mockupGeneradoTrackedRef = useRef(false);
@@ -2081,13 +2086,13 @@ function BuyWizardContent({
       : parseSizeMm(data.selectedSize ?? '');
   const addonSuggestion = isInternationalMarket
     ? null
-    : getWizardAddonSuggestion(data.material, selectedStampMm);
+    : getWizardAddonSuggestion(data.material, selectedStampMm, data.usoSlug);
   const shownAddonSlug = addonSuggestion
     ? addonSlug && addonSlug === addonSuggestion.alternative
       ? addonSlug
       : addonSuggestion.primary
     : null;
-  const wizardAddon = shownAddonSlug ? resolveWizardAddon(shownAddonSlug) : null;
+  const wizardAddon = shownAddonSlug ? resolveWizardAddon(shownAddonSlug, data.usoSlug) : null;
   const otherAddonSlug = addonSuggestion?.alternative
     ? shownAddonSlug === addonSuggestion.primary
       ? addonSuggestion.alternative
@@ -2127,8 +2132,22 @@ function BuyWizardContent({
     setAddonSlug(otherAddonSlug);
   };
 
-  /** Lleva al checkout el sello configurado en el wizard. */
-  const handleAddWizardToCheckout = (metodo: CheckoutMetodoPagoPrefill = 'Openpay') => {
+  /** Sellos que ya hay en el carrito (de antes o de "Agregar otro sello"). */
+  const stampsInCart = countStampUnits(cartItems);
+  /** Envío gratis desde 3 sellos contando los del carrito + los de este paso (solo Argentina). */
+  const wizardFreeShipping =
+    !isInternationalMarket && stampsInCart + wizardQty >= FREE_SHIPPING_MIN_STAMPS;
+  const effectiveShippingCost = wizardFreeShipping ? 0 : shippingCost;
+
+  /**
+   * Lleva al checkout el sello configurado en el wizard. Con `anotherStamp`, en vez de ir a
+   * pagar lo deja en el carrito y vuelve al paso Logo para armar el próximo sello, sin volver
+   * a pedir uso ni datos de contacto.
+   */
+  const handleAddWizardToCheckout = (
+    metodo: CheckoutMetodoPagoPrefill = 'Openpay',
+    options: { anotherStamp?: boolean } = {}
+  ) => {
     const price = isInternationalMarket
       ? displayWizardProductPrice(
           data.selectedPrice ?? 0,
@@ -2150,12 +2169,13 @@ function BuyWizardContent({
       });
     }
     if (!isInternationalMarket) {
-      saveCheckoutShipping(shippingMethod, shippingCost);
+      saveCheckoutShipping(shippingMethod, effectiveShippingCost);
     }
     const variantSize = data.selectedSize;
     const materialLabel = wizardUsoDisplayLabel(data);
     const designSlug = `personalizado-${Date.now()}`;
     const marketConfig = getMarketConfig(market);
+    const mid = mockupSolicitudIdRef.current;
     const cartLine = {
       title: `Sello personalizado (${materialLabel}, ${variantSize})`,
       collection: 'Personalizado',
@@ -2165,23 +2185,57 @@ function BuyWizardContent({
       price,
       image: wizardCartImageUrl(data),
       designSlug,
+      ...(data.usoSlug ? { usoSlug: data.usoSlug } : {}),
+      logoStatus: 'subido' as const,
+      // Cada sello lleva su propia muestra: un pedido puede tener varios logos.
+      ...(mid ? { mockupSolicitudId: mid } : {}),
       ...(isInternationalMarket
         ? { market, currency: marketConfig.currency }
         : {}),
     };
     syncMedidasToMockup();
-    addItem(cartLine);
+    addItem(cartLine, { qty: wizardQty, openDrawer: false });
     // Complemento agregado en el pago: misma línea que la ficha del accesorio.
     const addonLine =
       !isInternationalMarket && addonInOrder && wizardAddon
         ? buildWizardAddonCartLine(wizardAddon, metodo)
         : null;
-    if (addonLine) addItem(addonLine);
-    const mid = mockupSolicitudIdRef.current;
+    if (addonLine) addItem(addonLine, { openDrawer: false });
     if (mid) {
       void markCheckoutStarted(mid, addonLine ? [cartLine, addonLine] : [cartLine]);
     }
     clearWizardDraft();
+    void trackEvent('add_to_cart', {
+      metadata: {
+        origen: 'generador',
+        uso: data.usoSlug ?? data.material ?? null,
+        qty: wizardQty,
+        otro_sello: Boolean(options.anotherStamp),
+      },
+    });
+
+    if (options.anotherStamp) {
+      // Próximo sello: mismo uso y mismos datos de contacto; logo, medida y muestra nuevos.
+      mockupSolicitudIdRef.current = null;
+      textLogoRef.current = null;
+      setDraftLogoUrl(null);
+      setAnalysisError(null);
+      setPaymentMethod(null);
+      setAddonAdded(false);
+      setWizardQty(1);
+      setCheckoutNavigateBusy(false);
+      setData((prev) => ({
+        material: prev.material,
+        usoSlug: prev.usoSlug,
+        nombre: prev.nombre,
+        whatsapp: prev.whatsapp,
+        email: prev.email,
+      }));
+      setAnotherStampAdded(`${wizardQty > 1 ? `${wizardQty}× ` : ''}${materialLabel}, ${variantSize}`);
+      goToStepKey('logo');
+      return;
+    }
+
     window.setTimeout(() => {
       router.push(isInternationalMarket ? marketPath(market, '/checkout') : '/checkout');
     }, 0);
@@ -2191,6 +2245,15 @@ function BuyWizardContent({
    * "No tengo logo" por WhatsApp: un vendedor asesora y arma un diseño simple. Convive con
    * el logo de texto dentro de la web (`WizardTextLogo`), para quien quiere algo más elaborado.
    */
+  /** "Comprar sin muestra": ficha del uso con el bloque de compra por tamaño (solo Argentina). */
+  const buyWithoutSampleHref = (() => {
+    if (isInternationalMarket) return null;
+    const uso =
+      data.usoSlug ??
+      (data.material === 'cuero' ? 'para-cuero' : data.material === 'madera' ? 'para-madera' : null);
+    return uso ? `/sellos/${uso}#comprar` : '/productos';
+  })();
+
   const noLogoWhatsappUrl = (() => {
     const phone = String(config.whatsapp.number || '').replace(/\D/g, '');
     const material = wizardUsoDisplayLabel(data);
@@ -2517,16 +2580,38 @@ function BuyWizardContent({
         {/* Logo */}
         {currentStepKey === 'logo' && (
           <div className="wizard-step h-full overflow-y-auto md:space-y-6 md:[animation:none]">
+            {(anotherStampAdded || stampsInCart > 0) && !data.logoPreview && (
+              <div className="wizard-notice wizard-notice--green flex items-start justify-between gap-3">
+                <p className="text-[13px] leading-snug">
+                  {anotherStampAdded ? (
+                    <>
+                      <strong className="font-semibold">✓ Agregamos tu sello</strong> ({anotherStampAdded}).
+                      Ahora subí el logo del próximo.
+                    </>
+                  ) : (
+                    <>
+                      Tenés {stampsInCart} {stampsInCart === 1 ? 'sello' : 'sellos'} en el carrito.
+                    </>
+                  )}
+                </p>
+                <a href={marketPath(market, '/carrito')} className="shrink-0 text-[12.5px] font-semibold underline underline-offset-2">
+                  Ver carrito
+                </a>
+              </div>
+            )}
             <div className="wizard-step-heading">
               <h2 className="mb-1 text-[21px] font-semibold tracking-tight text-neutral-950 md:mb-2 md:text-2xl">
-                <span className="md:hidden">Subí tu logo</span>
+                <span className="md:hidden">¿Cómo armamos tu sello?</span>
                 <span className="hidden md:inline">Subir logo</span>
               </h2>
               <p className="text-[13.5px] text-neutral-600 md:text-base">
-                PNG, JPG o SVG · ideal con fondo transparente. No hace falta que sea perfecto: lo optimizamos gratis.
+                <span className="md:hidden">Elegí una opción. Con tu logo te mostramos cómo queda, gratis.</span>
+                <span className="hidden md:inline">
+                  PNG, JPG o SVG · ideal con fondo transparente. No hace falta que sea perfecto: lo optimizamos gratis.
+                </span>
               </p>
             </div>
-            <div className="wizard-dropzone border border-dashed border-[var(--alcohn-line-strong)] bg-[var(--alcohn-surface)] text-center transition-colors hover:border-neutral-400 md:border-gray-300 md:p-12">
+            <div className="wizard-dropzone border border-dashed border-[var(--alcohn-line-strong)] bg-[var(--alcohn-surface)] text-center transition-colors hover:border-neutral-400 max-md:!py-5 md:border-gray-300 md:p-12">
               <input
                 type="file"
                 id="logo-upload"
@@ -2562,10 +2647,11 @@ function BuyWizardContent({
                     </div>
                     <div>
                       <p className="text-[15px] font-semibold text-neutral-900">
-                        Tocá para subir tu logo
+                        <span className="md:hidden">Subir mi logo</span>
+                        <span className="hidden md:inline">Tocá para subir tu logo</span>
                       </p>
                       <p className="mt-1 font-mono text-[10.5px] text-neutral-500">
-                        PNG, JPG o SVG
+                        PNG, JPG o SVG<span className="md:hidden"> · lo mejoramos gratis</span>
                       </p>
                     </div>
                   </div>
@@ -2587,7 +2673,7 @@ function BuyWizardContent({
                 <label
                   htmlFor="logo-camera"
                   onClick={() => trackWizardDetail('logo_picker_open', { fuente: 'camara' })}
-                  className={`flex min-h-[48px] items-center justify-center gap-2 border border-[var(--alcohn-line-strong)] bg-white px-4 text-[14px] font-semibold text-neutral-900 ${
+                  className={`flex min-h-[52px] items-center gap-3 border border-[var(--alcohn-line-strong)] bg-white px-3 py-2 text-[13.5px] font-semibold text-neutral-900 ${
                     isApplyingLogoCrop ? 'cursor-wait opacity-50' : 'cursor-pointer'
                   }`}
                 >
@@ -2595,12 +2681,13 @@ function BuyWizardContent({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2.5h6L17 8h3v11H4z" />
                     <circle cx="12" cy="13" r="3.5" />
                   </svg>
-                  Sacarle una foto a tu logo
+                  <span className="text-left">
+                    Sacarle una foto a mi logo
+                    <span className="block text-[11.5px] font-normal text-neutral-500">
+                      De frente y con buena luz. Después la recortás.
+                    </span>
+                  </span>
                 </label>
-                <p className="mt-2 text-[12px] leading-snug text-neutral-500">
-                  ¿Lo tenés en una etiqueta, tarjeta o bolsa? Sacale una foto de frente, con buena luz
-                  y sobre fondo claro. Después podés recortarla.
-                </p>
               </div>
             )}
             {/* Sin archivo: arma el logo con el nombre de la marca y sigue por el mismo camino. */}
@@ -2639,23 +2726,29 @@ function BuyWizardContent({
               </div>
             )}
             {!data.logoPreview && (
-              <div className="border-t border-[var(--alcohn-line)] pt-3 md:pt-4">
-                <p className="text-[13.5px] font-semibold text-neutral-900 md:text-sm">
-                  ¿Preferís que te ayudemos con el diseño?
-                </p>
-                <p className="mt-0.5 text-[12.5px] leading-snug text-neutral-600 md:text-sm">
-                  Escribinos y lo armamos juntos con tu nombre o tu marca.
-                </p>
-                <a
-                  href={noLogoWhatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={handleNoLogoWhatsappClick}
-                  className="mt-2 inline-flex min-h-[44px] items-center gap-2 text-[13.5px] font-semibold text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-4 md:text-sm"
-                >
-                  Armar mi diseño por WhatsApp →
-                </a>
-              </div>
+              /* Opción con el mismo peso que las demás (antes era un link al pie, fuera de pantalla). */
+              <a
+                href={noLogoWhatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleNoLogoWhatsappClick}
+                className="flex min-h-[52px] items-center gap-3 border border-[var(--alcohn-line-strong)] bg-white px-3 py-2 text-left"
+              >
+                <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1f8f4e] text-white">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                    <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13.5px] font-semibold text-neutral-900 md:text-sm">
+                    Prefiero que me ayuden por WhatsApp
+                  </span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-neutral-600 md:text-sm">
+                    Lo armamos juntos con tu nombre o tu marca.
+                  </span>
+                </span>
+                <span aria-hidden className="ml-auto shrink-0 text-neutral-400">→</span>
+              </a>
             )}
             {data.logoPreview && (
               <div className="wizard-notice wizard-notice--green md:rounded-lg md:border-solid md:border-blue-200 md:bg-blue-50 md:text-blue-800">
@@ -3473,12 +3566,14 @@ function BuyWizardContent({
 
         {/* Pago */}
         {currentStepKey === 'payment' && !data.needsManualPreview && (() => {
-          const transferPrice = data.selectedTransferPrice ?? 0;
-          const cardPrice = data.selectedPrice || 0;
+          const transferPrice = (data.selectedTransferPrice ?? 0) * wizardQty;
+          const cardPrice = (data.selectedPrice || 0) * wizardQty;
           const addonCard = addonInOrder && wizardAddon ? wizardAddon.linkPrice : 0;
           const addonTransfer = addonInOrder && wizardAddon ? wizardAddon.transferPrice : 0;
+          const shippingCost = effectiveShippingCost;
           const cardTotal = cardPrice + shippingCost + addonCard;
           const transferTotal = transferPrice + shippingCost + addonTransfer;
+          const stampsMissing = Math.max(0, FREE_SHIPPING_MIN_STAMPS - stampsInCart - wizardQty);
           const cuotaPrice = Math.round(cardTotal / 3);
           const materialDisplay = wizardUsoDisplayLabel(data);
           const clientLogo = data.logoOptimized || data.logoPreview;
@@ -3565,6 +3660,63 @@ function BuyWizardContent({
                 </p>
               </div>
 
+              {/* Cantidad y "Agregar otro sello": varios sellos en un mismo pedido. */}
+              <div className="border border-[var(--alcohn-line)] bg-white p-3 md:p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-neutral-900">Cantidad</p>
+                    <p className="text-[12px] leading-snug text-neutral-500">Mismo logo y medida</p>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setWizardQty((q) => Math.max(1, q - 1))}
+                      disabled={wizardQty <= 1}
+                      className="flex h-11 w-11 items-center justify-center border border-neutral-300 bg-white text-lg disabled:opacity-40"
+                      aria-label="Restar un sello"
+                    >
+                      −
+                    </button>
+                    <span className="flex h-11 w-11 items-center justify-center border-y border-neutral-300 text-[15px] font-semibold" aria-live="polite">
+                      {wizardQty}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setWizardQty((q) => Math.min(99, q + 1))}
+                      className="flex h-11 w-11 items-center justify-center border border-neutral-300 bg-white text-lg"
+                      aria-label="Sumar un sello"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-2 text-[12.5px] leading-snug text-neutral-700">
+                  {wizardFreeShipping ? (
+                    <strong className="font-semibold text-emerald-700">¡Tenés envío gratis!</strong>
+                  ) : (
+                    <>
+                      Llevando {FREE_SHIPPING_MIN_STAMPS} sellos o más, el envío es gratis
+                      {stampsMissing > 0 && stampsInCart + wizardQty > 0
+                        ? ` (te ${stampsMissing === 1 ? 'falta' : 'faltan'} ${stampsMissing}).`
+                        : '.'}
+                    </>
+                  )}
+                  {stampsInCart > 0 && (
+                    <span className="block text-neutral-500">
+                      Ya tenés {stampsInCart} {stampsInCart === 1 ? 'sello' : 'sellos'} en el carrito.
+                    </span>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleAddWizardToCheckout('Openpay', { anotherStamp: true })}
+                  disabled={checkoutNavigateBusy || !data.selectedPrice}
+                  className="mt-3 flex min-h-[48px] w-full items-center justify-center border border-dashed border-neutral-400 bg-white px-4 text-[13px] font-semibold uppercase tracking-wider text-neutral-900 transition-colors hover:border-neutral-900 disabled:opacity-50"
+                >
+                  + Agregar otro sello (otro logo o medida)
+                </button>
+              </div>
+
               {/* Order Summary (mobile colapsable) */}
               <details className="lg:hidden border border-[var(--alcohn-line)] bg-white open:bg-white">
                 <summary className="flex min-h-[52px] cursor-pointer list-none items-center justify-between gap-3 px-3 py-3">
@@ -3608,6 +3760,18 @@ function BuyWizardContent({
                       <span>${shippingCost.toLocaleString('es-AR')}</span>
                     </div>
                   )}
+                  {wizardFreeShipping && shippingMethod !== 'retiro' && (
+                    <div className="flex justify-between text-xs text-emerald-700">
+                      <span>Costo envío</span>
+                      <span>Gratis (3 sellos o más)</span>
+                    </div>
+                  )}
+                  {wizardQty > 1 && (
+                    <div className="flex justify-between gap-3 text-xs text-neutral-600">
+                      <span>Cantidad</span>
+                      <span>{wizardQty} sellos</span>
+                    </div>
+                  )}
                   {addonInOrder && wizardAddon && (
                     <div className="flex justify-between gap-3 text-xs text-neutral-600">
                       <span>{wizardAddon.accessory.title}</span>
@@ -3643,7 +3807,10 @@ function BuyWizardContent({
                     </div>
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3">
                       <dt className="text-neutral-500">Medida</dt>
-                      <dd className="font-medium text-neutral-950">{getSizeDisplayText()}</dd>
+                      <dd className="font-medium text-neutral-950">
+                        {getSizeDisplayText()}
+                        {wizardQty > 1 ? ` · ${wizardQty} sellos` : ''}
+                      </dd>
                     </div>
                     <div className="grid grid-cols-[0.34fr_0.66fr] py-3 items-center gap-2">
                       <dt className="text-neutral-500">Envío</dt>
@@ -3663,6 +3830,9 @@ function BuyWizardContent({
                           <p className="mt-1 text-xs text-neutral-500">
                             + ${shippingCost.toLocaleString('es-AR')} envío
                           </p>
+                        )}
+                        {wizardFreeShipping && shippingMethod !== 'retiro' && (
+                          <p className="mt-1 text-xs text-emerald-700">Envío gratis (3 sellos o más)</p>
                         )}
                       </dd>
                     </div>
@@ -3885,6 +4055,17 @@ function BuyWizardContent({
             >
               ← Atrás
             </button>
+            {/* Sin logo a mano: compra directa por tamaño en la ficha y el logo va por WhatsApp. */}
+            {currentStepKey === 'logo' && !data.logoPreview && buyWithoutSampleHref && (
+              <a
+                href={buyWithoutSampleHref}
+                onClick={() => trackWizardDetail('wizard_comprar_sin_muestra', { uso: data.usoSlug ?? null })}
+                className="inline-flex min-h-[52px] flex-[2] flex-col items-center justify-center bg-[var(--alcohn-ink)] px-3 py-1.5 text-center text-white transition-colors hover:bg-[var(--alcohn-ink-soft)] md:min-h-[44px] md:rounded-md"
+              >
+                <span className="text-[12.5px] font-semibold uppercase tracking-[0.06em]">Comprar sin muestra</span>
+                <span className="text-[11px] text-white/75">y mandar el logo después</span>
+              </a>
+            )}
             {currentStepKey === 'preview' &&
               !data.needsManualPreview &&
               (data.previewGenerated || data.logoPreview) &&

@@ -1,5 +1,6 @@
 import type { CartItem } from '@/lib/cart';
-import { cotizarRectangular } from '@/lib/cotizador/quote';
+import { cotizarGrupo, cotizarRectangular } from '@/lib/cotizador/quote';
+import { getStampSizeCategory, resolveCartLineCategory } from '@/lib/stampSizeCategories';
 import type { CotizadorCatalog } from '@/lib/cotizador/types';
 import {
   enrichCartItemsWithItemType,
@@ -44,6 +45,12 @@ export function applyTransferPricesToCartItems(
 
     if (!catalog) return item;
 
+    const category = resolveCartLineCategory(item);
+    if (category) {
+      const precio = cotizarGrupo(catalog, category.grupo);
+      return precio ? { ...item, price: precio.transferencia } : item;
+    }
+
     const dims = parseVariantSizeToCm(item.variantSize);
     if (dims.ancho_real == null || dims.largo_real == null) return item;
 
@@ -79,6 +86,21 @@ export function sanitizeCartItemsForDb(items: CartItem[]): CartLineForDb[] {
   });
 
   return enrichCartItemsWithItemType(cleaned);
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Campos opcionales del carrito (compra por tamaño, logo pendiente, muestra por sello). */
+function optionalCartFields(o: Record<string, unknown>): Partial<CartItem> {
+  const out: Partial<CartItem> = {};
+  const cat = getStampSizeCategory(typeof o.sizeCategory === 'string' ? o.sizeCategory : null);
+  if (cat) out.sizeCategory = cat.key;
+  if (typeof o.usoSlug === 'string' && /^[a-z0-9-]{1,60}$/.test(o.usoSlug)) out.usoSlug = o.usoSlug;
+  if (o.logoStatus === 'subido' || o.logoStatus === 'pendiente') out.logoStatus = o.logoStatus;
+  if (typeof o.mockupSolicitudId === 'string' && UUID_RE.test(o.mockupSolicitudId)) {
+    out.mockupSolicitudId = o.mockupSolicitudId;
+  }
+  return out;
 }
 
 export function parseCartItemsFromBody(raw: unknown): CartLineForDb[] | null {
@@ -118,6 +140,7 @@ export function parseCartItemsFromBody(raw: unknown): CartLineForDb[] | null {
       qty: Math.min(999, Math.floor(qty)),
       image: typeof o.image === 'string' ? o.image : '',
       designSlug: typeof o.designSlug === 'string' ? o.designSlug : id,
+      ...optionalCartFields(o),
     });
   }
 

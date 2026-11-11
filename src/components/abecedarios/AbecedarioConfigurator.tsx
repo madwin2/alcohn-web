@@ -238,7 +238,7 @@ function AbecedarioConfiguratorContent() {
     setPersonalizado((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleAgregarAlCarrito = () => {
+  const handleAgregarAlCarrito = (openDrawer = true) => {
     if (!precioValido) return;
 
     if (tipo === 'completo') {
@@ -251,7 +251,7 @@ function AbecedarioConfiguratorContent() {
         price: completoPrecio,
         image: abecedarioCompleto.images[0],
         designSlug: abecedarioCompleto.slug,
-      });
+      }, { openDrawer });
     } else {
       const detalle = presupuesto.lineas
         .filter((l) => l.qty > 0)
@@ -266,14 +266,14 @@ function AbecedarioConfiguratorContent() {
         price: presupuesto.total,
         image: abecedarioCompleto.images[0],
         designSlug: 'abecedario-personalizado',
-      });
+      }, { openDrawer });
     }
 
     setAddedToCart(true);
   };
 
   const handleComprar = () => {
-    handleAgregarAlCarrito();
+    handleAgregarAlCarrito(false);
     router.push(marketPath(market, '/checkout'));
   };
 

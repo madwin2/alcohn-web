@@ -6,6 +6,8 @@ import type { MarketCode } from '@/lib/markets/types';
 export interface FAQ {
   question: string;
   answer: string;
+  /** Solo Argentina (compra directa por tamaño, envío gratis): no se muestra afuera. */
+  arOnly?: boolean;
 }
 
 export const faqs: FAQ[] = [
@@ -47,7 +49,19 @@ export const faqs: FAQ[] = [
   {
     question: '¿Cómo sé qué medida elegir?',
     answer:
-      'Después de subir tu logo te mostramos medidas sugeridas según la proporción del diseño. También podés cargar una medida personalizada en milímetros. Si dudás, elegí la recomendada: suele equilibrar legibilidad, precio y uso real.',
+      'En cada producto elegís sello chico, mediano o grande; tocando "¿Qué medidas entran?" ves las medidas de cada tamaño. La medida exacta la ajustamos a tu logo sin cambiar el precio. Si subís el logo en el generador, te mostramos medidas sugeridas según la proporción del diseño.',
+  },
+  {
+    question: '¿Puedo comprar sin tener el logo listo?',
+    answer:
+      'Sí. En cada producto elegís el tamaño y la cantidad y lo agregás al carrito. Después de pagar nos mandás el logo por WhatsApp con tu número de pedido y nosotros lo sumamos al pedido. Antes de fabricar te enviamos la muestra.',
+    arOnly: true,
+  },
+  {
+    question: '¿Puedo pedir varios sellos en un mismo pedido?',
+    answer:
+      'Sí. Podés sumar la cantidad que quieras del mismo sello o tocar "+ Agregar otro sello" para sumar otro logo o tamaño. Llevando 3 sellos o más, el envío es gratis.',
+    arOnly: true,
   },
   {
     question: '¿Veo una muestra antes de fabricar?',
@@ -67,7 +81,7 @@ export const faqs: FAQ[] = [
   {
     question: '¿Cuánto sale el envío?',
     answer:
-      'El envio por correo argentino a sucursal sale $6000 mientras que el envio a domicilio sale $9000. En caso de preferir otra empresa, el costo del envio puede variar dependiendo la empresa.',
+      'Llevando 3 sellos o más, el envío es gratis. Si no, el envío por Correo Argentino a sucursal sale $6000 y a domicilio $9000. En caso de preferir otra empresa, el costo del envío puede variar dependiendo la empresa.',
   },
   {
     question: '¿Cómo pago?',
@@ -130,7 +144,9 @@ export function getFaqs(market: MarketCode): FAQ[] {
       'Podemos armarte un diseño sencillo acorde a tus necesidades. Te enviaríamos muestra y presupuesto del diseño. Para eso puedes contactarnos por WhatsApp y te asesoramos.',
   };
 
-  return faqs.map((item) =>
-    overrides[item.question] ? { ...item, answer: overrides[item.question] } : item
-  );
+  return faqs
+    .filter((item) => !item.arOnly)
+    .map((item) =>
+      overrides[item.question] ? { ...item, answer: overrides[item.question] } : item
+    );
 }

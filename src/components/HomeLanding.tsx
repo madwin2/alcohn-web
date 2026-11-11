@@ -18,6 +18,7 @@ import {
   getHomeDesignCtaLabel,
   getHomeFinalCta,
   getHomeHeroSubtitle,
+  getHomeHeroMobileTitle,
   getHomeHeroTitle,
   getHomePrimaryCta,
   getHomeSecondaryCta,
@@ -27,6 +28,17 @@ import { marketPath } from '@/lib/markets/paths';
 import type { InternationalMarketCode, MarketCode } from '@/lib/markets/types';
 import { getCustomStampMinPrice } from '@/lib/pricing';
 import { localizeTree } from '@/lib/markets/localizeTree';
+import FaqList from '@/components/FaqList';
+import { getFaqs } from '@/data/faq';
+import { FREE_SHIPPING_MIN_STAMPS } from '@/lib/shipping/freeShipping';
+
+/** Preguntas que más frenan la compra: se muestran en la home (el resto, en /faq). */
+const HOME_FAQ_QUESTIONS = [
+  '¿Puedo comprar sin tener el logo listo?',
+  '¿Cómo sé qué medida elegir?',
+  '¿Cuánto tarda la fabricación?',
+  '¿Cuánto sale el envío?',
+];
 
 const materialProofs = [
   {
@@ -112,6 +124,10 @@ function HomeLandingContent({ market }: HomeLandingProps) {
   const designCtaHref = getHomeDesignCtaHref(market);
   const designCtaLabel = getHomeDesignCtaLabel(market);
   const finalCta = getHomeFinalCta(market);
+  const marketFaqs = getFaqs(market);
+  const homeFaqs = HOME_FAQ_QUESTIONS.map((q) => marketFaqs.find((f) => f.question === q)).filter(
+    (f): f is NonNullable<typeof f> => Boolean(f)
+  );
 
   const oficioMaterialBlocks = stampUseCases
     .filter(
@@ -135,10 +151,15 @@ function HomeLandingContent({ market }: HomeLandingProps) {
       <HomeScrollShell>
         <Hero
           title={getHomeHeroTitle(market)}
+          mobileTitle={getHomeHeroMobileTitle(market)}
           subtitle={getHomeHeroSubtitle(market)}
           primaryCta={primaryCta}
           secondaryCta={secondaryCta}
           priceFrom={customStampMinPrice}
+          mobileCta={{
+            primary: { text: 'Elegí tu sello', href: '#usos' },
+            secondary: { text: 'Probar con mi logo', href: designCtaHref },
+          }}
         />
 
         {market !== 'ar' && (
@@ -149,7 +170,7 @@ function HomeLandingContent({ market }: HomeLandingProps) {
           </section>
         )}
 
-        <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-t border-[var(--alcohn-line)] py-6 md:py-24 md:min-h-0">
+        <section id="oficio-identidad" className="atelier-page relative z-[1] -mt-px border-t border-[var(--alcohn-line)] py-6 max-md:order-4 md:py-24 md:min-h-0">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">
             <div
               data-scroll-panel
@@ -224,11 +245,17 @@ function HomeLandingContent({ market }: HomeLandingProps) {
           </div>
         </section>
 
-        <TrustStatsStrip />
+        <div className="max-md:order-5">
+          <TrustStatsStrip />
+        </div>
 
-        {market !== 'ar' && <InternationalBuySteps market={market as InternationalMarketCode} />}
+        {market !== 'ar' && (
+          <div className="max-md:order-1">
+            <InternationalBuySteps market={market as InternationalMarketCode} />
+          </div>
+        )}
 
-        <section id="lo-transforma" className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:py-24">
+        <section id="lo-transforma" className="atelier-page border-b border-[var(--alcohn-line)] py-6 max-md:order-3 md:py-24">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">
             <div
               data-scroll-panel
@@ -277,7 +304,7 @@ function HomeLandingContent({ market }: HomeLandingProps) {
           </div>
         </section>
 
-        <section className="atelier-page border-y border-[var(--alcohn-line)] py-6 md:py-24">
+        <section id="usos" className="atelier-page scroll-mt-20 border-y border-[var(--alcohn-line)] py-6 max-md:order-1 md:py-24">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">
             <div
               data-scroll-panel
@@ -291,11 +318,12 @@ function HomeLandingContent({ market }: HomeLandingProps) {
                   <div className="max-w-3xl">
                     <p className="craft-label mb-4">Usos, materiales y oficios</p>
                     <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight text-neutral-950 md:text-5xl">
-                      Sellos para cada oficio y material.
+                      <span className="md:hidden">¿Para qué lo vas a usar?</span>
+                      <span className="hidden md:inline">Sellos para cada oficio y material.</span>
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-700 md:mt-5 md:text-base">
                       <span className="md:hidden">
-                        Un mismo sello te sirve para todos los materiales y usos.
+                        Elegí tu uso, el tamaño y comprá. El logo lo mandás ahora o después.
                       </span>
                       <span className="hidden md:inline">
                         Un mismo sello puede resolver usos muy distintos: cuero, madera, pan, lacre, hielo, cerámica, jabón o packaging. Con un mismo sello podés resolver varias partes de un producto.
@@ -373,7 +401,23 @@ function HomeLandingContent({ market }: HomeLandingProps) {
           </div>
         </section>
 
-        <section className="atelier-page border-b border-[var(--alcohn-line)] py-6 md:py-24">
+        {market === 'ar' && (
+          <section
+            aria-label="Envío gratis"
+            className="border-y border-[var(--alcohn-bronze)] bg-[var(--alcohn-ink)] py-4 text-white max-md:order-2 md:py-5"
+          >
+            <div className="container mx-auto flex max-w-7xl flex-col items-start gap-1 px-4 sm:flex-row sm:items-center sm:justify-between md:px-8">
+              <p className="text-[15px] font-semibold tracking-tight md:text-lg">
+                Llevando {FREE_SHIPPING_MIN_STAMPS} sellos o más, el envío es gratis.
+              </p>
+              <p className="text-[13px] text-white/75 md:text-sm">
+                Mismo logo en varios tamaños o un sello para cada producto.
+              </p>
+            </div>
+          </section>
+        )}
+
+        <section className="atelier-page border-b border-[var(--alcohn-line)] py-6 max-md:hidden md:py-24">
           <div className="container mx-auto max-w-7xl px-4 md:px-8">
             <div
               data-scroll-panel
@@ -453,9 +497,29 @@ function HomeLandingContent({ market }: HomeLandingProps) {
           </div>
         </section>
 
-        <LogoCloud />
+        <div className="max-md:order-6">
+          <LogoCloud />
+        </div>
 
-        <section data-final-cta className="border-t border-[var(--alcohn-bronze)] bg-[var(--alcohn-ink)] py-10 md:py-12 text-white">
+        {homeFaqs.length > 0 && (
+          <section className="atelier-page border-t border-[var(--alcohn-line)] py-8 max-md:order-7 md:py-20">
+            <div className="container mx-auto max-w-4xl px-4 md:px-8">
+              <p className="craft-label mb-3">Preguntas frecuentes</p>
+              <h2 className="mb-5 text-[1.5rem] font-semibold leading-tight tracking-tight text-neutral-950 md:mb-8 md:text-4xl">
+                Antes de comprar.
+              </h2>
+              <FaqList faqs={homeFaqs} />
+              <Link
+                href={marketPath(market, '/faq')}
+                className="mt-4 inline-flex min-h-[44px] items-center text-sm font-semibold text-neutral-900 underline decoration-[var(--alcohn-bronze)] underline-offset-4"
+              >
+                Ver todas las preguntas →
+              </Link>
+            </div>
+          </section>
+        )}
+
+        <section data-final-cta className="border-t border-[var(--alcohn-bronze)] bg-[var(--alcohn-ink)] py-10 text-white max-md:order-8 md:py-12">
           <div className="container mx-auto max-w-7xl px-4 text-center md:px-8">
             <h2 className="mb-3 md:mb-4 text-[1.85rem] font-semibold tracking-tight text-white md:text-4xl leading-[1.1]">
               ¿Listo para marcar tu próximo producto?

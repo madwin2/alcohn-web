@@ -10,6 +10,7 @@ import AnalyticsProvider from '@/components/AnalyticsProvider';
 import GoogleTagManager from '@/components/GoogleTagManager';
 import MetaPixel from '@/components/MetaPixel';
 import { CartProvider } from '@/contexts/CartContext';
+import CartDrawer from '@/components/cart/CartDrawer';
 import { MarketProvider } from '@/contexts/MarketContext';
 import {
   DEFAULT_OG_IMAGE,
@@ -133,6 +134,7 @@ export default function RootLayout({
             <ConditionalFooter />
             <ConditionalWhatsapp />
             <CookieConsentBanner />
+            <CartDrawer />
           </CartProvider>
         </MarketProvider>
       </body>

@@ -7,9 +7,10 @@ import {
 } from '@/data/accessories';
 
 /**
- * Complemento sugerido en el paso de pago del generador (solo Argentina).
- * Un solo accesorio según el material: madera → calentador; cuero → mango de golpe
- * (o la base para remachadora si el sello pasa los 3×3 cm, donde el golpe no rinde).
+ * Complemento sugerido al comprar (generador, ficha y panel del carrito; solo Argentina).
+ * Un solo accesorio según el uso: madera, pan y fruta → soldador (calentador eléctrico);
+ * cuero → mango de golpe (o la base para remachadora si el sello pasa los 3×3 cm, donde el
+ * golpe no rinde); hielo y el resto → nada.
  */
 
 const CALENTADOR_SLUG = 'calentador-electrico';
@@ -39,10 +40,25 @@ export type WizardAddonSuggestion = {
   alternative?: string;
 };
 
+/** Usos que se marcan con el sello caliente: se sugiere el soldador. */
+const SOLDADOR_USOS = new Set(['para-madera', 'para-pan', 'para-fruta', 'para-colmenas']);
+/** Usos sin accesorio sugerido aunque compartan material con otros (hielo: el sello se calienta aparte). */
+const NO_ADDON_USOS = new Set(['para-hielo']);
+
+/** Texto del soldador según el uso (pan y fruta no son madera). */
+const USO_PITCH: Record<string, string> = {
+  'para-pan': 'Calienta el sello parejo para marcar pan sin fuego directo.',
+  'para-fruta': 'Calienta el sello parejo para marcar cáscaras sin fuego directo.',
+};
+
 export function getWizardAddonSuggestion(
   material: string | undefined,
-  stampMm?: { width: number; height: number } | null
+  stampMm?: { width: number; height: number } | null,
+  usoSlug?: string | null
 ): WizardAddonSuggestion | null {
+  if (usoSlug && NO_ADDON_USOS.has(usoSlug)) return null;
+  if (usoSlug && SOLDADOR_USOS.has(usoSlug)) return { primary: CALENTADOR_SLUG };
+  if (usoSlug === 'para-cuero') material = 'cuero';
   if (material === 'madera') return { primary: CALENTADOR_SLUG };
   if (material === 'cuero') {
     const big =
@@ -66,7 +82,7 @@ export type WizardAddon = {
   variantLabel: string;
 };
 
-export function resolveWizardAddon(slug: string): WizardAddon | null {
+export function resolveWizardAddon(slug: string, usoSlug?: string | null): WizardAddon | null {
   const accessory = getAccessoryBySlug(slug);
   if (!accessory) return null;
   const variant = getDefaultAccessoryVariant(accessory);
@@ -76,7 +92,10 @@ export function resolveWizardAddon(slug: string): WizardAddon | null {
   if (!(linkPrice > 0) || !(transferPrice > 0)) return null;
   return {
     accessory,
-    pitch: ADDON_PITCH[slug] ?? accessory.description,
+    pitch:
+      (slug === CALENTADOR_SLUG && usoSlug ? USO_PITCH[usoSlug] : undefined) ??
+      ADDON_PITCH[slug] ??
+      accessory.description,
     switchPrompt: ADDON_SWITCH_PROMPT[slug] ?? '¿Preferís otra opción?',
     linkPrice,
     transferPrice,

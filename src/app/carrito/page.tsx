@@ -8,12 +8,21 @@ import Link from 'next/link';
 import CartItemRow from '@/components/cart/CartItemRow';
 import CartSummary from '@/components/cart/CartSummary';
 import ActionButton from '@/components/ActionButton';
+import FreeShippingProgress from '@/components/cart/FreeShippingProgress';
+import { qualifiesForFreeShipping } from '@/lib/shipping/freeShipping';
+import { estimateTransferSubtotal } from '@/lib/cart';
 
 export default function CartPage() {
   const { items, getDisplaySubtotal, clearCart } = useCart();
   const { market } = useMarket();
   const subtotal = getDisplaySubtotal();
   const hasItems = items.length > 0;
+  const freeShipping = qualifiesForFreeShipping(items, market);
+  // "+ Agregar otro sello": a la ficha del último sello con uso conocido.
+  const lastUso = [...items].reverse().find((i) => i.usoSlug)?.usoSlug;
+  const anotherStampHref = lastUso
+    ? `${marketPath(market, `/sellos/${lastUso}`)}#comprar`
+    : marketPath(market, '/productos');
 
   if (!hasItems) {
     return (
@@ -29,8 +38,8 @@ export default function CartPage() {
             <p className="text-sm text-neutral-600 mb-8">
               Agregá productos para comenzar tu pedido.
             </p>
-            <ActionButton href={marketCatalogPath(market)} variant="primary">
-              Ver diseños disponibles
+            <ActionButton href={marketPath(market, '/productos')} variant="primary">
+              Ver sellos
             </ActionButton>
           </div>
         </div>
@@ -46,17 +55,7 @@ export default function CartPage() {
           <h1 className="text-[2rem] md:text-5xl font-semibold text-neutral-900 mb-3 md:mb-4 tracking-tight">
             Carrito
           </h1>
-          <div className="mt-6 technical-sheet p-5">
-            <p className="text-sm text-neutral-700 mb-3">
-              ¿Querés ver cómo quedaría tu logo marcado en cuero o madera antes de pagar?
-            </p>
-            <Link
-              href={marketBuyPath(market)}
-              className="inline-block border border-neutral-900 bg-neutral-900 text-white px-5 py-2 text-xs font-medium uppercase tracking-wider hover:bg-neutral-800 transition-colors"
-            >
-              Generar muestra con mi logo
-            </Link>
-          </div>
+          {market === 'ar' && <FreeShippingProgress items={items} className="mt-4 max-w-md" />}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-12 lg:gap-16">
@@ -69,6 +68,13 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+
+            <Link
+              href={anotherStampHref}
+              className="mt-4 flex min-h-[48px] w-full items-center justify-center border border-dashed border-neutral-400 bg-white px-6 text-sm font-semibold uppercase tracking-wider text-neutral-900 transition-colors hover:border-neutral-900 md:mt-6"
+            >
+              + Agregar otro sello
+            </Link>
 
             {items.length > 0 && (
               <div className="mt-8 pt-6 border-t border-neutral-200">
@@ -90,7 +96,12 @@ export default function CartPage() {
                   Resumen
                 </h2>
 
-                <CartSummary subtotal={subtotal} />
+                <CartSummary
+                  subtotal={subtotal}
+                  freeShipping={freeShipping}
+                  shippingLabel={freeShipping ? 'desde 3 sellos' : undefined}
+                  transferSubtotal={market === 'ar' ? estimateTransferSubtotal(items) : undefined}
+                />
 
                 <div className="hidden md:block pt-4 border-t border-neutral-200">
                   <Link
@@ -107,6 +118,12 @@ export default function CartPage() {
                 >
                   Seguir comprando
                 </Link>
+                <p className="text-center text-[12.5px] leading-snug text-neutral-500">
+                  ¿Querés ver cómo queda tu logo antes de pagar?{' '}
+                  <Link href={marketBuyPath(market)} className="underline hover:text-neutral-900">
+                    Probalo gratis
+                  </Link>
+                </p>
               </div>
             </div>
           </div>

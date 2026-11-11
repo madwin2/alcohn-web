@@ -14,12 +14,32 @@ export interface CartItem {
   designSlug: string; // Para poder cambiar variante después
   market?: MarketCode;
   currency?: CurrencyCode;
+  /**
+   * Sello personalizado comprado por tamaño desde la ficha (sin generador). El servidor
+   * cotiza por grupo de precio y la medida final la define Alcohn al recibir el logo.
+   */
+  sizeCategory?: StampSizeCategoryKey;
+  /** Uso elegido (`para-madera`, `para-pan`…): sirve para sugerir accesorios y para el pedido. */
+  usoSlug?: string;
+  /** `pendiente`: el cliente manda el logo por WhatsApp después de comprar. */
+  logoStatus?: 'subido' | 'pendiente';
+  /** Solicitud de muestra/logo asociada a ESTE sello (un pedido puede tener varios). */
+  mockupSolicitudId?: string;
+}
+
+export type StampSizeCategoryKey = 'chico' | 'mediano' | 'grande';
+
+export interface AddItemOptions {
+  /** Unidades a sumar (por defecto 1). */
+  qty?: number;
+  /** Abre el panel del carrito con "Agregaste…" (por defecto true). */
+  openDrawer?: boolean;
 }
 
 export interface CartState {
   items: CartItem[];
   isHydrated: boolean;
-  addItem: (item: Omit<CartItem, 'id' | 'qty'>) => void;
+  addItem: (item: Omit<CartItem, 'id' | 'qty'>, options?: AddItemOptions) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   updateVariant: (id: string, newSize: string, newPrice: number) => void;
@@ -27,7 +47,20 @@ export interface CartState {
   getTotalItems: () => number;
   getSubtotal: () => number;
   getDisplaySubtotal: () => number;
+  /** Panel lateral del carrito (uno solo para toda la web). */
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  /** Última línea agregada: el panel la muestra como "Agregaste…". */
+  lastAddedId: string | null;
 }
+
+/**
+ * Subtotal pagando por transferencia (solo Argentina). Los precios del carrito son con
+ * tarjeta (link); la transferencia tiene 15% off, igual que calcula el checkout.
+ */
+export const estimateTransferSubtotal = (items: Pick<CartItem, 'price' | 'qty'>[]): number =>
+  items.reduce((sum, item) => sum + Math.round(item.price / 1.15) * item.qty, 0);
 
 // Helper para generar ID único
 export const generateCartItemId = (designSlug: string, size: string): string => {

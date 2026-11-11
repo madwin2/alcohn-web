@@ -1,7 +1,14 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { CartItem, CartState, generateCartItemId, loadCartFromStorage, saveCartToStorage } from '@/lib/cart';
+import {
+  AddItemOptions,
+  CartItem,
+  CartState,
+  generateCartItemId,
+  loadCartFromStorage,
+  saveCartToStorage,
+} from '@/lib/cart';
 import { useMarket } from '@/contexts/MarketContext';
 import { trackMetaAddToCart } from '@/lib/analytics/metaPixel';
 import { displayCatalogPriceFromLinkArs } from '@/lib/markets/pricing';
@@ -12,6 +19,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { market, config: marketConfig } = useMarket();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
 
   // Cargar del localStorage al montar o al cambiar de mercado
   useEffect(() => {
@@ -27,32 +36,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isHydrated, market]);
 
-  const addItem = (item: Omit<CartItem, 'id' | 'qty'>) => {
+  const addItem = (item: Omit<CartItem, 'id' | 'qty'>, options: AddItemOptions = {}) => {
     const id = generateCartItemId(item.designSlug, item.variantSize);
+    const addQty = Math.max(1, Math.min(999, Math.floor(options.qty ?? 1)));
+
+    trackMetaAddToCart({
+      id,
+      title: item.title,
+      price: item.price,
+      qty: addQty,
+    });
 
     setItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === id);
-
       if (existingItem) {
-        trackMetaAddToCart({
-          id,
-          title: item.title,
-          price: item.price,
-          qty: 1,
-        });
-        return prevItems.map((i) =>
-          i.id === id ? { ...i, qty: i.qty + 1 } : i
-        );
+        return prevItems.map((i) => (i.id === id ? { ...i, qty: i.qty + addQty } : i));
       }
-
-      trackMetaAddToCart({
-        id,
-        title: item.title,
-        price: item.price,
-        qty: 1,
-      });
-      return [...prevItems, { ...item, id, qty: 1, market, currency: marketConfig.currency }];
+      return [...prevItems, { ...item, id, qty: addQty, market, currency: marketConfig.currency }];
     });
+
+    setLastAddedId(id);
+    if (options.openDrawer !== false) setIsDrawerOpen(true);
+  };
+
+  const openDrawer = () => {
+    setLastAddedId(null);
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
   };
 
   const removeItem = (id: string) => {
@@ -133,6 +146,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         getTotalItems,
         getSubtotal,
         getDisplaySubtotal,
+        isDrawerOpen,
+        openDrawer,
+        closeDrawer,
+        lastAddedId,
       }}
     >
       {children}

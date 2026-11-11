@@ -7,6 +7,7 @@ import { pushGtmEvent } from '@/lib/analytics/gtm';
 import GoogleCustomerReviewsOptIn from '@/components/GoogleCustomerReviewsOptIn';
 import { trackMetaCustomEvent } from '@/lib/analytics/metaPixel';
 import { consumePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
+import PendingLogoWhatsapp from '@/components/checkout/PendingLogoWhatsapp';
 
 function TransferenciaConfirmacionContent() {
   const searchParams = useSearchParams();
@@ -68,6 +69,7 @@ function TransferenciaConfirmacionContent() {
             <span className="font-mono font-semibold text-neutral-900">{ordenId}</span>
           </p>
         ) : null}
+        <PendingLogoWhatsapp orderId={ordenId} />
         <Link
           href="/"
           className="inline-block border border-neutral-900 bg-neutral-900 px-6 py-3 text-sm font-medium uppercase tracking-wider text-white transition-colors hover:bg-neutral-800"

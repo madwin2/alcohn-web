@@ -22,6 +22,8 @@ export default function PromoBar() {
     ...(market === 'ar'
       ? [`${INSTALLMENTS_WITHOUT_INTEREST} cuotas sin interés`, `${TRANSFER_DISCOUNT_PERCENT}% off por transferencia`]
       : [`Envío DHL a ${config.countryName}`, `Pago en ${config.currency}`]),
+    // En celular solo entran los dos primeros (el resto se ve en sm+).
+    ...(market === 'ar' ? ['Envío gratis desde 3 sellos'] : []),
     ...(showLeadTime ? [leadTime] : []),
   ];
 
@@ -29,7 +31,7 @@ export default function PromoBar() {
     <div className="bg-[var(--alcohn-bronze,#a87a4a)] text-neutral-950" role="note" aria-label="Condiciones de compra">
       <p className="container mx-auto flex items-center justify-center gap-x-3 px-4 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide md:text-xs">
         {items.map((item, index) => (
-          <span key={item} className={index === 2 ? 'hidden sm:inline' : undefined}>
+          <span key={item} className={index >= 3 ? 'hidden lg:inline' : index === 2 ? 'hidden sm:inline' : undefined}>
             {index > 0 && <span aria-hidden="true" className="mr-3 opacity-60">·</span>}
             {item}
           </span>

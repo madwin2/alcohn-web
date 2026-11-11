@@ -138,7 +138,8 @@ function WizardTextLogoContent({ disabled = false, onOpen, onConfirm }: WizardTe
   };
 
   return (
-    <div className="border-t border-[var(--alcohn-line)] pt-3 md:pt-4">
+    <div className={open ? 'border border-[var(--alcohn-line-strong)] bg-white p-3' : ''}>
+      {/* Opción con el mismo formato que "Subir" / "Foto" / "WhatsApp" (antes era un acordeón con un "+" chico). */}
       <button
         type="button"
         onClick={() => {
@@ -146,18 +147,26 @@ function WizardTextLogoContent({ disabled = false, onOpen, onConfirm }: WizardTe
           setOpen((v) => !v);
         }}
         aria-expanded={open}
-        className="flex min-h-[44px] w-full items-center justify-between gap-3 text-left"
+        className={`flex min-h-[52px] w-full items-center gap-3 text-left ${
+          open ? '' : 'border border-[var(--alcohn-line-strong)] bg-white px-3 py-2'
+        }`}
       >
+        <span
+          aria-hidden
+          className="flex h-8 w-8 shrink-0 items-center justify-center border border-neutral-300 bg-[var(--alcohn-surface)] font-serif text-[15px] font-semibold text-neutral-900"
+        >
+          Aa
+        </span>
         <span className="min-w-0">
           <span className="block text-[13.5px] font-semibold text-neutral-900 md:text-sm">
-            No tengo logo: usar el nombre de mi marca
+            No tengo logo: usar mi nombre
           </span>
-          <span className="mt-0.5 block text-[12.5px] leading-snug text-neutral-600 md:text-sm">
-            Elegí una letra y mirá cómo queda en tu sello.
+          <span className="mt-0.5 block text-[12px] leading-snug text-neutral-600 md:text-sm">
+            Escribí tu marca, elegí la letra y mirá cómo queda.
           </span>
         </span>
-        <span aria-hidden className="shrink-0 text-lg text-neutral-500">
-          {open ? '−' : '+'}
+        <span aria-hidden className="ml-auto shrink-0 text-neutral-400">
+          {open ? '−' : '→'}
         </span>
       </button>
 

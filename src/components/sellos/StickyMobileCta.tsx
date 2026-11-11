@@ -8,6 +8,8 @@ interface StickyMobileCtaProps {
   label: string;
   /** Línea chica debajo del botón (opcional). */
   note?: string;
+  /** Se oculta mientras este bloque está en pantalla (ej. `#comprar`: la compra ya está a la vista). */
+  hideWhileVisible?: string;
 }
 
 /** Botón del hero (PageIntro) y bloque del CTA final de la página. */
@@ -20,17 +22,19 @@ const END_SELECTOR = '[data-sticky-cta-end]';
  * `--sticky-cta-height`) para que el botón flotante de WhatsApp suba y no quede tapado.
  * Mientras el aviso de cookies está abierto no se muestra (ver `.sticky-cta-bar` en globals.css).
  */
-export default function StickyMobileCta({ href, label, note }: StickyMobileCtaProps) {
+export default function StickyMobileCta({ href, label, note, hideWhileVisible }: StickyMobileCtaProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const start = document.querySelector(START_SELECTOR);
     const end = document.querySelector(END_SELECTOR);
+    const pause = hideWhileVisible ? document.querySelector(hideWhileVisible) : null;
     if (!start || typeof IntersectionObserver === 'undefined') return;
 
     let pastStart = false;
     let reachedEnd = false;
+    let pauseVisible = false;
 
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -39,15 +43,18 @@ export default function StickyMobileCta({ href, label, note }: StickyMobileCtaPr
           pastStart = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
         } else if (entry.target === end) {
           reachedEnd = entry.isIntersecting || entry.boundingClientRect.top < 0;
+        } else if (entry.target === pause) {
+          pauseVisible = entry.isIntersecting;
         }
       }
-      setVisible(pastStart && !reachedEnd);
+      setVisible(pastStart && !reachedEnd && !pauseVisible);
     });
 
     observer.observe(start);
     if (end) observer.observe(end);
+    if (pause) observer.observe(pause);
     return () => observer.disconnect();
-  }, []);
+  }, [hideWhileVisible]);
 
   useEffect(() => {
     const root = document.documentElement;

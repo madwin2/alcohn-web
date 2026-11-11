@@ -17,6 +17,7 @@ import CheckoutShippingForm, {
   type CheckoutShippingFormHandle,
 } from '@/components/checkout/CheckoutShippingForm';
 import { fetchShippingCost } from '@/lib/shipping/client';
+import { qualifiesForFreeShipping } from '@/lib/shipping/freeShipping';
 import {
   peekCheckoutShipping,
   saveCheckoutShipping,
@@ -24,6 +25,7 @@ import {
 import type { ShippingFormData, ShippingMetodoUi } from '@/lib/shipping/types';
 import { SHIPPING_METODO_LABELS, SHIPPING_METODO_OPTIONS } from '@/lib/shipping/types';
 import { savePurchaseSnapshot } from '@/lib/analytics/purchaseSnapshot';
+import { savePendingLogoSnapshot } from '@/lib/pendingLogo';
 import { pushGtmEvent } from '@/lib/analytics/gtm';
 import { useMarket } from '@/contexts/MarketContext';
 import { marketBuyPath, marketCatalogPath, marketPath } from '@/lib/markets/paths';
@@ -62,7 +64,7 @@ export default function CheckoutPage() {
   const shippingFormRef = useRef<CheckoutShippingFormHandle>(null);
   const [shippingSectionError, setShippingSectionError] = useState<string | null>(null);
   const [shippingMetodo, setShippingMetodo] = useState<ShippingMetodoUi>('domicilio');
-  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingCostQuoted, setShippingCost] = useState(0);
   const [shippingForm, setShippingForm] = useState<ShippingFormData | null>(null);
   const [shippingMetodoChosen, setShippingMetodoChosen] = useState(false);
   const [checkoutPricing, setCheckoutPricing] = useState<{
@@ -74,6 +76,10 @@ export default function CheckoutPage() {
   >(null);
 
   const subtotal = getSubtotal();
+  // Envío gratis desde 3 sellos: el servidor hace la misma cuenta al crear la orden.
+  const freeShipping = qualifiesForFreeShipping(orderData?.items || items, 'ar');
+  const shippingCost = freeShipping ? 0 : shippingCostQuoted;
+  const showFreeShippingLine = freeShipping && shippingMetodoChosen && shippingMetodo !== 'retiro';
   const openpaySubtotal = checkoutPricing?.openpaySubtotal ?? subtotal;
   const transferSubtotal = checkoutPricing?.transferSubtotal ?? subtotal;
   const openpayTotalConEnvio = openpaySubtotal + shippingCost;
@@ -361,6 +367,8 @@ export default function CheckoutPage() {
       })),
       email: formData.email.trim() || undefined,
     });
+    // Sellos sin logo: la confirmación muestra el botón para mandarlo por WhatsApp.
+    savePendingLogoSnapshot(ordenId, cartItems);
   };
 
   const handleOpenpayCheckout = async () => {
@@ -590,6 +598,12 @@ export default function CheckoutPage() {
                     <span className="font-semibold text-neutral-900">${shippingCost.toLocaleString('es-AR')}</span>
                   </div>
                 )}
+                {showFreeShippingLine && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Envío ({SHIPPING_METODO_LABELS[shippingMetodo]})</span>
+                    <span className="font-semibold text-emerald-700">Gratis</span>
+                  </div>
+                )}
               </div>
             </div>
           </details>
@@ -746,6 +760,11 @@ export default function CheckoutPage() {
                               <span className="min-w-0">
                                 <span className="block text-sm font-semibold text-neutral-900">
                                   {label}
+                                  {freeShipping && id !== 'retiro' && (
+                                    <span className="ml-2 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                                      Gratis
+                                    </span>
+                                  )}
                                 </span>
                                 <span className="mt-1 block text-xs leading-relaxed text-neutral-600">
                                   {description}
@@ -897,6 +916,7 @@ export default function CheckoutPage() {
                         <p className="mt-2">
                           <strong>Envío:</strong> {SHIPPING_METODO_LABELS[shippingMetodo]}
                           {shippingCost > 0 && ` — $${shippingCost.toLocaleString('es-AR')}`}
+                          {showFreeShippingLine && ' — gratis (3 sellos o más)'}
                         </p>
                         {shippingForm && shippingMetodo !== 'retiro' && (
                           <p className="mt-1 text-neutral-700">
@@ -1145,6 +1165,7 @@ export default function CheckoutPage() {
                   }
                   shippingCost={shippingCost}
                   shippingLabel={SHIPPING_METODO_LABELS[shippingMetodo]}
+                  freeShipping={showFreeShippingLine}
                 />
 
                 <PurchaseInclusions
